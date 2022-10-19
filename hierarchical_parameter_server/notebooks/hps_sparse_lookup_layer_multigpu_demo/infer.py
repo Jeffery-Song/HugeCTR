@@ -59,11 +59,45 @@ def tf_dataset(sparse_keys, dense_features, labels, batchsize):
     dataset = dataset.batch(batchsize, drop_remainder=True)
     return dataset
 
+class InferenceModel(tf.keras.models.Model):
+    def __init__(self,
+                 slot_num,
+                 embed_vec_size,
+                 max_nnz,
+                 dense_dim,
+                 dense_model_path,
+                 **kwargs):
+        super(InferenceModel, self).__init__(**kwargs)
+        
+        self.embed_vec_size = embed_vec_size
+        self.slot_num = slot_num
+        self.max_nnz = max_nnz
+        self.dense_dim = dense_dim
+        self.sparse_lookup_layer = hps.SparseLookupLayer(model_name="dnn", table_id=0, emb_vec_size=self.embed_vec_size, emb_vec_dtype=args["tf_vector_type"], name="lookup")
+        self.dense_model = tf.keras.models.load_model(dense_model_path)
+
+    def call(self, inputs):
+        input_cat = inputs[0]
+        input_dense = inputs[1]
+        
+        # SparseTensor of keys, shape: (batch_size*slot_num, max_nnz)
+        embedding_vector = self.sparse_lookup_layer(input_cat, sp_weights = None, combiner="mean")
+        embedding_vector = tf.reshape(embedding_vector, shape=[-1, self.slot_num * self.embed_vec_size])
+        concat_feat = tf.concat([embedding_vector, input_dense], axis=1)
+        logit = self.dense_model(concat_feat)
+        return logit, embedding_vector
+
+    def summary(self):
+        inputs = [tf.keras.Input(shape=(self.max_nnz, ), sparse=True, dtype=args["tf_key_type"]), 
+                  tf.keras.Input(shape=(self.dense_dim, ), dtype=tf.float32)]
+        model = tf.keras.models.Model(inputs=inputs, outputs=self.call(inputs))
+        return model.summary()
+
 def inference_with_saved_model(args):
     strategy = tf.distribute.MirroredStrategy()
     with strategy.scope():
         hps.Init(global_batch_size = args["global_batch_size"], ps_config_file = args["ps_config_file"])
-        model = tf.keras.models.load_model(args["saved_path"])
+        model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["max_nnz"], args["dense_dim"], args["dense_model_path"])
         model.summary()
     atexit.register(strategy._extended._collective_ops._pool.close) # type: ignore
 
@@ -71,6 +105,7 @@ def inference_with_saved_model(args):
         sparse_keys = tf.sparse.reshape(sparse_keys, [-1, sparse_keys.shape[-1]])
         return sparse_keys
     
+    @tf.function
     def _infer_step(inputs, labels):
         logit, embeddings = model(inputs)
         return logit, embeddings
