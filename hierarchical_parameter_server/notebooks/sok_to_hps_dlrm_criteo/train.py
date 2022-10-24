@@ -1,4 +1,5 @@
 import sparse_operation_kit as sok
+import hierarchical_parameter_server as hps
 import sys
 import os
 import numpy as np
@@ -6,6 +7,7 @@ import tensorflow as tf
 import struct
 import yaml
 import time
+import shutil
 sys.path.append("../../../sparse_operation_kit/unit_test/test_scripts/tf2/")
 import utils
 
@@ -49,7 +51,7 @@ args["max_vocabulary_size"] = max_range + 1
 args["max_vocabulary_size_per_gpu"] = (max_range + 1) // args["gpu_num"]
 if ((max_range + 1) % args["gpu_num"]) != 0:
     args["max_vocabulary_size_per_gpu"] += 1
-print(args['max_vocabulary_size'])
+print(args)
 
 def generate_random_samples(num_samples, vocabulary_range_per_slot, max_nnz, dense_dim):
     def generate_sparse_keys(num_samples, vocabulary_range_per_slot, max_nnz, key_dtype = args["np_key_type"]):
@@ -193,13 +195,12 @@ class DLRM(tf.keras.models.Model):
         self.max_nnz = max_nnz
         self.dense_dim = dense_dim
  
-        initializer = tf.keras.initializers.RandomUniform() # or "random_uniform" or "Zeros" or "ones"
+        # initializer = tf.keras.initializers.RandomUniform() # or "random_uniform" or "Zeros" or "ones"
         self.embedding_layer = sok.DistributedEmbedding(combiner=self.combiner,
                                                         max_vocabulary_size_per_gpu=self.max_vocabulary_size_per_gpu,
                                                         embedding_vec_size=self.embed_vec_size,
                                                         slot_num=self.slot_num,
-                                                        max_nnz=self.max_nnz,
-                                                        embedding_initializer=initializer)
+                                                        max_nnz=self.max_nnz)
         self.bot_nn = MLP(arch_bot, name = "bottom", out_activation='relu')
         self.top_nn = MLP(arch_top, name = "top", out_activation='sigmoid')
         self.interaction_op = SecondOrderFeatureInteraction(self_interaction)
@@ -285,7 +286,19 @@ def train(args):
             inputs = [sparse_keys, dense_features]
             logit, embedding_vector, loss = strategy.run(_train_step, args=(inputs, labels))
             print("-"*20, "Step {}, loss: {}".format(i, loss),  "-"*20)
+
+    embedding_saver = sok.Saver()
+    res = embedding_saver.dump_to_file(dlrm.embedding_layer.embedding_variable, args["embedding_table_path"])
+    print(res)
+    os.rename(args["embedding_table_path"] + "/EmbeddingVariable_keys.file", args["embedding_table_path"] + "/key")
+    os.rename(args["embedding_table_path"] + "/EmbeddingVariable_values.file", args["embedding_table_path"] + "/emb_vector")
+
     return dlrm
+
+shutil.rmtree(args["embedding_table_path"])
+shutil.rmtree(args["dense_model_path"])
+os.mkdir(args["embedding_table_path"])
+os.mkdir(args["dense_model_path"])
 
 trained_model = train(args)
 trained_model.summary()
@@ -295,13 +308,6 @@ dense_model = tf.keras.Model([trained_model.get_layer("distributed_embedding").o
                              trained_model.get_layer("top").output)
 dense_model.summary()
 dense_model.save(args["dense_model_path"])
-
-embedding_saver = sok.Saver()
-os.mkdir("dlrm_sparse.model")
-embedding_saver.dump_to_file(trained_model.embedding_layer.embedding_variable, args["embedding_table_path"])
-os.rename("dlrm_sparse.model/EmbeddingVariable_keys.file", "dlrm_sparse.model/key")
-os.rename("dlrm_sparse.model/EmbeddingVariable_values.file", "dlrm_sparse.model/emb_vector")
-
 
 class InferenceModel(tf.keras.models.Model):
     def __init__(self,
