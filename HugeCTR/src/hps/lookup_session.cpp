@@ -19,7 +19,7 @@
 
 namespace HugeCTR {
 
-LookupSessionBase::~LookupSessionBase() = default;
+// LookupSessionBase::~LookupSessionBase() = default;
 
 std::shared_ptr<LookupSessionBase> LookupSessionBase::create(
     const InferenceParams& inference_params,
@@ -70,6 +70,7 @@ void LookupSession::lookup(const void* const h_keys, float* const d_vectors, con
 void LookupSession::lookup(const std::vector<const void*>& h_keys_per_table,
                            const std::vector<float*>& d_vectors_per_table,
                            const std::vector<size_t>& num_keys_per_table) {
+  // looks like this function is never called?
   CudaDeviceContext context(inference_params_.device_id);
   HCTR_CHECK_HINT(h_keys_per_table.size() == inference_params_.sparse_model_files.size(),
                   "The h_keys_per_table.size() should be equal to the number of embedding tables");

@@ -44,6 +44,13 @@ void Facade::forward(const char* model_name, int32_t table_id, int32_t global_re
   size_t num_keys = static_cast<size_t>(values_tensor->NumElements());
   size_t emb_vec_size = static_cast<size_t>(emb_vector_tensor->shape().dim_sizes().back());
   const void* values_ptr = values_tensor->data();
+  if (ps_config->inference_params_array[0].i64_input_key) {
+    CHECK(values_tensor->dtype() == tensorflow::DT_INT64 ||
+          values_tensor->dtype() == tensorflow::DT_UINT64);
+  } else {
+    CHECK(values_tensor->dtype() == tensorflow::DT_INT32 ||
+          values_tensor->dtype() == tensorflow::DT_UINT32);
+  }
   void* emb_vector_ptr = emb_vector_tensor->data();
   lookup_manager_->forward(std::string(model_name), table_id, global_replica_id, num_keys,
                            emb_vec_size, values_ptr, emb_vector_ptr);

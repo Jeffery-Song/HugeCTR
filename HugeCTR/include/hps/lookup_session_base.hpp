@@ -22,7 +22,7 @@ namespace HugeCTR {
 
 class LookupSessionBase {
  public:
-  virtual ~LookupSessionBase() = 0;
+  virtual ~LookupSessionBase() = default;
   LookupSessionBase() = default;
   LookupSessionBase(LookupSessionBase const&) = delete;
   LookupSessionBase& operator=(LookupSessionBase const&) = delete;

@@ -390,6 +390,7 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
 
     InferenceParams params(model_name, max_batch_size, hit_rate_threshold, dense_file, sparse_files,
                            device_id, use_gpu_embedding_cache, cache_size_percentage, true);
+    params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int
     params.number_of_worker_buffers_in_pool =
         get_value_from_json_soft<int>(model, "num_of_worker_buffer_in_pool", 1);

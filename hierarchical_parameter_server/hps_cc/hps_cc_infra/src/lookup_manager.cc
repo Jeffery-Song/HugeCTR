@@ -43,7 +43,9 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
       }
       return true;
     };
-    HCTR_CHECK_HINT(inference_params.i64_input_key, "inference_params.i64_input_key must be true.");
+    // 32 bit key is supported
+    // HCTR_CHECK_HINT(inference_params.i64_input_key, "inference_params.i64_input_key must be
+    // true.");
     HCTR_CHECK_HINT(
         inference_params.deployed_devices.size() == num_replicas_in_sync,
         "inference_params.deployed_devices.size() must be equal to num_replicas_in_sync.");

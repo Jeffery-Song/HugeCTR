@@ -26,10 +26,11 @@ class LookupSession : public LookupSessionBase {
   LookupSession(LookupSession const&) = delete;
   LookupSession& operator=(LookupSession const&) = delete;
 
-  virtual void lookup(const void* h_keys, float* d_vectors, size_t num_keys, size_t table_id);
+  virtual void lookup(const void* h_keys, float* d_vectors, size_t num_keys,
+                      size_t table_id) override;
   virtual void lookup(const std::vector<const void*>& h_keys_per_table,
                       const std::vector<float*>& d_vectors_per_table,
-                      const std::vector<size_t>& num_keys_per_table);
+                      const std::vector<size_t>& num_keys_per_table) override;
   virtual const InferenceParams get_inference_params() const override { return inference_params_; }
 
  private:

@@ -174,8 +174,8 @@ class SparseLookupLayer(tf.keras.layers.Layer):
         if not isinstance(sp_ids, sparse_tensor.SparseTensor):
             raise TypeError(f"sp_ids must be SparseTensor, got {type(sp_ids)}")
 
-        if sp_ids.values.dtype is not tf.int64:
-            raise TypeError(f"sp_ids.values must be tf.int64, got {sp_ids.values.dtype}")
+        # if sp_ids.values.dtype is not tf.int64:
+        #     raise TypeError(f"sp_ids.values must be tf.int64, got {sp_ids.values.dtype}")
 
         ignore_weights = sp_weights is None
         if not ignore_weights:

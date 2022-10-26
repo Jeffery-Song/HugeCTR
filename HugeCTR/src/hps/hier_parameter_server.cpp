@@ -352,7 +352,7 @@ void HierParameterServer<TypeHashKey>::init_ec(
       // apply the memory block for embedding cache refresh workspace
       MemoryBlock* memory_block = nullptr;
       while (memory_block == nullptr) {
-        memory_block = reinterpret_cast<struct MemoryBlock*>(this->apply_buffer(
+        memory_block = reinterpret_cast<MemoryBlock*>(this->apply_buffer(
             inference_params.model_name, device_id, CACHE_SPACE_TYPE::REFRESHER));
       }
       EmbeddingCacheRefreshspace refreshspace_handler = memory_block->refresh_buffer;
@@ -631,7 +631,7 @@ void HierParameterServer<TypeHashKey>::refresh_embedding_cache(const std::string
   // apply the memory block for embedding cache refresh workspace
   MemoryBlock* memory_block = nullptr;
   while (memory_block == nullptr) {
-    memory_block = reinterpret_cast<struct MemoryBlock*>(
+    memory_block = reinterpret_cast<MemoryBlock*>(
         this->apply_buffer(model_name, device_id, CACHE_SPACE_TYPE::REFRESHER));
   }
   EmbeddingCacheRefreshspace refreshspace_handler = memory_block->refresh_buffer;
