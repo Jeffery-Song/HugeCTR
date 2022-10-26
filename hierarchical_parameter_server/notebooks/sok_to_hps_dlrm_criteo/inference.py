@@ -45,9 +45,7 @@ if ((max_range + 1) % args["gpu_num"]) != 0:
 print(args['max_vocabulary_size'])
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
-gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
-sess = tf.compat.v1.Session(config=tf.compat.v1.ConfigProto(gpu_options=gpu_options))
-
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 def generate_random_samples(num_samples, vocabulary_range_per_slot, max_nnz, dense_dim):
     def generate_sparse_keys(num_samples, vocabulary_range_per_slot, max_nnz, key_dtype = args["np_key_type"]):
@@ -122,32 +120,35 @@ def inference_with_saved_model(args):
                 ps_config_file = args["ps_config_file"])
         model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["max_nnz"], args["dense_dim"], args["dense_model_path"])
         model.summary()
-        inputs = [tf.keras.Input(shape=(args["max_nnz"], ), sparse=True, dtype=args["tf_key_type"]), 
-                tf.keras.Input(shape=(args["dense_dim"], ), dtype=tf.float32)]
-        _, _ = model(inputs)
-    #     model = tf.keras.models.load_model(args["saved_path"])
-    #     model.summary()
-    # model.save(args["saved_path"])
+    # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
+    atexit.register(strategy._extended._collective_ops._pool.close) # type: ignore
 
+    def _reshape_input(sparse_keys):
+        sparse_keys = tf.sparse.reshape(sparse_keys, [-1, sparse_keys.shape[-1]])
+        return sparse_keys
+    @tf.function
     def _infer_step(inputs, labels):
         logit, embeddings = model(inputs)
         return logit, embeddings
-    
+
     embeddings_peek = list()
     inputs_peek = list()
-    
-    sparse_keys, dense_features, labels = generate_random_samples(args["global_batch_size"]  * args["iter_num"], args["vocabulary_range_per_slot"], args["max_nnz"], args["dense_dim"])
-    dataset = tf_dataset(sparse_keys, dense_features, labels, args["global_batch_size"])
+
+    def _dataset_fn(input_context):
+        replica_batch_size = input_context.get_per_replica_batch_size(args["global_batch_size"])
+        sparse_keys, dense_features, labels = generate_random_samples(args["global_batch_size"]  * args["iter_num"], args["vocabulary_range_per_slot"], args["max_nnz"], args["dense_dim"])
+        dataset = tf_dataset(sparse_keys, dense_features, labels, replica_batch_size)
+        dataset = dataset.shard(input_context.num_input_pipelines, input_context.input_pipeline_id)
+        return dataset
+
+    dataset = strategy.distribute_datasets_from_function(_dataset_fn)
     for i, (sparse_keys, dense_features, labels) in enumerate(dataset):
-        sparse_keys = tf.sparse.reshape(sparse_keys, [-1, sparse_keys.shape[-1]])
+        sparse_keys = strategy.run(_reshape_input, args=(sparse_keys,))
         inputs = [sparse_keys, dense_features]
-        logit, embeddings = _infer_step(inputs, labels)
+        logit, embeddings = strategy.run(_infer_step, args=(inputs, labels))
         embeddings_peek.append(embeddings)
         inputs_peek.append(inputs)
         print("-"*20, "Step {}".format(i),  "-"*20)
-
-    # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
-    atexit.register(strategy._extended._collective_ops._pool.close) # type: ignore
     return embeddings_peek, inputs_peek
 
 embeddings_peek, inputs_peek = inference_with_saved_model(args)
