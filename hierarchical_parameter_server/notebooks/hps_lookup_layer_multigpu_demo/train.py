@@ -50,10 +50,9 @@ args["combiner"] = "mean"
 args["ps_config_file"] = "dnn.json"
 args["dense_model_path"] = "dnn_dense.model"
 args["embedding_table_path"] = "dnn_sparse.model"
-args["saved_path"] = "dnn_tf_saved_model"
-args["np_key_type"] = np.int64
+args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
-args["tf_key_type"] = tf.int64
+args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
@@ -61,12 +60,12 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
 # %%
 def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim):
     def generate_dense_keys(num_samples, vocabulary_range_per_slot, key_dtype = args["np_key_type"]):
-        dense_keys = list()
+        keys = list()
         for vocab_range in vocabulary_range_per_slot:
             keys_per_slot = np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(num_samples, 1), dtype=key_dtype)
-            dense_keys.append(keys_per_slot)
-        dense_keys = np.concatenate(np.array(dense_keys), axis = 1)
-        return dense_keys
+            keys.append(keys_per_slot)
+        keys = np.concatenate(np.array(keys), axis = 1)
+        return keys
     cat_keys = generate_dense_keys(num_samples, vocabulary_range_per_slot)
     dense_features = np.random.random((num_samples, dense_dim)).astype(np.float32)
     labels = np.random.randint(low=0, high=2, size=(num_samples, 1))

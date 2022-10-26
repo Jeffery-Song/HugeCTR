@@ -21,12 +21,12 @@ args["combiner"] = "mean"
 args["ps_config_file"] = "dnn.json"
 args["dense_model_path"] = "dnn_dense.model"
 args["embedding_table_path"] = "dnn_sparse.model"
-args["saved_path"] = "dnn_tf_saved_model"
-args["np_key_type"] = np.int64
+args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
-args["tf_key_type"] = tf.int64
+args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 
+os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
 
 # %%
@@ -104,7 +104,7 @@ def inference_with_saved_model(args):
     def _reshape_input(sparse_keys):
         sparse_keys = tf.sparse.reshape(sparse_keys, [-1, sparse_keys.shape[-1]])
         return sparse_keys
-    
+
     @tf.function
     def _infer_step(inputs, labels):
         logit, embeddings = model(inputs)

@@ -23,7 +23,7 @@ args["combiner"] = "mean"
 args["ps_config_file"] = "dlrm.json"
 args["dense_model_path"] = "dlrm_dense.model"
 args["embedding_table_path"] = "dlrm_sparse.model"
-args["saved_path"] = "dlrm_tf_saved_model"
+# SOK requires 64bit key, but we may use different key type at inference
 args["np_key_type"] = np.int64
 args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int64
@@ -308,49 +308,3 @@ dense_model = tf.keras.Model([trained_model.get_layer("distributed_embedding").o
                              trained_model.get_layer("top").output)
 dense_model.summary()
 dense_model.save(args["dense_model_path"])
-
-class InferenceModel(tf.keras.models.Model):
-    def __init__(self,
-                 slot_num,
-                 embed_vec_size,
-                 max_nnz,
-                 dense_dim,
-                 dense_model_path,
-                 **kwargs):
-        super(InferenceModel, self).__init__(**kwargs)
-        
-        self.slot_num = slot_num
-        self.embed_vec_size = embed_vec_size
-        self.max_nnz = max_nnz
-        self.dense_dim = dense_dim
-        
-        self.sparse_lookup_layer = hps.SparseLookupLayer(model_name = "dlrm", 
-                                            table_id = 0,
-                                            emb_vec_size = self.embed_vec_size,
-                                            emb_vec_dtype = args["tf_vector_type"])
-        self.dense_model = tf.keras.models.load_model(dense_model_path, compile=False)
-    
-    def call(self, inputs):
-        input_cat = inputs[0]
-        input_dense = inputs[1]
-
-        embeddings = tf.reshape(self.sparse_lookup_layer(sp_ids=input_cat, sp_weights = None, combiner="mean"),
-                                shape=[-1, self.slot_num, self.embed_vec_size])
-        logit = self.dense_model([embeddings, input_dense])
-        return logit, embeddings
-
-    def summary(self):
-        inputs = [tf.keras.Input(shape=(self.max_nnz, ), sparse=True, dtype=args["tf_key_type"]), 
-                  tf.keras.Input(shape=(self.dense_dim, ), dtype=tf.float32)]
-        model = tf.keras.models.Model(inputs=inputs, outputs=self.call(inputs))
-        return model.summary()
-
-def create_and_save_inference_graph(args): 
-    model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["max_nnz"], args["dense_dim"], args["dense_model_path"])
-    model.summary()
-    inputs = [tf.keras.Input(shape=(args["max_nnz"], ), sparse=True, dtype=args["tf_key_type"]), 
-              tf.keras.Input(shape=(args["dense_dim"], ), dtype=tf.float32)]
-    _, _ = model(inputs)
-    model.save(args["saved_path"])
-
-create_and_save_inference_graph(args)

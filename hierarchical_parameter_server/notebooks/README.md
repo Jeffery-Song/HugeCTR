@@ -1,6 +1,22 @@
 # Hierarchical Parameter Server Notebooks #
 This directory contains a set of Jupyter notebooks that demonstrate how to use HPS in TensorFlow.
 
+## Coll Cache Notes
+
+Please refer to following examples in sub-folder for the correct use of HPS & coll cache in multi-gpu environment.
+
+- `hierarchical_parameter_server_dmeo`: exmaple using `hps.LookupLayer` with single gpu.
+- `hps_lookup_layer_multigpu_demo`: exmaple using `hps.LookupLayer` with multi gpu. Compare it with previous example to see what modification is necessary for multigpu.
+- `hps_sparse_lookup_layer_multigpu_demo`: exmaple using `hps.SparseLookupLayer` with multi gpu.
+- `hps_multi_table_sparse_input_demo`: exmaple using `hps.LookupLayer` and `hps.SparseLookupLayer` simultaneously with single gpu.
+
+### Misc
+
+- `supportlonglong` is never used.
+- 32bit-key is supported by hps now, and required when using coll cache.
+- When using multiple gpus, save model then load it seems unsupported by hps. The only option is save dense and sparse separately, then build inference model from scratch.
+- If encounter OOM issue: `os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'`
+
 ## Quickstart
 
 The simplest way to run a one of our notebooks is with a Docker container.

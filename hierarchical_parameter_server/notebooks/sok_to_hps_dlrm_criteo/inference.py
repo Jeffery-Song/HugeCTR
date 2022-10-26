@@ -15,11 +15,11 @@ args["global_batch_size"] = 8                    # the globally batchsize for al
 args["max_nnz"] = 10                # the max number of non-zeros for all slots
 args["combiner"] = "mean"
 args["ps_config_file"] = "dlrm.json"
-args["saved_path"] = "dlrm_tf_saved_model"
 args["dense_model_path"] = "dlrm_dense.model"
-args["np_key_type"] = np.int64
+# SOK requires 64bit key, but we may use different key type at inference
+args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
-args["tf_key_type"] = tf.int64
+args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 args["optimizer"] = "plugin_adam"
 
