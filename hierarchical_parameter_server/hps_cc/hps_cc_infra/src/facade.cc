@@ -34,11 +34,11 @@ void Facade::operator delete(void*) {
 void Facade::init(const int32_t global_replica_id, tensorflow::OpKernelContext* ctx,
                   const char* ps_config_file, int32_t global_batch_size,
                   int32_t num_replicas_in_sync) {
-  std::call_once(lookup_manager_init_once_flag_, [this, ps_config_file, global_batch_size,
-                                                  num_replicas_in_sync, global_replica_id]() {
-    ps_config = new parameter_server_config{ps_config_file};
-    lookup_manager_->init(*ps_config, global_batch_size, num_replicas_in_sync);
-  });
+  std::call_once(lookup_manager_init_once_flag_,
+                 [this, ps_config_file, global_batch_size, num_replicas_in_sync]() {
+                   ps_config = new parameter_server_config{ps_config_file};
+                   lookup_manager_->init(*ps_config, global_batch_size, num_replicas_in_sync);
+                 });
 }
 
 void Facade::forward(const char* model_name, int32_t table_id, int32_t global_replica_id,

@@ -145,21 +145,26 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                          reinterpret_cast<float*>(emb_vector_ptr), num_keys, table_id);
   this->current_steps_for_each_replica_[global_replica_id]++;
   if (current_steps_for_each_replica_[global_replica_id] ==
-      inference_params.coll_cache_enable_step) {
-    // fixme: only call init when coll cache is enabled
+          inference_params.coll_cache_enable_step &&
+      parameter_server_->ref_ps_config().use_coll_cache) {
+    lookup_session = nullptr;
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " reaches "
+                             << this->current_steps_for_each_replica_[global_replica_id]
+                             << ", calling init pre replica\n";
     init_per_replica(global_replica_id);
+    HCTR_LOG_S(ERROR, WORLD) << "init per replica done\n";
   }
 }
 
 void LookupManager::init_per_replica(const int32_t global_replica_id) {
   initialized_ = true;
-  const parameter_server_config& ps_config = parameter_server_->ref_ps_config();
+  const parameter_server_config ps_config = parameter_server_->ref_ps_config();
   const int32_t num_replicas_in_sync = ps_config.inference_params_array[0].deployed_devices.size();
 
   // Create the HPS for all models on all the deployed devices
   std::vector<uint32_t> rank_vec, freq_vec;
   uint32_t *rank_ptr = nullptr, *freq_ptr = nullptr;
-  auto& freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
+  auto freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
 
   std::call_once(this->atomic_creation_flag_, [&]() {
     HCTR_CHECK_HINT(this->lookup_session_map_.size() == 1, "coll cache supports only 1 model");
@@ -175,6 +180,12 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     for (int32_t i = 1; i < num_replicas_in_sync; i++) {
       freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
     }
+    HCTR_LOG_S(ERROR, WORLD) << "try deleting previous lookup session at tid=" << gettid() << "\n";
+    lookup_session_map_.clear();
+    HCTR_LOG_S(ERROR, WORLD) << "try deleting previous hps at tid=" << gettid() << "\n";
+    parameter_server_ = nullptr;
+    h_values_map_.clear();
+
     rank_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
     freq_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
     freq_recorder->Sort();
