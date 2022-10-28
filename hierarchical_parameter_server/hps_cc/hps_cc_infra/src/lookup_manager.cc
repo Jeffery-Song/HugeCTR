@@ -17,6 +17,12 @@
 #include "lookup_manager.h"
 
 #include "base/debug/logger.hpp"
+#include "coll_cache_lib/atomic_barrier.h"
+#include "coll_cache_lib/facade.h"
+#include "hps/hier_parameter_server.hpp"
+#include "hps/inference_utils.hpp"
+#include "tensorflow/core/framework/op_kernel.h"
+#include "tensorflow/core/platform/stream_executor.h"
 
 namespace HierarchicalParameterServer {
 
@@ -59,6 +65,7 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
 
   // Create the HPS for all models on all the deployed devices
   parameter_server_ = HierParameterServerBase::create(ps_config, ps_config.inference_params_array);
+  current_steps_for_each_replica_.resize(num_replicas_in_sync, 0);
 
   // Initialie the resources for each model
   for (auto& inference_params : ps_config.inference_params_array) {
@@ -87,11 +94,23 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
     }
     h_values_map_.emplace(inference_params.model_name, h_values);
   }
+  this->tf_ctx_list.resize(num_replicas_in_sync);
 }
 
 void LookupManager::forward(const std::string& model_name, int32_t table_id,
                             int32_t global_replica_id, size_t num_keys, size_t emb_vec_size,
                             const void* values_ptr, void* emb_vector_ptr) {
+  if (coll_parameter_server_) {
+    cudaStream_t stream =
+        *reinterpret_cast<const cudaStream_t*>(this->tf_ctx_list[global_replica_id]
+                                                   ->op_device_context()
+                                                   ->stream()
+                                                   ->implementation()
+                                                   ->GpuStreamMemberHack());
+    coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
+                                   model_name, table_id, stream);
+    return;
+  }
   HCTR_CHECK_HINT(initialized_,
                   "hierarchical_parameter_server.Init must be called before execution");
   HCTR_CHECK_HINT(lookup_session_map_.find(model_name) != lookup_session_map_.end(),
@@ -124,6 +143,78 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
   cudaMemcpy(h_values, values_ptr, num_keys * sizeof(size_t), cudaMemcpyDeviceToHost);
   lookup_session->lookup(reinterpret_cast<void*>(h_values),
                          reinterpret_cast<float*>(emb_vector_ptr), num_keys, table_id);
+  this->current_steps_for_each_replica_[global_replica_id]++;
+  if (current_steps_for_each_replica_[global_replica_id] ==
+      inference_params.coll_cache_enable_step) {
+    // fixme: only call init when coll cache is enabled
+    init_per_replica(global_replica_id);
+  }
 }
 
+void LookupManager::init_per_replica(const int32_t global_replica_id) {
+  initialized_ = true;
+  const parameter_server_config& ps_config = parameter_server_->ref_ps_config();
+  const int32_t num_replicas_in_sync = ps_config.inference_params_array[0].deployed_devices.size();
+
+  // Create the HPS for all models on all the deployed devices
+  std::vector<uint32_t> rank_vec, freq_vec;
+  uint32_t *rank_ptr = nullptr, *freq_ptr = nullptr;
+  auto& freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
+
+  std::call_once(this->atomic_creation_flag_, [&]() {
+    HCTR_CHECK_HINT(this->lookup_session_map_.size() == 1, "coll cache supports only 1 model");
+    coll_parameter_server_ = std::make_shared<CollCacheParameterServer>(ps_config);
+    // this->_tensorflow_ctx_list.resize(num_replicas_in_sync);
+  });
+  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+                           << " waits for coll ps creation barrier\n";
+  coll_parameter_server_->barrier();
+
+  if (global_replica_id == 0) {
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
+    for (int32_t i = 1; i < num_replicas_in_sync; i++) {
+      freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
+    }
+    rank_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
+    freq_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
+    freq_recorder->Sort();
+    freq_recorder->GetFreq(freq_vec.data());
+    freq_recorder->GetRankNode(rank_vec.data());
+    rank_ptr = rank_vec.data();
+    freq_ptr = freq_vec.data();
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
+  }
+  coll_parameter_server_->barrier();
+  freq_recorder = nullptr;
+
+  std::function<coll_cache_lib::MemHandle(size_t)> gpu_mem_allocator =
+      [&ctx = tf_ctx_list[global_replica_id]](size_t nbytes) -> coll_cache_lib::MemHandle {
+    auto handle = std::make_shared<HPSMemHandle>();
+    TF_CHECK_OK(ctx->allocate_temp(tensorflow::DataType::DT_UINT8,
+                                   tensorflow::TensorShape({(long)nbytes}),
+                                   &(handle->tensor_hold)));
+    // HCTR_LOG_S(ERROR, WORLD) << "allocated " << nbytes << " at " << handle->ptr() << "\n";
+    return handle;
+  };
+
+  CollCacheParameterServer* ps_ptr =
+      reinterpret_cast<CollCacheParameterServer*>(coll_parameter_server_.get());
+
+  CHECK(ps_config.inference_params_array.size() == 1);
+
+  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " calling init per replica\n";
+  cudaStream_t stream;
+  stream = *reinterpret_cast<const cudaStream_t*>(this->tf_ctx_list[global_replica_id]
+                                                      ->op_device_context()
+                                                      ->stream()
+                                                      ->implementation()
+                                                      ->GpuStreamMemberHack());
+  // stream = tensorflow::GetGpuStream(this->tf_ctx_list[global_replica_id]);
+  ps_ptr->init_per_replica(global_replica_id, rank_ptr, freq_ptr, gpu_mem_allocator, stream);
+  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+                           << " calling init per replica done, doing barrier\n";
+  coll_parameter_server_->barrier();
+  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+                           << " calling init per replica done, doing barrier done\n";
+}
 }  // namespace HierarchicalParameterServer

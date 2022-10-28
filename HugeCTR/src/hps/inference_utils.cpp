@@ -216,6 +216,7 @@ InferenceParams::InferenceParams(
     fill_n(this->default_value_for_each_table.begin(), this->sparse_model_files.size(),
            default_value);
   }
+  max_vocabulary_size.resize(embedding_vecsize_per_table.size());
 }
 
 parameter_server_config::parameter_server_config(const char* hps_json_config_file) {
@@ -234,6 +235,11 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
   // Initialize for each model
   // Open model config file and input model json config
   nlohmann::json hps_config(read_json_file(hps_json_config_file));
+  this->use_coll_cache = get_value_from_json_soft<bool>(hps_config, "use_coll_cache", false);
+  if (hps_config.find("coll_cache_enable_step") != hps_config.end()) {
+    this->coll_cache_enable_step =
+        get_value_from_json<size_t>(hps_config, "coll_cache_enable_step");
+  }
 
   // Parsing HPS Databse backend
   //****Update source parameters.
@@ -390,6 +396,8 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
 
     InferenceParams params(model_name, max_batch_size, hit_rate_threshold, dense_file, sparse_files,
                            device_id, use_gpu_embedding_cache, cache_size_percentage, true);
+    params.use_coll_cache = this->use_coll_cache;
+    params.coll_cache_enable_step = this->coll_cache_enable_step;
     params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int
     params.number_of_worker_buffers_in_pool =
@@ -470,6 +478,18 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
       for (size_t i = 0; i < sparse_model_files.size(); ++i) {
         params.embedding_table_names.emplace_back("sparse_embedding" + std::to_string(i));
       }
+    }
+
+    if (model.find("max_vocabulary_size") != model.end()) {
+      auto max_vocabulary_size = get_json(model, "max_vocabulary_size");
+      params.max_vocabulary_size.clear();
+      if (max_vocabulary_size.is_array()) {
+        for (size_t name_index = 0; name_index < max_vocabulary_size.size(); ++name_index) {
+          params.max_vocabulary_size.emplace_back(max_vocabulary_size[name_index].get<size_t>());
+        }
+      }
+    } else {
+      params.max_vocabulary_size.resize(sparse_model_files.size(), 0);
     }
 
     params.volatile_db = volatile_db_params;

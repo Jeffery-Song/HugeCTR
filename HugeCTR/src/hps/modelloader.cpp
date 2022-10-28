@@ -14,7 +14,11 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
+#include <sys/mman.h>
+
 #include <common.hpp>
+#include <cstddef>
 #include <hps/inference_utils.hpp>
 #include <hps/modelloader.hpp>
 #include <parser.hpp>
@@ -37,6 +41,7 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
 
   std::ifstream key_stream(key_file);
   std::ifstream vec_stream(vec_file);
+  int vec_file_fd = open(vec_file.c_str(), O_RDONLY);
   if (!key_stream.is_open() || !vec_stream.is_open()) {
     HCTR_OWN_THROW(Error_t::WrongInput, "Error: embeddings file not open for reading");
   }
@@ -57,17 +62,32 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
   } else {
     std::vector<long long> i64_key_vec(num_key, 0);
     key_stream.read(reinterpret_cast<char*>(i64_key_vec.data()), key_file_size_in_byte);
+    /** Impl 1*/
+    // #pragma omp parallel for
+    // for (size_t i = 0; i < num_key; i++) {
+    //   embedding_table_->keys[i] = i64_key_vec[i];
+    // }
+    /** Impl 2*/
     std::transform(i64_key_vec.begin(), i64_key_vec.end(), embedding_table_->keys.begin(),
                    [](long long key) { return static_cast<unsigned>(key); });
   }
 
-  embedding_table_->vectors.resize(num_float_val_in_vec_file);
+  /** Impl 1*/
+  // embedding_table_->vectors =
+  //     mmap(nullptr, vec_file_size_in_byte, PROT_READ, MAP_PRIVATE, vec_file_fd, 0);
+  // embedding_table_->umap_len = vec_file_size_in_byte;
+  /** Impl 2*/
+  embedding_table_->vectors.resize((num_float_val_in_vec_file + 0x0fffff) & (~0x0fffff));
   vec_stream.read(reinterpret_cast<char*>(embedding_table_->vectors.data()), vec_file_size_in_byte);
+  HCTR_LOG_S(ERROR, WORLD) << "raw read done\n";
 }
 
 template <typename TKey, typename TValue>
 void RawModelLoader<TKey, TValue>::delete_table() {
   std::vector<TKey>().swap(embedding_table_->keys);
+  /** Impl 1*/
+  // munmap(embedding_table_->vectors, embedding_table_->umap_len);
+  /** Impl 2*/
   std::vector<TValue>().swap(embedding_table_->vectors);
   std::vector<TValue>().swap(embedding_table_->meta);
   delete embedding_table_;
@@ -80,6 +100,9 @@ void* RawModelLoader<TKey, TValue>::getkeys() {
 
 template <typename TKey, typename TValue>
 void* RawModelLoader<TKey, TValue>::getvectors() {
+  /** Impl 1*/
+  // return embedding_table_->vectors;
+  /** Impl 2*/
   return embedding_table_->vectors.data();
 }
 

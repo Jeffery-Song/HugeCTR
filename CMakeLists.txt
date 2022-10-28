@@ -164,6 +164,7 @@ configure_file(${PROJECT_SOURCE_DIR}/HugeCTR/include/config.hpp.in ${PROJECT_SOU
 
 # building
 include_directories(
+  ${PROJECT_SOURCE_DIR}/coll-cache-lib
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/test
   ${PROJECT_SOURCE_DIR}/HugeCTR/include
@@ -211,6 +212,7 @@ else()
 endif()
 
 link_directories(
+  ${PROJECT_SOURCE_DIR}/coll-cache-lib/build
   ${CUDNN_LIB_PATHS}
   ${PARQUET_LIB_PATHS}
   ${NCCL_LIB_PATHS}

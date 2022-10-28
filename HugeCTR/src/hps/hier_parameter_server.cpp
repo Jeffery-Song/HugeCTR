@@ -24,6 +24,12 @@
 #include <hps/rocksdb_backend.hpp>
 #include <regex>
 
+#include "base/debug/logger.hpp"
+#include "coll_cache_lib/atomic_barrier.h"
+#include "coll_cache_lib/common.h"
+#include "coll_cache_lib/facade.h"
+#include "coll_cache_lib/run_config.h"
+
 namespace HugeCTR {
 
 std::string HierParameterServerBase::make_tag_name(const std::string& model_name,
@@ -67,6 +73,11 @@ std::shared_ptr<HierParameterServerBase> HierParameterServerBase::create(
 }
 
 HierParameterServerBase::~HierParameterServerBase() = default;
+
+template <typename TypeHashKey>
+const parameter_server_config& HierParameterServer<TypeHashKey>::ref_ps_config() {
+  return this->ps_config_;
+}
 
 template <typename TypeHashKey>
 HierParameterServer<TypeHashKey>::HierParameterServer(
@@ -725,5 +736,111 @@ void HierParameterServer<TypeHashKey>::insert_embedding_cache(
 
 template class HierParameterServer<long long>;
 template class HierParameterServer<unsigned int>;
+
+CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config& ps_config)
+    : ps_config_(ps_config) {
+  HCTR_PRINT(INFO,
+             "====================================================HPS Coll "
+             "Create====================================================\n");
+  const std::vector<InferenceParams>& inference_params_array = ps_config_.inference_params_array;
+  for (size_t i = 0; i < inference_params_array.size(); i++) {
+    if (inference_params_array[i].volatile_db != inference_params_array[0].volatile_db ||
+        inference_params_array[i].persistent_db != inference_params_array[0].persistent_db) {
+      HCTR_OWN_THROW(
+          Error_t::WrongInput,
+          "Inconsistent database setup. HugeCTR paramter server does currently not support hybrid "
+          "database deployment.");
+    }
+  }
+  if (ps_config_.embedding_vec_size_.size() != inference_params_array.size() ||
+      ps_config_.default_emb_vec_value_.size() != inference_params_array.size()) {
+    HCTR_OWN_THROW(Error_t::WrongInput,
+                   "Wrong input: The size of parameter server parameters are not correct.");
+  }
+
+  if (inference_params_array.size() != 1) {
+    HCTR_OWN_THROW(Error_t::WrongInput, "Coll cache only support single model for now");
+  }
+  auto& inference_params = inference_params_array[0];
+  if (inference_params_array[0].sparse_model_files.size() != 1) {
+    HCTR_OWN_THROW(Error_t::WrongInput, "Coll cache only support single sparse file for now");
+  }
+
+  // Connect to volatile database.
+  // Create input file stream to read the embedding file
+  if (ps_config_.embedding_vec_size_[inference_params.model_name].size() !=
+      inference_params.sparse_model_files.size()) {
+    HCTR_OWN_THROW(Error_t::WrongInput,
+                   "Wrong input: The number of embedding tables in network json file for model " +
+                       inference_params.model_name +
+                       " doesn't match the size of 'sparse_model_files' in configuration.");
+  }
+  // hps assumes disk key file is long-long
+  raw_data_holder = std::shared_ptr<IModelLoader>(
+      ModelLoader<long long, float>::CreateLoader(DBTableDumpFormat_t::Raw));
+  raw_data_holder->load(inference_params.embedding_table_names[0],
+                        inference_params.sparse_model_files[0]);
+  // Get raw format model loader
+  size_t num_key = raw_data_holder->getkeycount();
+  // const size_t embedding_size = ps_config_.embedding_vec_size_[inference_params.model_name][0];
+  // Populate volatile database(s).
+  auto key_ptr = reinterpret_cast<long long*>(raw_data_holder->getkeys());
+#pragma omp parallel for
+  for (long long i = 0; i < num_key; i++) {
+    HCTR_CHECK(key_ptr[i] == i);
+  }
+  // auto val_ptr = reinterpret_cast<const char*>(raw_data_holder->getvectors());
+
+  coll_cache_lib::common::RunConfig::cache_percentage = inference_params.cache_size_percentage;
+  // coll_cache_lib::common::RunConfig::cache_policy = coll_cache_lib::common::kRepCache;
+  // coll_cache_lib::common::RunConfig::cache_policy = coll_cache_lib::common::kCliquePart;
+  coll_cache_lib::common::RunConfig::cache_policy = coll_cache_lib::common::kCollCacheAsymmLink;
+  coll_cache_lib::common::RunConfig::cross_process = false;
+  coll_cache_lib::common::RunConfig::device_id_list = inference_params.deployed_devices;
+  coll_cache_lib::common::RunConfig::num_device = inference_params.deployed_devices.size();
+
+  HCTR_LOG_S(ERROR, WORLD) << "coll ps creation, with "
+                           << ps_config.inference_params_array[0].deployed_devices.size()
+                           << " devices\n";
+  this->global_barrier_ = std::make_shared<coll_cache_lib::common::AtomicBarrier>(
+      ps_config.inference_params_array[0].deployed_devices.size());
+  this->coll_cache_ptr_ = std::make_shared<coll_cache_lib::CollCache>(nullptr, global_barrier_);
+  HCTR_LOG(ERROR, WORLD, "coll ps creation done\n");
+}
+
+void CollCacheParameterServer::init_per_replica(int global_replica_id,
+                                                IdType* ranking_nodes_list_ptr,
+                                                IdType* ranking_nodes_freq_list_ptr,
+                                                std::function<MemHandle(size_t)> gpu_mem_allocator,
+                                                cudaStream_t cu_stream) {
+  void* cpu_data = raw_data_holder->getvectors();
+  double cache_percentage = ps_config_.inference_params_array[0].cache_size_percentage;
+  size_t dim = ps_config_.inference_params_array[0].embedding_vecsize_per_table[0];
+  // hps may be used in hugectr or tensorflow, so we don't know how to allocate memory;
+  size_t num_key = raw_data_holder->getkeycount();
+  HCTR_CHECK_HINT(num_key == ps_config_.inference_params_array[0].max_vocabulary_size[0],
+                  "num key from file must equal with max vocabulary: %d", num_key);
+  auto stream = reinterpret_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
+  HCTR_LOG(ERROR, WORLD, "Calling build_v2\n");
+
+  {
+    int value;
+    cudaDeviceGetAttribute(&value, cudaDevAttrCanUseHostPointerForRegisteredMem,
+                           coll_cache_lib::common::RunConfig::device_id_list[global_replica_id]);
+    HCTR_LOG_S(ERROR, WORLD) << "cudaDevAttrCanUseHostPointerForRegisteredMem is " << value << "\n";
+  }
+
+  this->coll_cache_ptr_->build_v2(global_replica_id, ranking_nodes_list_ptr,
+                                  ranking_nodes_freq_list_ptr, num_key, gpu_mem_allocator, cpu_data,
+                                  dtype, dim, cache_percentage, stream);
+}
+
+void CollCacheParameterServer::lookup(int replica_id, const void* keys, size_t length, void* output,
+                                      const std::string& model_name, size_t table_id,
+                                      cudaStream_t cu_stream) {
+  auto stream = reinterpret_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
+  this->coll_cache_ptr_->lookup(replica_id, reinterpret_cast<const uint32_t*>(keys), length, output,
+                                stream);
+}
 
 }  // namespace HugeCTR

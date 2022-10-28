@@ -20,6 +20,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <iostream>
+#include <limits>
 #include <map>
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -195,6 +196,8 @@ struct UpdateSourceParams {
 enum class PSUpdateSource_t { None, Kafka };
 
 struct InferenceParams {
+  bool use_coll_cache = false;
+  size_t coll_cache_enable_step;
   std::string model_name;
   size_t max_batchsize;
   float hit_rate_threshold;
@@ -214,6 +217,7 @@ struct InferenceParams {
   float cache_refresh_percentage_per_iteration;
   std::vector<int> deployed_devices;
   std::vector<float> default_value_for_each_table;
+  std::vector<size_t> max_vocabulary_size;
   // Database backend.
   VolatileDatabaseParams volatile_db;
   PersistentDatabaseParams persistent_db;
@@ -256,6 +260,8 @@ struct InferenceParams {
 };
 
 struct parameter_server_config {
+  bool use_coll_cache = false;
+  size_t coll_cache_enable_step = std::numeric_limits<size_t>::max();
   std::map<std::string, size_t> model_name_id_map_;
   // Each vector should have size of M(# of models), where each element in the vector should be a
   // vector with size E(# of embedding tables in that model)

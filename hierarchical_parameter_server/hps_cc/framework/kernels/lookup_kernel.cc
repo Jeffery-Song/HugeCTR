@@ -55,9 +55,9 @@ class Lookup : public OpKernel {
 
     // do forward propagation
     try {
-      HierarchicalParameterServer::Facade::instance()->forward(model_name_.c_str(), table_id_,
-                                                               global_replica_id_value,
-                                                               values_tensor, emb_vector_tensor);
+      HierarchicalParameterServer::Facade::instance()->forward(
+          model_name_.c_str(), table_id_, global_replica_id_value, values_tensor, emb_vector_tensor,
+          ctx);
     } catch (std::exception const &error) {
       ctx->SetStatus(errors::Aborted(error.what()));
       return;

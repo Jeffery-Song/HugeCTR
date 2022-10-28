@@ -14,12 +14,16 @@
 cmake_minimum_required(VERSION 3.8)
 set(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPSTL_USE_PARALLEL_POLICIES=0")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
+
+link_directories(
+  /hugectr_dev/coll-cache-lib/build
+)
 
 file(GLOB_RECURSE hps_cc_infra_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cc *.cpp *.cu)
 add_library(hps_cc_infra SHARED ${hps_cc_infra_src})
-target_link_libraries(hps_cc_infra PUBLIC huge_ctr_hps ${CUDA_LIBRARIES} ${TF_LINK_FLAGS})
+target_link_libraries(hps_cc_infra PUBLIC huge_ctr_hps ${CUDA_LIBRARIES} ${TF_LINK_FLAGS} coll_cache)
 
 target_compile_features(huge_ctr_hps PUBLIC cxx_std_17)
 set_target_properties(huge_ctr_hps PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)

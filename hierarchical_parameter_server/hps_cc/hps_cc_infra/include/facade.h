@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include "hps/inference_utils.hpp"
 #include "lookup_manager.h"
 #include "tensorflow/core/framework/op_kernel.h"
 
@@ -37,10 +38,13 @@ class Facade final {
  public:
   static Facade* instance();
   void operator delete(void*);
-  void init(const char* ps_config_file, const int32_t global_batch_size,
+  void init(const int32_t global_replica_id, tensorflow::OpKernelContext* ctx,
+            const char* ps_config_file, const int32_t global_batch_size,
             const int32_t num_replicas_in_sync);
   void forward(const char* model_name, const int32_t table_id, const int32_t global_replica_id,
-               const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor);
+               const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor,
+               tensorflow::OpKernelContext* ctx);
+  parameter_server_config* ps_config;
 };
 
 }  // namespace HierarchicalParameterServer

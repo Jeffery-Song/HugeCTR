@@ -84,6 +84,7 @@ foreach(arch_name ${cuda_arch_list})
     set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -gencode arch=compute_${arch_name},code=sm_${arch_name}")
 endforeach()
 
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DPSTL_USE_PARALLEL_POLICIES=0")
 if (${CMAKE_BUILD_TYPE} MATCHES "Release")
     set(CMAKE_C_FLAGS    "${CMAKE_C_FLAGS} -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-format-truncation -Wno-sign-compare -Wno-error=stringop-overflow=")
     set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Werror -Wno-unknown-pragmas -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -Wno-maybe-uninitialized -Wno-format-truncation -Wno-sign-compare -Wno-error=stringop-overflow=")
@@ -112,6 +113,7 @@ endif()
 
 # headers
 include_directories(
+    ${PROJECT_SOURCE_DIR}/../coll-cache-lib
     ${PROJECT_SOURCE_DIR}/hps_cc/hps_cc_infra/include/
     ${PROJECT_SOURCE_DIR}/hps_cc/framework/kernels/
     ${PROJECT_SOURCE_DIR}/../
@@ -153,6 +155,7 @@ endif()
 # libs
 link_directories(
     ${TF_LINK_DIR}
+    /hugectr_dev/coll-cache-lib/build
 )
 
 # building HPS infra C++ code
@@ -170,7 +173,7 @@ file(GLOB framework
 # build dynamic lib
 add_library(hierarchical_parameter_server SHARED ${framework})
 
-target_link_libraries(hierarchical_parameter_server PUBLIC ${TF_LINK_FLAGS} hps_cc_infra)
+target_link_libraries(hierarchical_parameter_server PUBLIC ${TF_LINK_FLAGS} coll_cache hps_cc_infra)
 target_compile_features(hierarchical_parameter_server PUBLIC cxx_std_17)
 set_target_properties(hierarchical_parameter_server PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 set_target_properties(hierarchical_parameter_server PROPERTIES CUDA_ARCHITECTURES OFF)

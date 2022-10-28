@@ -18,6 +18,8 @@
 #include <hps/inference_utils.hpp>
 #include <memory>
 
+#include "coll_cache_lib/freq_recorder.h"
+
 namespace HugeCTR {
 
 class LookupSessionBase {
@@ -36,6 +38,7 @@ class LookupSessionBase {
   static std::shared_ptr<LookupSessionBase> create(
       const InferenceParams& inference_params,
       const std::shared_ptr<EmbeddingCacheBase>& embedding_cache);
+  std::shared_ptr<coll_cache_lib::common::FreqRecorder> freq_recorder_;
 };
 
 }  // namespace HugeCTR

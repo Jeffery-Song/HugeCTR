@@ -24,10 +24,15 @@ list(APPEND huge_ctr_hps_src
   "../thread_pool.cpp"
 )
 
+set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DPSTL_USE_PARALLEL_POLICIES=0")
+link_directories(
+  /hugectr_dev/coll-cache-lib/build
+)
+
 set(CMAKE_CXX_STANDARD 17)
 add_library(huge_ctr_hps SHARED ${huge_ctr_hps_src})
 
-target_link_libraries(huge_ctr_hps PUBLIC gpu_cache tbb hiredis redis++ rocksdb-shared rdkafka)
+target_link_libraries(huge_ctr_hps PUBLIC gpu_cache coll_cache tbb hiredis redis++ rocksdb-shared rdkafka)
 
 target_compile_features(huge_ctr_hps PUBLIC cxx_std_17)
 target_link_libraries(huge_ctr_hps PUBLIC numa )

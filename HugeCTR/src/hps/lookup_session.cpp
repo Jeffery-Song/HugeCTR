@@ -17,6 +17,8 @@
 #include <hps/lookup_session.hpp>
 #include <utils.hpp>
 
+#include "coll_cache_lib/freq_recorder.h"
+
 namespace HugeCTR {
 
 // LookupSessionBase::~LookupSessionBase() = default;
@@ -31,6 +33,13 @@ LookupSession::LookupSession(const InferenceParams& inference_params,
                              const std::shared_ptr<EmbeddingCacheBase>& embedding_cache)
     : LookupSessionBase(), embedding_cache_(embedding_cache), inference_params_(inference_params) {
   try {
+    if (inference_params_.use_coll_cache) {
+      embedding_cache_->get_cache_config();
+      HCTR_CHECK_HINT(inference_params_.max_vocabulary_size.size() == 1,
+                      "Coll Cache supports only 1 model");
+      this->freq_recorder_ = std::make_shared<coll_cache_lib::common::FreqRecorder>(
+          inference_params_.max_vocabulary_size[0]);
+    }
     if (inference_params_.use_gpu_embedding_cache &&
         embedding_cache_->get_device_id() != inference_params_.device_id) {
       HCTR_OWN_THROW(
@@ -64,6 +73,15 @@ void LookupSession::lookup(const void* const h_keys, float* const d_vectors, con
   // embedding_cache lookup
   embedding_cache_->lookup(table_id, d_vectors, h_keys, num_keys,
                            inference_params_.hit_rate_threshold, lookup_streams_[table_id]);
+  if (freq_recorder_) {
+    if (inference_params_.i64_input_key) {
+      freq_recorder_->Record(reinterpret_cast<const coll_cache_lib::common::Id64Type*>(h_keys),
+                             num_keys);
+    } else {
+      freq_recorder_->Record(reinterpret_cast<const coll_cache_lib::common::IdType*>(h_keys),
+                             num_keys);
+    }
+  }
   HCTR_LIB_THROW(cudaStreamSynchronize(lookup_streams_[table_id]));
 }
 
