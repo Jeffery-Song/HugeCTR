@@ -8,13 +8,14 @@
         "embedding_vecsize_per_table": [128],
         "maxnum_catfeature_query_per_table_per_sample": [260],
         "default_value_for_each_table": [1.0],
-        "deployed_device_list": [0,1],
-        "max_batch_size": 8,
+        "deployed_device_list": [0,1,2,3,4,5,6,7],
+        "max_batch_size": 8192,
         "i64_input_key": false,
         "cache_refresh_percentage_per_iteration": 0.2,
         "hit_rate_threshold": 1.0,
-        "gpucacheper": 1.0,
-        "gpucache": true
+        "gpucacheper": 0.5,
+        "gpucache": true,
+        "max_vocabulary_size":[187767399]
         }
     ]
 }

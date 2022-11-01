@@ -6,12 +6,12 @@ import yaml
 import atexit
 
 args = dict()
-args["gpu_num"] = 2                               # the number of available GPUs
-args["iter_num"] = 1024                           # the number of training iteration
+args["gpu_num"] = 8                               # the number of available GPUs
+args["iter_num"] = 16                           # the number of training iteration
 args["slot_num"] = 26                             # the number of feature fields in this embedding layer
 args["embed_vec_size"] = 128                      # the dimension of embedding vectors
 args["dense_dim"] = 13                            # the dimension of dense features
-args["global_batch_size"] = 8                    # the globally batchsize for all GPUs
+args["global_batch_size"] = 8192                    # the globally batchsize for all GPUs
 args["max_nnz"] = 10                # the max number of non-zeros for all slots
 args["combiner"] = "mean"
 args["ps_config_file"] = "dlrm.json"
@@ -38,9 +38,9 @@ for i in range(26):
     ranges[i][1] = max_range + feature_cat
     max_range += feature_cat
 args["vocabulary_range_per_slot"] = ranges
-args["max_vocabulary_size"] = max_range + 1
-args["max_vocabulary_size_per_gpu"] = (max_range + 1) // args["gpu_num"]
-if ((max_range + 1) % args["gpu_num"]) != 0:
+args["max_vocabulary_size"] = max_range
+args["max_vocabulary_size_per_gpu"] = (max_range) // args["gpu_num"]
+if ((max_range) % args["gpu_num"]) != 0:
     args["max_vocabulary_size_per_gpu"] += 1
 print(args['max_vocabulary_size'])
 
@@ -50,17 +50,24 @@ os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 def generate_random_samples(num_samples, vocabulary_range_per_slot, max_nnz, dense_dim):
     def generate_sparse_keys(num_samples, vocabulary_range_per_slot, max_nnz, key_dtype = args["np_key_type"]):
         slot_num = len(vocabulary_range_per_slot)
-        indices = []
-        values = []
+        indices = np.zeros((max_nnz * slot_num * num_samples,3), key_dtype)
+        values = np.zeros((max_nnz * slot_num * num_samples,), key_dtype)
+        current_elems = 0
         for i in range(num_samples):
             for j in range(slot_num):
                 vocab_range = vocabulary_range_per_slot[j]
                 nnz = np.random.randint(low=1, high=max_nnz+1)
-                entries = sorted(np.random.choice(max_nnz, nnz, replace=False))
-                for entry in entries:
-                    indices.append([i, j, entry])
-                values.extend(np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(nnz, )))
-        values = np.array(values, dtype=key_dtype)
+                entries = np.random.choice(max_nnz, nnz, replace=False)
+                entries.sort()
+                indices[current_elems:current_elems+nnz, 2] = entries
+                indices[current_elems:current_elems+nnz, 0] = i
+                indices[current_elems:current_elems+nnz, 1] = j
+                values[current_elems:current_elems+nnz] = np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(nnz, ))
+                current_elems += nnz
+            if i % 100 == 0:
+                print(i,slot_num,num_samples)
+        values = values[:current_elems]
+        indices = indices[:current_elems, :]
         return tf.sparse.SparseTensor(indices = indices,
                                     values = values,
                                     dense_shape = (num_samples, slot_num, max_nnz))
