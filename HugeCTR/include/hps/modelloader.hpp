@@ -53,6 +53,7 @@ struct UnifiedEmbeddingTable {
  */
 class IModelLoader {
  public:
+  static std::shared_ptr<IModelLoader> preserved_model_loader;
   ~IModelLoader() = default;
   /**
    * Load the contents of the model file with difference format into a into a

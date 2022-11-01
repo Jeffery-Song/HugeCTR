@@ -27,6 +27,8 @@
 
 namespace HugeCTR {
 
+std::shared_ptr<IModelLoader> IModelLoader::preserved_model_loader = nullptr;
+
 template <typename TKey, typename TValue>
 RawModelLoader<TKey, TValue>::RawModelLoader() : IModelLoader() {
   HCTR_LOG_S(DEBUG, WORLD) << "Created raw model loader in local memory!" << std::endl;

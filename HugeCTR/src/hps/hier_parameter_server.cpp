@@ -190,7 +190,13 @@ HierParameterServer<TypeHashKey>::~HierParameterServer() {
 template <typename TypeHashKey>
 void HierParameterServer<TypeHashKey>::update_database_per_model(
     const InferenceParams& inference_params) {
+  if (ps_config_.use_coll_cache) {
+    HCTR_CHECK_HINT(IModelLoader::preserved_model_loader == nullptr, "Only single model supported");
+    HCTR_CHECK_HINT(inference_params.sparse_model_files.size() == 1,
+                    "Only single sparse file in model is supported");
+  }
   IModelLoader* rawreader = ModelLoader<TypeHashKey, float>::CreateLoader(DBTableDumpFormat_t::Raw);
+  IModelLoader::preserved_model_loader = std::shared_ptr<IModelLoader>(rawreader);
   // Create input file stream to read the embedding file
   for (size_t j = 0; j < inference_params.sparse_model_files.size(); j++) {
     if (ps_config_.embedding_vec_size_[inference_params.model_name].size() !=
@@ -241,7 +247,9 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
                               << persistent_db_->get_name() << ")." << std::endl;
     }
   }
-  rawreader->delete_table();
+  if (!ps_config_.use_coll_cache) {
+    rawreader->delete_table();
+  }
 
   // Connect to online update service (if configured).
   // TODO: Maybe need to change the location where this is initialized.
@@ -776,17 +784,14 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
                        " doesn't match the size of 'sparse_model_files' in configuration.");
   }
   // hps assumes disk key file is long-long
-  raw_data_holder = std::shared_ptr<IModelLoader>(
-      ModelLoader<long long, float>::CreateLoader(DBTableDumpFormat_t::Raw));
-  raw_data_holder->load(inference_params.embedding_table_names[0],
-                        inference_params.sparse_model_files[0]);
+  raw_data_holder = IModelLoader::preserved_model_loader;
   // Get raw format model loader
   size_t num_key = raw_data_holder->getkeycount();
   // const size_t embedding_size = ps_config_.embedding_vec_size_[inference_params.model_name][0];
   // Populate volatile database(s).
-  auto key_ptr = reinterpret_cast<long long*>(raw_data_holder->getkeys());
+  auto key_ptr = reinterpret_cast<uint32_t*>(raw_data_holder->getkeys());
 #pragma omp parallel for
-  for (long long i = 0; i < num_key; i++) {
+  for (uint32_t i = 0; i < num_key; i++) {
     HCTR_CHECK(key_ptr[i] == i);
   }
   // auto val_ptr = reinterpret_cast<const char*>(raw_data_holder->getvectors());
