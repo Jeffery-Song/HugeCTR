@@ -194,7 +194,7 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
                                          float const hit_rate_threshold, cudaStream_t stream) {
   MemoryBlock* memory_block = nullptr;
   while (memory_block == nullptr) {
-    memory_block = reinterpret_cast<struct MemoryBlock*>(parameter_server_->apply_buffer(
+    memory_block = reinterpret_cast<MemoryBlock*>(parameter_server_->apply_buffer(
         cache_config_.model_name_, cache_config_.cuda_dev_id_, CACHE_SPACE_TYPE::WORKER));
   }
   EmbeddingCacheWorkspace workspace_handler = memory_block->worker_buffer;

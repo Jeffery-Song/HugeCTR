@@ -197,7 +197,7 @@ enum class PSUpdateSource_t { None, Kafka };
 
 struct InferenceParams {
   bool use_coll_cache = false;
-  size_t coll_cache_enable_step;
+  size_t coll_cache_enable_iter;
   std::string model_name;
   size_t max_batchsize;
   float hit_rate_threshold;
@@ -261,7 +261,7 @@ struct InferenceParams {
 
 struct parameter_server_config {
   bool use_coll_cache = false;
-  size_t coll_cache_enable_step = std::numeric_limits<size_t>::max();
+  size_t coll_cache_enable_iter = std::numeric_limits<size_t>::max();
   std::map<std::string, size_t> model_name_id_map_;
   // Each vector should have size of M(# of models), where each element in the vector should be a
   // vector with size E(# of embedding tables in that model)

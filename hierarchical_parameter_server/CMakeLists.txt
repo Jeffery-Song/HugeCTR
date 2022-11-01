@@ -155,7 +155,7 @@ endif()
 # libs
 link_directories(
     ${TF_LINK_DIR}
-    /hugectr_dev/coll-cache-lib/build
+    ${PROJECT_SOURCE_DIR}/../coll-cache-lib/build
 )
 
 # building HPS infra C++ code

@@ -32,6 +32,7 @@ def _GetHPSVersion():
     sys.path.pop(-1)
     return version
 
+CONDA_PREFIX=os.getenv("CONDA_PREFIX")
 
 def get_cmake_args():
     gpu_capabilities = ["70", "75", "80"]
@@ -50,6 +51,7 @@ def get_cmake_args():
     cmake_args = [
         "-DSM='{}'".format(";".join(gpu_capabilities)),
         "-DCMAKE_BUILD_TYPE={}".format(cmake_build_type),
+        f"-DCMAKE_PREFIX_PATH={CONDA_PREFIX}",
     ]
     return cmake_args
 

@@ -801,7 +801,8 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
 
   HCTR_LOG_S(ERROR, WORLD) << "coll ps creation, with "
                            << ps_config.inference_params_array[0].deployed_devices.size()
-                           << " devices\n";
+                           << " devices, using policy "
+                           << coll_cache_lib::common::RunConfig::cache_policy << "\n";
   this->global_barrier_ = std::make_shared<coll_cache_lib::common::AtomicBarrier>(
       ps_config.inference_params_array[0].deployed_devices.size());
   this->coll_cache_ptr_ = std::make_shared<coll_cache_lib::CollCache>(nullptr, global_barrier_);

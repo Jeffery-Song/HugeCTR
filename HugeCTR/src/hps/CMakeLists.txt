@@ -26,7 +26,7 @@ list(APPEND huge_ctr_hps_src
 
 set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -DPSTL_USE_PARALLEL_POLICIES=0")
 link_directories(
-  /hugectr_dev/coll-cache-lib/build
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../../coll-cache-lib/build
 )
 
 set(CMAKE_CXX_STANDARD 17)

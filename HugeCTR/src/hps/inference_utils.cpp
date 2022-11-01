@@ -236,9 +236,9 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
   // Open model config file and input model json config
   nlohmann::json hps_config(read_json_file(hps_json_config_file));
   this->use_coll_cache = get_value_from_json_soft<bool>(hps_config, "use_coll_cache", false);
-  if (hps_config.find("coll_cache_enable_step") != hps_config.end()) {
-    this->coll_cache_enable_step =
-        get_value_from_json<size_t>(hps_config, "coll_cache_enable_step");
+  if (hps_config.find("coll_cache_enable_iter") != hps_config.end()) {
+    this->coll_cache_enable_iter =
+        get_value_from_json<size_t>(hps_config, "coll_cache_enable_iter");
   }
 
   // Parsing HPS Databse backend
@@ -397,7 +397,7 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
     InferenceParams params(model_name, max_batch_size, hit_rate_threshold, dense_file, sparse_files,
                            device_id, use_gpu_embedding_cache, cache_size_percentage, true);
     params.use_coll_cache = this->use_coll_cache;
-    params.coll_cache_enable_step = this->coll_cache_enable_step;
+    params.coll_cache_enable_iter = this->coll_cache_enable_iter;
     params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int
     params.number_of_worker_buffers_in_pool =

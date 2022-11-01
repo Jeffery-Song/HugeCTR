@@ -145,7 +145,7 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                          reinterpret_cast<float*>(emb_vector_ptr), num_keys, table_id);
   this->current_steps_for_each_replica_[global_replica_id]++;
   if (current_steps_for_each_replica_[global_replica_id] ==
-          inference_params.coll_cache_enable_step &&
+          inference_params.coll_cache_enable_iter &&
       parameter_server_->ref_ps_config().use_coll_cache) {
     lookup_session = nullptr;
     HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " reaches "
@@ -180,9 +180,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     for (int32_t i = 1; i < num_replicas_in_sync; i++) {
       freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
     }
-    HCTR_LOG_S(ERROR, WORLD) << "try deleting previous lookup session at tid=" << gettid() << "\n";
     lookup_session_map_.clear();
-    HCTR_LOG_S(ERROR, WORLD) << "try deleting previous hps at tid=" << gettid() << "\n";
     parameter_server_ = nullptr;
     h_values_map_.clear();
 

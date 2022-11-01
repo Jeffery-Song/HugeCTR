@@ -18,7 +18,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DPSTL_USE_PARALLEL_POLICIES=0")
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS}")
 
 link_directories(
-  /hugectr_dev/coll-cache-lib/build
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../../coll-cache-lib/build
 )
 
 file(GLOB_RECURSE hps_cc_infra_src RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.cc *.cpp *.cu)
