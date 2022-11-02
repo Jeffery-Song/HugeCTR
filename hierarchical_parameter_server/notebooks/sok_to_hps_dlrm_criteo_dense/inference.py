@@ -6,6 +6,7 @@ import tensorflow as tf
 from tqdm import tqdm
 import yaml
 import atexit
+from numba import njit
 
 args = dict()
 args["gpu_num"] = 8                               # the number of available GPUs
@@ -49,16 +50,23 @@ os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim):
+    vocabulary_range_per_slot = np.array(vocabulary_range_per_slot)
+    num_slots = vocabulary_range_per_slot.shape[0]
+    @njit(parallel=True)
     def generate_dense_keys(num_samples, vocabulary_range_per_slot, key_dtype = args["np_key_type"]):
-        dense_keys = list()
-        for vocab_range in vocabulary_range_per_slot:
-            keys_per_slot = np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(num_samples, 1), dtype=key_dtype)
-            dense_keys.append(keys_per_slot)
-        dense_keys = np.concatenate(np.array(dense_keys), axis = 1)
+        dense_keys = np.empty((num_samples, num_slots), key_dtype)
+        for i in range(num_slots):
+            vocab_range = vocabulary_range_per_slot[i]
+            keys_per_slot = np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(num_samples)).astype(key_dtype)
+            dense_keys[:, i] = keys_per_slot
         return dense_keys
     cat_keys = generate_dense_keys(num_samples, vocabulary_range_per_slot)
-    dense_features = np.random.random((num_samples, dense_dim)).astype(np.float32)
-    labels = np.random.randint(low=0, high=2, size=(num_samples, 1))
+    @njit(parallel=True)
+    def generate_cont_feats(num_samples, dense_dim):
+        dense_features = np.random.random((num_samples, dense_dim)).astype(np.float32)
+        labels = np.random.randint(low=0, high=2, size=(num_samples, 1))
+        return dense_features, labels
+    dense_features, labels = generate_cont_feats(num_samples, dense_dim)
     return cat_keys, dense_features, labels
 
 def tf_dataset(sparse_keys, dense_features, labels, batchsize):
