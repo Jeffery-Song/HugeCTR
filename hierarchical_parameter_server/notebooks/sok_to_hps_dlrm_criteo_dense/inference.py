@@ -3,6 +3,7 @@ import hierarchical_parameter_server as hps
 import os
 import numpy as np
 import tensorflow as tf
+from tqdm import tqdm
 import yaml
 import atexit
 
@@ -63,6 +64,8 @@ def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim):
 def tf_dataset(sparse_keys, dense_features, labels, batchsize):
     dataset = tf.data.Dataset.from_tensor_slices((sparse_keys, dense_features, labels))
     dataset = dataset.batch(batchsize, drop_remainder=True)
+    # dataset = dataset.prefetch(8)
+    dataset = dataset.cache()
     return dataset
 
 
@@ -108,7 +111,7 @@ def inference_with_saved_model(args):
         model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"])
         model.summary()
     # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
-    # atexit.register(strategy._extended._collective_ops._pool.close) # type: ignore
+    atexit.register(strategy._extended._collective_ops._pool.close) # type: ignore
 
     @tf.function
     def _infer_step(inputs, labels):
@@ -125,31 +128,35 @@ def inference_with_saved_model(args):
     #     replica_batch_size = input_context.get_per_replica_batch_size(args["global_batch_size"])
     #     sparse_keys, dense_features, labels = generate_random_samples(args["global_batch_size"]  * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"])
     #     dataset = tf_dataset(sparse_keys, dense_features, labels, replica_batch_size)
-    #     # dataset.cache()
     #     dataset = dataset.shard(input_context.num_input_pipelines, input_context.input_pipeline_id)
-    #     dataset = dataset.prefetch(8)
-    #     dataset.cache()
     #     return dataset
 
-    # dataset = strategy.distribute_datasets_from_function(_dataset_fn, tf.distribute.InputOptions(
+    # # with strategy.scope():
+    # dataset = strategy.distribute_datasets_from_function(_dataset_fn
+    # , tf.distribute.InputOptions(
     #     experimental_fetch_to_device=True,
-    #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_REPLICA,
+    #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
     #     experimental_place_dataset_on_device=False,
     #     experimental_per_replica_buffer_size=8
-    # ))
+    # )
+    # )
 
     def _dataset_fn():
         sparse_keys, dense_features, labels = generate_random_samples(args["global_batch_size"]  * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"])
         dataset = tf_dataset(sparse_keys, dense_features, labels, args["global_batch_size"])
-        dataset = dataset.prefetch(8)
-        dataset.cache()
         return dataset
-    dataset = strategy.experimental_distribute_dataset(_dataset_fn(), tf.distribute.InputOptions(
-        experimental_fetch_to_device=True,
-        experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
-        experimental_place_dataset_on_device=True,
-        experimental_per_replica_buffer_size=100
-    ))
+    dataset = strategy.experimental_distribute_dataset(_dataset_fn()
+        # , tf.distribute.InputOptions(
+        #     experimental_fetch_to_device=True,
+        #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
+        #     experimental_place_dataset_on_device=True,
+        #     experimental_per_replica_buffer_size=2
+        # )
+    )
+    for _ in tqdm(dataset, "warm dataset"):
+        pass
+    for _ in tqdm(dataset, "dataset shoulded be warm"):
+        pass
     ds_time = 0
     md_time = 0
     dataset_iter = iter(dataset)
@@ -159,6 +166,7 @@ def inference_with_saved_model(args):
         sparse_keys, dense_features, labels = next(dataset_iter)
         t1 = time.time()
         inputs = [sparse_keys, dense_features]
+        # logits = strategy.run(_infer_step, args=(inputs, labels))
         logits = _whole_infer_step((inputs, labels))
         t2 = time.time()
         ds_time += t1 - t0
