@@ -24,6 +24,7 @@ args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 args["optimizer"] = "plugin_adam"
+args["dataset_path"] = "saved_dataset"
 
 # load vocabulary_range_per_slot from yaml file
 file = open('criteo_full.yaml', 'r', encoding="utf-8")
@@ -48,34 +49,6 @@ print(args['max_vocabulary_size'])
 
 os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
 os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
-
-def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim):
-    vocabulary_range_per_slot = np.array(vocabulary_range_per_slot)
-    num_slots = vocabulary_range_per_slot.shape[0]
-    @njit(parallel=True)
-    def generate_dense_keys(num_samples, vocabulary_range_per_slot, key_dtype = args["np_key_type"]):
-        dense_keys = np.empty((num_samples, num_slots), key_dtype)
-        for i in range(num_slots):
-            vocab_range = vocabulary_range_per_slot[i]
-            keys_per_slot = np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(num_samples)).astype(key_dtype)
-            dense_keys[:, i] = keys_per_slot
-        return dense_keys
-    cat_keys = generate_dense_keys(num_samples, vocabulary_range_per_slot)
-    @njit(parallel=True)
-    def generate_cont_feats(num_samples, dense_dim):
-        dense_features = np.random.random((num_samples, dense_dim)).astype(np.float32)
-        labels = np.random.randint(low=0, high=2, size=(num_samples, 1))
-        return dense_features, labels
-    dense_features, labels = generate_cont_feats(num_samples, dense_dim)
-    return cat_keys, dense_features, labels
-
-def tf_dataset(sparse_keys, dense_features, labels, batchsize):
-    dataset = tf.data.Dataset.from_tensor_slices((sparse_keys, dense_features, labels))
-    dataset = dataset.batch(batchsize, drop_remainder=True)
-    # dataset = dataset.prefetch(8)
-    dataset = dataset.cache()
-    return dataset
-
 
 class InferenceModel(tf.keras.models.Model):
     def __init__(self,
@@ -150,8 +123,17 @@ def inference_with_saved_model(args):
     # )
 
     def _dataset_fn():
-        sparse_keys, dense_features, labels = generate_random_samples(args["global_batch_size"]  * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"])
-        dataset = tf_dataset(sparse_keys, dense_features, labels, args["global_batch_size"])
+        dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
+        options = tf.data.Options()
+        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+        dataset = dataset.with_options(options)
+        if dataset.element_spec[0].shape[0] != args["global_batch_size"]:
+            print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], args["global_batch_size"]))
+            dataset = dataset.unbatch().batch(args["global_batch_size"], num_parallel_calls=56)
+        else:
+            print("loaded dataset has batch size we need, so directly use it")
+        # dataset = dataset.batch(args["global_batch_size"], num_parallel_calls=56).cache()
+        dataset = dataset.cache()
         return dataset
     dataset = strategy.experimental_distribute_dataset(_dataset_fn()
         # , tf.distribute.InputOptions(
