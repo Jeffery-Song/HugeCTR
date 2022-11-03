@@ -262,6 +262,9 @@ struct InferenceParams {
 struct parameter_server_config {
   bool use_coll_cache = false;
   size_t coll_cache_enable_iter = std::numeric_limits<size_t>::max();
+  size_t iteration_per_epoch = 0;
+  size_t epoch = 0;
+  int coll_cache_policy = 13;
   std::map<std::string, size_t> model_name_id_map_;
   // Each vector should have size of M(# of models), where each element in the vector should be a
   // vector with size E(# of embedding tables in that model)

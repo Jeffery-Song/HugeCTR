@@ -799,10 +799,16 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
   coll_cache_lib::common::RunConfig::cache_percentage = inference_params.cache_size_percentage;
   // coll_cache_lib::common::RunConfig::cache_policy = coll_cache_lib::common::kRepCache;
   // coll_cache_lib::common::RunConfig::cache_policy = coll_cache_lib::common::kCliquePart;
-  coll_cache_lib::common::RunConfig::cache_policy = coll_cache_lib::common::kCollCacheAsymmLink;
+  coll_cache_lib::common::RunConfig::cache_policy =
+      (coll_cache_lib::common::CachePolicy)ps_config_.coll_cache_policy;
   coll_cache_lib::common::RunConfig::cross_process = false;
   coll_cache_lib::common::RunConfig::device_id_list = inference_params.deployed_devices;
   coll_cache_lib::common::RunConfig::num_device = inference_params.deployed_devices.size();
+
+  coll_cache_lib::common::RunConfig::num_global_step_per_epoch =
+      ps_config.iteration_per_epoch * coll_cache_lib::common::RunConfig::num_device;
+  coll_cache_lib::common::RunConfig::num_epoch = ps_config.epoch;
+  coll_cache_lib::common::RunConfig::num_total_item = num_key;
 
   HCTR_LOG_S(ERROR, WORLD) << "coll ps creation, with "
                            << ps_config.inference_params_array[0].deployed_devices.size()
@@ -843,10 +849,11 @@ void CollCacheParameterServer::init_per_replica(int global_replica_id,
 
 void CollCacheParameterServer::lookup(int replica_id, const void* keys, size_t length, void* output,
                                       const std::string& model_name, size_t table_id,
-                                      cudaStream_t cu_stream) {
+                                      cudaStream_t cu_stream, uint64_t iter_key) {
   auto stream = reinterpret_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
+  auto step_key = iter_key * coll_cache_lib::common::RunConfig::num_device + replica_id;
   this->coll_cache_ptr_->lookup(replica_id, reinterpret_cast<const uint32_t*>(keys), length, output,
-                                stream);
+                                stream, step_key);
 }
 
 }  // namespace HugeCTR

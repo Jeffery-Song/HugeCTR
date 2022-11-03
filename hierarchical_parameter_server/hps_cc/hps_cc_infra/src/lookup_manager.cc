@@ -108,7 +108,9 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                                    ->implementation()
                                                    ->GpuStreamMemberHack());
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
-                                   model_name, table_id, stream);
+                                   model_name, table_id, stream,
+                                   this->current_steps_for_each_replica_[global_replica_id]);
+    this->current_steps_for_each_replica_[global_replica_id]++;
     return;
   }
   HCTR_CHECK_HINT(initialized_,
@@ -153,6 +155,7 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                              << ", calling init pre replica\n";
     init_per_replica(global_replica_id);
     HCTR_LOG_S(ERROR, WORLD) << "init per replica done\n";
+    this->current_steps_for_each_replica_[global_replica_id] = 0;
   }
 }
 
