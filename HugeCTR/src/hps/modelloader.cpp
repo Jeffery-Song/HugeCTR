@@ -75,12 +75,26 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
   }
 
   /** Impl 1*/
-  // embedding_table_->vectors =
-  //     mmap(nullptr, vec_file_size_in_byte, PROT_READ, MAP_PRIVATE, vec_file_fd, 0);
-  // embedding_table_->umap_len = vec_file_size_in_byte;
+  std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
+  HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr, "Env HPS_WORKER_ID must be set before loading hps lib\n");
+  int fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+  HCTR_CHECK_HINT(fd != -1, "shm open vec file shm failed\n");
+  int ret = ftruncate(fd, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff);
+  HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
+  embedding_table_->vectors_ptr = mmap(nullptr, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff,
+                                       PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+  HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
+  if (std::stoi(getenv("HPS_WORKER_ID")) == 0) {
+    HCTR_LOG_S(ERROR, WORLD) << "I'm worker 0, I should read the data " << vec_file_size_in_byte
+                             << "\n";
+    embedding_table_->umap_len = vec_file_size_in_byte;
+    vec_stream.read(reinterpret_cast<char*>(embedding_table_->vectors_ptr), vec_file_size_in_byte);
+  }
+
   /** Impl 2*/
-  embedding_table_->vectors.resize((num_float_val_in_vec_file + 0x0fffff) & (~0x0fffff));
-  vec_stream.read(reinterpret_cast<char*>(embedding_table_->vectors.data()), vec_file_size_in_byte);
+  // embedding_table_->vectors.resize((num_float_val_in_vec_file + 0x0fffff) & (~0x0fffff));
+  // vec_stream.read(reinterpret_cast<char*>(embedding_table_->vectors.data()),
+  // vec_file_size_in_byte);
   HCTR_LOG_S(ERROR, WORLD) << "raw read done\n";
 }
 
@@ -88,9 +102,9 @@ template <typename TKey, typename TValue>
 void RawModelLoader<TKey, TValue>::delete_table() {
   std::vector<TKey>().swap(embedding_table_->keys);
   /** Impl 1*/
-  // munmap(embedding_table_->vectors, embedding_table_->umap_len);
+  munmap(embedding_table_->vectors_ptr, embedding_table_->umap_len);
   /** Impl 2*/
-  std::vector<TValue>().swap(embedding_table_->vectors);
+  // std::vector<TValue>().swap(embedding_table_->vectors);
   std::vector<TValue>().swap(embedding_table_->meta);
   delete embedding_table_;
 }
@@ -103,9 +117,9 @@ void* RawModelLoader<TKey, TValue>::getkeys() {
 template <typename TKey, typename TValue>
 void* RawModelLoader<TKey, TValue>::getvectors() {
   /** Impl 1*/
-  // return embedding_table_->vectors;
+  return embedding_table_->vectors_ptr;
   /** Impl 2*/
-  return embedding_table_->vectors.data();
+  // return embedding_table_->vectors.data();
 }
 
 template <typename TKey, typename TValue>

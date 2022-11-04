@@ -37,10 +37,10 @@ template <typename TypeHashKey, typename TypeHashValue>
 struct UnifiedEmbeddingTable {
   std::vector<TypeHashKey> keys;
   /** Impl 1*/
-  // void* vectors;
-  // size_t umap_len = 0;
+  void* vectors_ptr;
+  size_t umap_len = 0;
   /** Impl 2*/
-  std::vector<TypeHashValue> vectors;
+  // std::vector<TypeHashValue> vectors;
   std::vector<TypeHashValue> meta;
   size_t key_count = 0;
 };

@@ -218,6 +218,9 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
     // Get raw format model loader
     rawreader->load(inference_params.embedding_table_names[j],
                     inference_params.sparse_model_files[j]);
+    if (inference_params.use_multi_worker) {
+      CollCacheParameterServer::barrier();
+    }
     const std::string tag_name = make_tag_name(
         inference_params.model_name, ps_config_.emb_table_name_[inference_params.model_name][j]);
     size_t num_key = rawreader->getkeycount();
