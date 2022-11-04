@@ -167,7 +167,6 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   // Create the HPS for all models on all the deployed devices
   std::vector<uint32_t> rank_vec, freq_vec;
   uint32_t *rank_ptr = nullptr, *freq_ptr = nullptr;
-  auto freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
 
   std::call_once(this->atomic_creation_flag_, [&]() {
     HCTR_CHECK_HINT(this->lookup_session_map_.size() == 1, "coll cache supports only 1 model");
@@ -180,8 +179,12 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
 
   if (global_replica_id == 0) {
     HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
+    HCTR_CHECK_HINT(lookup_session_map_.begin()->second.count(0) > 0,
+                    "replica 0's must have device 0's lookup session\n");
+    auto freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
     for (int32_t i = 1; i < num_replicas_in_sync; i++) {
-      freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
+      // freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
+      freq_recorder->Combine(i);
     }
     lookup_session_map_.clear();
     parameter_server_ = nullptr;
@@ -197,7 +200,6 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
   }
   coll_parameter_server_->barrier();
-  freq_recorder = nullptr;
 
   std::function<coll_cache_lib::MemHandle(size_t)> gpu_mem_allocator =
       [&ctx = tf_ctx_list[global_replica_id]](size_t nbytes) -> coll_cache_lib::MemHandle {

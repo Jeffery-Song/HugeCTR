@@ -124,7 +124,7 @@ class CollCacheParameterServer {
               const std::string& model_name, size_t table_id, cudaStream_t cu_stream,
               uint64_t iter_key);
   void report_avg();
-  void barrier() { this->global_barrier_->Wait(); }
+  static void barrier();
   // virtual void refresh_embedding_cache(const std::string& model_name, int device_id);
   // virtual void insert_embedding_cache(size_t table_id,
   //                                     std::shared_ptr<EmbeddingCacheBase> embedding_cache,
@@ -134,7 +134,6 @@ class CollCacheParameterServer {
   // virtual std::map<std::string, InferenceParams> get_hps_model_configuration_map();
 
  private:
-  std::shared_ptr<coll_cache_lib::AtomicBarrier> global_barrier_;
   std::shared_ptr<coll_cache_lib::CollCache> coll_cache_ptr_;
   std::shared_ptr<IModelLoader> raw_data_holder;
   coll_cache_lib::common::DataType dtype = coll_cache_lib::common::kF32;

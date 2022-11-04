@@ -823,9 +823,8 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
                            << ps_config.inference_params_array[0].deployed_devices.size()
                            << " devices, using policy "
                            << coll_cache_lib::common::RunConfig::cache_policy << "\n";
-  this->global_barrier_ = std::make_shared<coll_cache_lib::common::AtomicBarrier>(
-      ps_config.inference_params_array[0].deployed_devices.size());
-  this->coll_cache_ptr_ = std::make_shared<coll_cache_lib::CollCache>(nullptr, global_barrier_);
+  this->coll_cache_ptr_ = std::make_shared<coll_cache_lib::CollCache>(
+      nullptr, coll_cache_lib::common::AnonymousBarrier::_global_instance);
   HCTR_LOG(ERROR, WORLD, "coll ps creation done\n");
 }
 
@@ -863,6 +862,10 @@ void CollCacheParameterServer::lookup(int replica_id, const void* keys, size_t l
   auto step_key = iter_key * coll_cache_lib::common::RunConfig::num_device + replica_id;
   this->coll_cache_ptr_->lookup(replica_id, reinterpret_cast<const uint32_t*>(keys), length, output,
                                 stream, step_key);
+}
+
+void CollCacheParameterServer::barrier() {
+  coll_cache_lib::common::AnonymousBarrier::_global_instance->Wait();
 }
 
 void CollCacheParameterServer::report_avg() { this->coll_cache_ptr_->report_avg(); }

@@ -38,7 +38,7 @@ LookupSession::LookupSession(const InferenceParams& inference_params,
       HCTR_CHECK_HINT(inference_params_.max_vocabulary_size.size() == 1,
                       "Coll Cache supports only 1 model");
       this->freq_recorder_ = std::make_shared<coll_cache_lib::common::FreqRecorder>(
-          inference_params_.max_vocabulary_size[0]);
+          inference_params_.max_vocabulary_size[0], inference_params.device_id);
     }
     if (inference_params_.use_gpu_embedding_cache &&
         embedding_cache_->get_device_id() != inference_params_.device_id) {
