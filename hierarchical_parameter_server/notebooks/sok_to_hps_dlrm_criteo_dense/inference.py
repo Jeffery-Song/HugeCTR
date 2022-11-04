@@ -1,6 +1,9 @@
 import time
-import hierarchical_parameter_server as hps
 import os
+# this must be set before hps is imported
+os.environ["COLL_NUM_REPLICA"] = "8"
+os.environ["HPS_WORKER_ID"] = "0"
+import hierarchical_parameter_server as hps
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -105,44 +108,52 @@ def inference_with_saved_model(args):
     embeddings_peek = list()
     inputs_peek = list()
 
-    # def _dataset_fn(input_context):
-    #     replica_batch_size = input_context.get_per_replica_batch_size(args["global_batch_size"])
-    #     sparse_keys, dense_features, labels = generate_random_samples(args["global_batch_size"]  * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"])
-    #     dataset = tf_dataset(sparse_keys, dense_features, labels, replica_batch_size)
-    #     dataset = dataset.shard(input_context.num_input_pipelines, input_context.input_pipeline_id)
-    #     return dataset
-
-    # # with strategy.scope():
-    # dataset = strategy.distribute_datasets_from_function(_dataset_fn
-    # , tf.distribute.InputOptions(
-    #     experimental_fetch_to_device=True,
-    #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
-    #     experimental_place_dataset_on_device=False,
-    #     experimental_per_replica_buffer_size=8
-    # )
-    # )
-
-    def _dataset_fn():
+    def _dataset_fn(input_context):
+        replica_batch_size = input_context.get_per_replica_batch_size(args["global_batch_size"])
         dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
         options = tf.data.Options()
-        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
-        dataset = dataset.with_options(options)
-        if dataset.element_spec[0].shape[0] != args["global_batch_size"]:
-            print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], args["global_batch_size"]))
-            dataset = dataset.unbatch().batch(args["global_batch_size"], num_parallel_calls=56)
+        dataset = dataset.shard(input_context.num_input_pipelines, input_context.input_pipeline_id)
+        if dataset.element_spec[0].shape[0] != replica_batch_size:
+            print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], replica_batch_size))
+            dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=56)
         else:
             print("loaded dataset has batch size we need, so directly use it")
-        # dataset = dataset.batch(args["global_batch_size"], num_parallel_calls=56).cache()
         dataset = dataset.cache()
+        dataset = dataset.prefetch(3)
+        dataset = dataset.with_options(options)
         return dataset
-    dataset = strategy.experimental_distribute_dataset(_dataset_fn()
+
+    # with strategy.scope():
+    dataset = strategy.distribute_datasets_from_function(_dataset_fn
         # , tf.distribute.InputOptions(
         #     experimental_fetch_to_device=True,
         #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
-        #     experimental_place_dataset_on_device=True,
-        #     experimental_per_replica_buffer_size=2
+        #     experimental_place_dataset_on_device=False,
+        #     experimental_per_replica_buffer_size=8
         # )
     )
+
+    # def _dataset_fn():
+    #     dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
+    #     options = tf.data.Options()
+    #     options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+    #     if dataset.element_spec[0].shape[0] != args["global_batch_size"]:
+    #         print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], args["global_batch_size"]))
+    #         dataset = dataset.unbatch().batch(args["global_batch_size"], num_parallel_calls=56)
+    #     else:
+    #         print("loaded dataset has batch size we need, so directly use it")
+    #     dataset = dataset.cache()
+    #     dataset = dataset.prefetch(3)
+    #     dataset = dataset.with_options(options)
+    #     return dataset
+    # dataset = strategy.experimental_distribute_dataset(_dataset_fn()
+    #     # , tf.distribute.InputOptions(
+    #     #     experimental_fetch_to_device=True,
+    #     #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
+    #     #     experimental_place_dataset_on_device=True,
+    #     #     experimental_per_replica_buffer_size=2
+    #     # )
+    # )
     for _ in tqdm(dataset, "warm dataset"):
         pass
     for _ in tqdm(dataset, "dataset shoulded be warm"):

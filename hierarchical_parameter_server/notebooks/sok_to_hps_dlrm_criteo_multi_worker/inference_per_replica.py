@@ -122,7 +122,7 @@ def inference_with_saved_model(args):
         else:
             print("loaded dataset has batch size we need, so directly use it")
         dataset = dataset.cache()
-        dataset = dataset.prefetch(3)
+        dataset = dataset.prefetch(24)
         return dataset
 
     # # with strategy.scope():
@@ -147,19 +147,24 @@ def inference_with_saved_model(args):
     for sparse_keys, dense_features, labels in tqdm(dataset, "warmup run"):
         inputs = [sparse_keys, dense_features]
         ret = strategy.run(_warmup_step, args=(inputs, labels))
-        ret_list.append(ret)
-    for i in tqdm(ret_list, "warmup should be done"):
-        ret = strategy.run(_warmup_step, args=i)
-    for i in tqdm(ret_list, "warmup should be done"):
-        ret = strategy.run(_warmup_step, args=i)
+    for sparse_keys, dense_features, labels in tqdm(dataset, "warmup run"):
+        inputs = [sparse_keys, dense_features]
+        ret = strategy.run(_warmup_step, args=(inputs, labels))
+        # ret_list.append(ret)
+    # for i in tqdm(ret_list, "warmup should be done"):
+    #     ret = strategy.run(_warmup_step, args=i)
+    # for i in tqdm(ret_list, "warmup should be done"):
+    #     ret = strategy.run(_warmup_step, args=i)
 
     for i in range(args["iter_num"]):
         t0 = time.time()
-        # sparse_keys, dense_features, labels = next(dataset_iter)
+        sparse_keys, dense_features, labels = next(dataset_iter)
         t1 = time.time()
-        # inputs = [sparse_keys, dense_features]
+        inputs = [sparse_keys, dense_features]
+        # print(sparse_keys)
         # logits = strategy.run(_infer_step, args=(inputs, labels))
-        logits = _whole_infer_step(ret_list[i])
+        logits = _whole_infer_step((inputs, labels))
+        # logits = _whole_infer_step(ret_list[i])
         t2 = time.time()
         ds_time += t1 - t0
         md_time += t2 - t1
@@ -170,6 +175,8 @@ def inference_with_saved_model(args):
     return embeddings_peek, inputs_peek
 
 def proc_func(id):
+    print(f"worker {id} at process {os.getpid()}")
+    # time.sleep(30)
     os.environ["TF_CONFIG"] = '{"cluster": {"worker": ["localhost:12340", "localhost:12341", "localhost:12342", "localhost:12343", "localhost:12344", "localhost:12345", "localhost:12346", "localhost:12347"]}, "task": {"type": "worker", "index": ' + str(id) + '} }'
     tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[i], 'GPU')
     os.environ["HPS_WORKER_ID"] = str(id)
