@@ -2,13 +2,13 @@ import time
 import os
 # this must be set before hps is imported
 os.environ["COLL_NUM_REPLICA"] = "8"
-os.environ["HPS_WORKER_ID"] = "0"
 import hierarchical_parameter_server as hps
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
 import yaml
 import atexit
+import multiprocessing
 from numba import njit
 
 args = dict()
@@ -50,8 +50,8 @@ if ((max_range) % args["gpu_num"]) != 0:
     args["max_vocabulary_size_per_gpu"] += 1
 print(args['max_vocabulary_size'])
 
-os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
-os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+# os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
+# os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
 class InferenceModel(tf.keras.models.Model):
     def __init__(self,
@@ -88,14 +88,15 @@ class InferenceModel(tf.keras.models.Model):
         return model.summary()
 
 def inference_with_saved_model(args):
-    strategy = tf.distribute.MirroredStrategy()
+    strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
         hps.Init(global_batch_size = args["global_batch_size"],
                 ps_config_file = args["ps_config_file"])
         model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"])
         model.summary()
     # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
-    atexit.register(strategy._extended._collective_ops._pool.close) # type: ignore
+    atexit.register(strategy._extended._cross_device_ops._pool.close) # type: ignore
+    atexit.register(strategy._extended._host_cross_device_ops._pool.close) #type: ignore
 
     @tf.function
     def _infer_step(inputs, labels):
@@ -134,27 +135,6 @@ def inference_with_saved_model(args):
     # )
     )
 
-    def _dataset_fn():
-        dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
-        options = tf.data.Options()
-        options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
-        dataset = dataset.with_options(options)
-        if dataset.element_spec[0].shape[0] != args["global_batch_size"]:
-            print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], args["global_batch_size"]))
-            dataset = dataset.unbatch().batch(args["global_batch_size"], num_parallel_calls=56)
-        else:
-            print("loaded dataset has batch size we need, so directly use it")
-        # dataset = dataset.batch(args["global_batch_size"], num_parallel_calls=56).cache()
-        dataset = dataset.cache()
-        return dataset
-    # dataset = strategy.experimental_distribute_dataset(_dataset_fn()
-    #     # , tf.distribute.InputOptions(
-    #     #     experimental_fetch_to_device=True,
-    #     #     experimental_replication_mode=tf.distribute.InputReplicationMode.PER_WORKER,
-    #     #     experimental_place_dataset_on_device=True,
-    #     #     experimental_per_replica_buffer_size=2
-    #     # )
-    # )
     for _ in tqdm(dataset, "warm dataset"):
         pass
     for _ in tqdm(dataset, "dataset shoulded be warm"):
@@ -189,4 +169,17 @@ def inference_with_saved_model(args):
             md_time = 0
     return embeddings_peek, inputs_peek
 
-embeddings_peek, inputs_peek = inference_with_saved_model(args)
+def proc_func(id):
+    os.environ["TF_CONFIG"] = '{"cluster": {"worker": ["localhost:12340", "localhost:12341", "localhost:12342", "localhost:12343", "localhost:12344", "localhost:12345", "localhost:12346", "localhost:12347"]}, "task": {"type": "worker", "index": ' + str(id) + '} }'
+    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[i], 'GPU')
+    os.environ["HPS_WORKER_ID"] = str(id)
+    os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
+    embeddings_peek, inputs_peek = inference_with_saved_model(args)
+    hps.Shutdown()
+
+proc_list = [None for _ in range(args["gpu_num"])]
+for i in range(args["gpu_num"]):
+    proc_list[i] = multiprocessing.Process(target=proc_func, args=(i,))
+    proc_list[i].start()
+for i in range(args["gpu_num"]):
+    proc_list[i].join()
