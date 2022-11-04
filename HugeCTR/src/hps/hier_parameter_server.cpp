@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <filesystem>
+#include <hps/direct_map_backend.hpp>
 #include <hps/hash_map_backend.hpp>
 #include <hps/hier_parameter_server.hpp>
 #include <hps/kafka_message.hpp>
@@ -107,6 +108,14 @@ HierParameterServer<TypeHashKey>::HierParameterServer(
     switch (conf.type) {
       case DatabaseType_t::Disabled:
         break;  // No volatile database.
+
+      case DatabaseType_t::DirectMap:
+        HCTR_CHECK_HINT(inference_params_array.size() == 1, "direct map backend supports only 1 model");
+        HCTR_LOG_S(INFO, WORLD) << "Creating DirectMap CPU database backend..." << std::endl;
+        volatile_db_ = std::make_unique<DirectMapBackend<TypeHashKey>>(
+            conf.max_get_batch_size, conf.max_set_batch_size, conf.overflow_margin,
+            conf.overflow_policy, conf.overflow_resolution_target);
+        break;
 
       case DatabaseType_t::HashMap:
       case DatabaseType_t::ParallelHashMap:
@@ -247,7 +256,7 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
                               << persistent_db_->get_name() << ")." << std::endl;
     }
   }
-  if (!ps_config_.use_coll_cache) {
+  if (!ps_config_.use_coll_cache && inference_params.volatile_db.type != DatabaseType_t::DirectMap) {
     rawreader->delete_table();
   }
 

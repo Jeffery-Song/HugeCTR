@@ -677,6 +677,12 @@ HugeCTR::DatabaseType_t get_hps_database_type(const nlohmann::json& json, const 
     if (tmp == name) {
       return enum_value;
     }
+  enum_value = HugeCTR::DatabaseType_t::DirectMap;
+  names = {hctr_enum_to_c_str(enum_value), "direct", "direct_map"};
+  for (const char* name : names)
+    if (tmp == name) {
+      return enum_value;
+    }
 
   enum_value = HugeCTR::DatabaseType_t::RedisCluster;
   names = {hctr_enum_to_c_str(enum_value), "redis"};

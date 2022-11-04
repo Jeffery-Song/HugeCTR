@@ -39,6 +39,7 @@ enum class DatabaseType_t {
   ParallelHashMap,
   RedisCluster,
   RocksDB,
+  DirectMap,
 };
 enum class DatabaseOverflowPolicy_t {
   EvictOldest,
@@ -58,6 +59,8 @@ constexpr const char* hctr_enum_to_c_str(const DatabaseType_t value) {
       return "hash_map";
     case DatabaseType_t::ParallelHashMap:
       return "parallel_hash_map";
+    case DatabaseType_t::DirectMap:
+      return "direct_map";
     case DatabaseType_t::RedisCluster:
       return "redis_cluster";
     case DatabaseType_t::RocksDB:
