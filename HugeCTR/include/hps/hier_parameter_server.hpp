@@ -98,8 +98,7 @@ class CollCacheParameterServer {
   using IdType = coll_cache_lib::common::IdType;
   using MemHandle = coll_cache_lib::common::MemHandle;
   using DataType = coll_cache_lib::common::DataType;
-  virtual ~CollCacheParameterServer() { this->coll_cache_ptr_->report_avg(); }
-  // virtual ~CollCacheParameterServer() = default;
+  virtual ~CollCacheParameterServer() = default;
   CollCacheParameterServer(const parameter_server_config& ps_config);
   CollCacheParameterServer(CollCacheParameterServer const&) = delete;
   CollCacheParameterServer& operator=(CollCacheParameterServer const&) = delete;
@@ -124,6 +123,7 @@ class CollCacheParameterServer {
   void lookup(int replica_id, const void* keys, size_t length, void* vectors,
               const std::string& model_name, size_t table_id, cudaStream_t cu_stream,
               uint64_t iter_key);
+  void report_avg();
   void barrier() { this->global_barrier_->Wait(); }
   // virtual void refresh_embedding_cache(const std::string& model_name, int device_id);
   // virtual void insert_embedding_cache(size_t table_id,

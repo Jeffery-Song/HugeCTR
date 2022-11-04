@@ -53,3 +53,4 @@ if lib_file is None:
 hps_ops = load_library.load_op_library(lib_file)
 lookup = hps_ops.lookup
 init = hps_ops.init
+shutdown = hps_ops.shutdown

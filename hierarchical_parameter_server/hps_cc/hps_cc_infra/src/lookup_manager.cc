@@ -229,4 +229,9 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
                            << " calling init per replica done, doing barrier done\n";
 }
+void LookupManager::report_avg() {
+  if (coll_parameter_server_) {
+    coll_parameter_server_->report_avg();
+  }
+}
 }  // namespace HierarchicalParameterServer

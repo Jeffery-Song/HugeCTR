@@ -61,4 +61,5 @@ void Facade::forward(const char* model_name, int32_t table_id, int32_t global_re
                            emb_vec_size, values_ptr, emb_vector_ptr);
 }
 
+void Facade::report_avg() { this->lookup_manager_->report_avg(); }
 }  // namespace HierarchicalParameterServer

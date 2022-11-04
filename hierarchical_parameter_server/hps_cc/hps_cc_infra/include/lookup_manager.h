@@ -47,6 +47,7 @@ class LookupManager final {
   void forward(const std::string& model_name, const int32_t table_id,
                const int32_t global_replica_id, const size_t num_keys, const size_t emb_vec_size,
                const void* values_ptr, void* emb_vector_ptr);
+  void report_avg();
 
  private:
   void init_per_replica(const int32_t global_replica_id);

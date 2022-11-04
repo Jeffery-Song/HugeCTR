@@ -29,6 +29,8 @@ except AttributeError:
     MultiWorkerMirroredStrategy = tf_dist.experimental.MultiWorkerMirroredStrategy
 import sys
 
+def Shutdown():
+    hps_lib.shutdown()
 
 def Init(**kwargs):
     """

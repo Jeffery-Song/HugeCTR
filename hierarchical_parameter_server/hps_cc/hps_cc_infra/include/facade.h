@@ -44,6 +44,7 @@ class Facade final {
   void forward(const char* model_name, const int32_t table_id, const int32_t global_replica_id,
                const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor,
                tensorflow::OpKernelContext* ctx);
+  void report_avg();
   parameter_server_config* ps_config;
 };
 

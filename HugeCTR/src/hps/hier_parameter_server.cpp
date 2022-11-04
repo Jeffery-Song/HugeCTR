@@ -856,4 +856,5 @@ void CollCacheParameterServer::lookup(int replica_id, const void* keys, size_t l
                                 stream, step_key);
 }
 
+void CollCacheParameterServer::report_avg() { this->coll_cache_ptr_->report_avg(); }
 }  // namespace HugeCTR
