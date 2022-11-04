@@ -143,7 +143,8 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
 
   void* h_values =
       h_values_map_.find(model_name)->second.find(global_replica_id)->second[table_id].get();
-  cudaMemcpy(h_values, values_ptr, num_keys * sizeof(size_t), cudaMemcpyDeviceToHost);
+  size_t per_key_size = inference_params.i64_input_key ? 8 : 4;
+  cudaMemcpy(h_values, values_ptr, num_keys * per_key_size, cudaMemcpyDeviceToHost);
   lookup_session->lookup(reinterpret_cast<void*>(h_values),
                          reinterpret_cast<float*>(emb_vector_ptr), num_keys, table_id);
   this->current_steps_for_each_replica_[global_replica_id]++;

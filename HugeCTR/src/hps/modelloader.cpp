@@ -76,7 +76,8 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
 
   /** Impl 1*/
   std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
-  HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr, "Env HPS_WORKER_ID must be set before loading hps lib\n");
+  HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr,
+                  "Env HPS_WORKER_ID must be set before loading hps lib\n");
   int fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   HCTR_CHECK_HINT(fd != -1, "shm open vec file shm failed\n");
   int ret = ftruncate(fd, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff);

@@ -110,7 +110,8 @@ HierParameterServer<TypeHashKey>::HierParameterServer(
         break;  // No volatile database.
 
       case DatabaseType_t::DirectMap:
-        HCTR_CHECK_HINT(inference_params_array.size() == 1, "direct map backend supports only 1 model");
+        HCTR_CHECK_HINT(inference_params_array.size() == 1,
+                        "direct map backend supports only 1 model");
         HCTR_LOG_S(INFO, WORLD) << "Creating DirectMap CPU database backend..." << std::endl;
         volatile_db_ = std::make_unique<DirectMapBackend<TypeHashKey>>(
             conf.max_get_batch_size, conf.max_set_batch_size, conf.overflow_margin,
@@ -259,7 +260,8 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
                               << persistent_db_->get_name() << ")." << std::endl;
     }
   }
-  if (!ps_config_.use_coll_cache && inference_params.volatile_db.type != DatabaseType_t::DirectMap) {
+  if (!ps_config_.use_coll_cache &&
+      inference_params.volatile_db.type != DatabaseType_t::DirectMap) {
     rawreader->delete_table();
   }
 
