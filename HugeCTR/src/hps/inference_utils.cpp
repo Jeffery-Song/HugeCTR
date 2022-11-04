@@ -235,6 +235,7 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
   // Initialize for each model
   // Open model config file and input model json config
   nlohmann::json hps_config(read_json_file(hps_json_config_file));
+  this->use_multi_worker = get_value_from_json_soft<bool>(hps_config, "use_multi_worker", false);
   this->use_coll_cache = get_value_from_json_soft<bool>(hps_config, "use_coll_cache", false);
   if (hps_config.find("coll_cache_enable_iter") != hps_config.end()) {
     this->coll_cache_enable_iter =
@@ -400,6 +401,7 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
     InferenceParams params(model_name, max_batch_size, hit_rate_threshold, dense_file, sparse_files,
                            device_id, use_gpu_embedding_cache, cache_size_percentage, true);
     params.use_coll_cache = this->use_coll_cache;
+    params.use_multi_worker = this->use_multi_worker;
     params.coll_cache_enable_iter = this->coll_cache_enable_iter;
     params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int
@@ -421,6 +423,10 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
       for (size_t device_index = 0; device_index < deployed_device_list.size(); ++device_index) {
         params.deployed_devices.emplace_back(deployed_device_list[device_index].get<int>());
       }
+    }
+    params.cross_worker_deployed_devices = params.deployed_devices;
+    if (use_multi_worker) {
+      params.deployed_devices = {params.deployed_devices[std::stoi(getenv("HPS_WORKER_ID"))]};
     }
     params.device_id = params.deployed_devices.back();
     // [12] default_value_for_each_table -> std::vector<float>

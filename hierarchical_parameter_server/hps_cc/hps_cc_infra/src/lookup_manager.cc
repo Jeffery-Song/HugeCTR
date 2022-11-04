@@ -52,12 +52,13 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
     // 32 bit key is supported
     // HCTR_CHECK_HINT(inference_params.i64_input_key, "inference_params.i64_input_key must be
     // true.");
+    HCTR_CHECK_HINT(inference_params.cross_worker_deployed_devices.size() == num_replicas_in_sync,
+                    "inference_params.cross_worker_deployed_devices.size() must be equal to "
+                    "num_replicas_in_sync.");
     HCTR_CHECK_HINT(
-        inference_params.deployed_devices.size() == num_replicas_in_sync,
-        "inference_params.deployed_devices.size() must be equal to num_replicas_in_sync.");
-    HCTR_CHECK_HINT(check(inference_params.deployed_devices),
-                    "inference_params.deployed_devices should contain exactly from 0 to "
-                    "num_replicas_in_sync-1.");
+        check(inference_params.cross_worker_deployed_devices),
+        "inference_params.cross_worker_deployed_devices should contain exactly from 0 to "
+        "num_replicas_in_sync-1.");
     HCTR_CHECK_HINT(local_batch_size <= inference_params.max_batchsize,
                     "global_batch_size / num_replicas_in_sync must be <= max_batchsize configured "
                     "in ps_config.json.");
@@ -162,7 +163,8 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
 void LookupManager::init_per_replica(const int32_t global_replica_id) {
   initialized_ = true;
   const parameter_server_config ps_config = parameter_server_->ref_ps_config();
-  const int32_t num_replicas_in_sync = ps_config.inference_params_array[0].deployed_devices.size();
+  const int32_t num_replicas_in_sync =
+      ps_config.inference_params_array[0].cross_worker_deployed_devices.size();
 
   // Create the HPS for all models on all the deployed devices
   std::vector<uint32_t> rank_vec, freq_vec;

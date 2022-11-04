@@ -811,18 +811,20 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
   coll_cache_lib::common::RunConfig::cache_policy =
       (coll_cache_lib::common::CachePolicy)ps_config_.coll_cache_policy;
   coll_cache_lib::common::RunConfig::cross_process = false;
-  coll_cache_lib::common::RunConfig::device_id_list = inference_params.deployed_devices;
-  coll_cache_lib::common::RunConfig::num_device = inference_params.deployed_devices.size();
-
+  coll_cache_lib::common::RunConfig::device_id_list =
+      inference_params.cross_worker_deployed_devices;
+  coll_cache_lib::common::RunConfig::num_device =
+      inference_params.cross_worker_deployed_devices.size();
+  coll_cache_lib::common::RunConfig::cross_process = ps_config_.use_multi_worker;
   coll_cache_lib::common::RunConfig::num_global_step_per_epoch =
       ps_config.iteration_per_epoch * coll_cache_lib::common::RunConfig::num_device;
   coll_cache_lib::common::RunConfig::num_epoch = ps_config.epoch;
   coll_cache_lib::common::RunConfig::num_total_item = num_key;
 
-  HCTR_LOG_S(ERROR, WORLD) << "coll ps creation, with "
-                           << ps_config.inference_params_array[0].deployed_devices.size()
-                           << " devices, using policy "
-                           << coll_cache_lib::common::RunConfig::cache_policy << "\n";
+  HCTR_LOG_S(ERROR, WORLD)
+      << "coll ps creation, with "
+      << ps_config.inference_params_array[0].cross_worker_deployed_devices.size()
+      << " devices, using policy " << coll_cache_lib::common::RunConfig::cache_policy << "\n";
   this->coll_cache_ptr_ = std::make_shared<coll_cache_lib::CollCache>(
       nullptr, coll_cache_lib::common::AnonymousBarrier::_global_instance);
   HCTR_LOG(ERROR, WORLD, "coll ps creation done\n");

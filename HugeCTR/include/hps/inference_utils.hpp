@@ -200,6 +200,7 @@ enum class PSUpdateSource_t { None, Kafka };
 
 struct InferenceParams {
   bool use_coll_cache = false;
+  bool use_multi_worker = false;
   size_t coll_cache_enable_iter;
   std::string model_name;
   size_t max_batchsize;
@@ -219,6 +220,7 @@ struct InferenceParams {
   int thread_pool_size;
   float cache_refresh_percentage_per_iteration;
   std::vector<int> deployed_devices;
+  std::vector<int> cross_worker_deployed_devices;
   std::vector<float> default_value_for_each_table;
   std::vector<size_t> max_vocabulary_size;
   // Database backend.
@@ -264,6 +266,7 @@ struct InferenceParams {
 
 struct parameter_server_config {
   bool use_coll_cache = false;
+  bool use_multi_worker = false;
   size_t coll_cache_enable_iter = std::numeric_limits<size_t>::max();
   size_t iteration_per_epoch = 0;
   size_t epoch = 0;
