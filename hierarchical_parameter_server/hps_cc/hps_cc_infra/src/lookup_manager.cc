@@ -213,6 +213,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     TF_CHECK_OK(ctx->allocate_temp(tensorflow::DataType::DT_UINT8,
                                    tensorflow::TensorShape({(long)nbytes}),
                                    &(handle->tensor_hold)));
+    handle->nbytes_ = nbytes;
     if (nbytes >= 1 << 21) {
       HCTR_LOG_S(ERROR, WORLD) << global_replica_id << " allocated " << nbytes << " at "
                                << handle->ptr() << "\n";

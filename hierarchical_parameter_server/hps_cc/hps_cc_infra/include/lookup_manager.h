@@ -29,8 +29,10 @@ using namespace HugeCTR;
 class LookupManager final {
   class HPSMemHandle : public coll_cache_lib::common::ExternelGPUMemoryHandler {
    public:
+    size_t nbytes_ = 0;
     tensorflow::Tensor tensor_hold;
     void* ptr() override { return tensor_hold.data(); }
+    size_t nbytes() override { return nbytes_; }
     ~HPSMemHandle() { /* HCTR_LOG_S(ERROR, WORLD) << "pointer " << tensor_hold.data() << " freed\n";
                        */
     }
