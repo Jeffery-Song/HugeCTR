@@ -189,9 +189,6 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
       // freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
       freq_recorder->Combine(i);
     }
-    lookup_session_map_.clear();
-    parameter_server_ = nullptr;
-    h_values_map_.clear();
 
     rank_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
     freq_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
@@ -202,15 +199,24 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     freq_ptr = freq_vec.data();
     HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
   }
+  if (ps_config.use_multi_worker || global_replica_id == 0) {
+    lookup_session_map_.clear();
+    parameter_server_ = nullptr;
+    h_values_map_.clear();
+  }
   coll_parameter_server_->barrier();
 
   std::function<coll_cache_lib::MemHandle(size_t)> gpu_mem_allocator =
-      [&ctx = tf_ctx_list[global_replica_id]](size_t nbytes) -> coll_cache_lib::MemHandle {
+      [&ctx = tf_ctx_list[global_replica_id],
+       global_replica_id](size_t nbytes) -> coll_cache_lib::MemHandle {
     auto handle = std::make_shared<HPSMemHandle>();
     TF_CHECK_OK(ctx->allocate_temp(tensorflow::DataType::DT_UINT8,
                                    tensorflow::TensorShape({(long)nbytes}),
                                    &(handle->tensor_hold)));
-    // HCTR_LOG_S(ERROR, WORLD) << "allocated " << nbytes << " at " << handle->ptr() << "\n";
+    if (nbytes >= 1 << 21) {
+      HCTR_LOG_S(ERROR, WORLD) << global_replica_id << " allocated " << nbytes << " at "
+                               << handle->ptr() << "\n";
+    }
     return handle;
   };
 
