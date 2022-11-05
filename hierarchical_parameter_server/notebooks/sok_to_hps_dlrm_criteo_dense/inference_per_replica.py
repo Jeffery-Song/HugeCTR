@@ -187,6 +187,7 @@ def inference_with_saved_model(args):
             print(i, "time {:.6} {:.6}".format(ds_time / 10, md_time / 10))
             ds_time = 0
             md_time = 0
+    hps.Shutdown()
     return embeddings_peek, inputs_peek
 
 embeddings_peek, inputs_peek = inference_with_saved_model(args)

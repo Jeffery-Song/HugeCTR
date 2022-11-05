@@ -1,6 +1,7 @@
 import time
-import hierarchical_parameter_server as hps
 import os
+os.environ["COLL_NUM_REPLICA"] = "8"
+os.environ["HPS_WORKER_ID"] = "0"
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -9,18 +10,18 @@ import atexit
 from numba import njit
 
 args = dict()
-args["gpu_num"] = 8                               # the number of available GPUs
-args["iter_num"] = 6000                           # the number of training iteration
+args["gpu_num"] = 1                               # the number of available GPUs
+args["iter_num"] = 2400                           # the number of training iteration
 args["slot_num"] = 26                             # the number of feature fields in this embedding layer
 args["embed_vec_size"] = 128                      # the dimension of embedding vectors
 args["dense_dim"] = 13                            # the dimension of dense features
-args["global_batch_size"] = 65536                    # the globally batchsize for all GPUs
+args["global_batch_size"] = 8192                    # the globally batchsize for all GPUs
 # SOK requires 64bit key, but we may use different key type at inference
 args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
-args["dataset_path"] = "saved_dataset"
+args["dataset_path"] = "saved_dataset_small"
 
 # load vocabulary_range_per_slot from yaml file
 file = open('criteo_full.yaml', 'r', encoding="utf-8")

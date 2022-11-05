@@ -13,7 +13,7 @@ from numba import njit
 
 args = dict()
 args["gpu_num"] = 8                               # the number of available GPUs
-args["iter_num"] = 200                           # the number of training iteration
+args["iter_num"] = 300                           # the number of training iteration
 args["slot_num"] = 26                             # the number of feature fields in this embedding layer
 args["embed_vec_size"] = 128                      # the dimension of embedding vectors
 args["dense_dim"] = 13                            # the dimension of dense features
@@ -27,7 +27,7 @@ args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 args["optimizer"] = "plugin_adam"
-args["dataset_path"] = "saved_dataset"
+args["dataset_path"] = "saved_dataset_small"
 
 # load vocabulary_range_per_slot from yaml file
 file = open('criteo_full.yaml', 'r', encoding="utf-8")
@@ -176,6 +176,7 @@ def inference_with_saved_model(args):
             print(i, "time {:.6} {:.6}".format(ds_time / 10, md_time / 10))
             ds_time = 0
             md_time = 0
+    hps.Shutdown()
     return embeddings_peek, inputs_peek
 
 embeddings_peek, inputs_peek = inference_with_saved_model(args)

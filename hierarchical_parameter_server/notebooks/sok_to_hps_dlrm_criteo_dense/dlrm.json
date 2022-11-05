@@ -18,5 +18,15 @@
         "gpucache": true,
         "max_vocabulary_size":[187767399]
         }
-    ]
+    ],
+
+    "volatile_db": {
+        "type": "direct_map",
+        "num_partitions": 56
+    },
+    "use_coll_cache": true,
+    "coll_cache_enable_iter": 50,
+    "iteration_per_epoch":50,
+    "epoch":5,
+    "coll_cache_policy":14
 }
