@@ -24,17 +24,17 @@ args["dense_dim"] = 13                            # the dimension of dense featu
 args["global_batch_size"] = 65536                    # the globally batchsize for all GPUs
 args["combiner"] = "mean"
 args["ps_config_file"] = "dlrm.json"
-args["dense_model_path"] = "dlrm_dense.model"
+args["dense_model_path"] = "/nvme/songxiaoniu/hps-model/dlrm_criteo/dense.model"
 # SOK requires 64bit key, but we may use different key type at inference
 args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 args["optimizer"] = "plugin_adam"
-args["dataset_path"] = "saved_dataset"
+args["dataset_path"] = "/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset"
 
 # load vocabulary_range_per_slot from yaml file
-file = open('criteo_full.yaml', 'r', encoding="utf-8")
+file = open('/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/desc.yaml', 'r', encoding="utf-8")
 file_data = file.read()
 file.close()
 feature_spec = yaml.load(file_data, yaml.Loader)['feature_spec']
@@ -151,8 +151,8 @@ def inference_with_saved_model(args):
         t2 = time.time()
         ds_time += t1 - t0
         md_time += t2 - t1
-        if i % 100 == 0:
-            print(i, "time {:.6} {:.6}".format(ds_time / 100, md_time / 100))
+        if i % 500 == 0:
+            print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500))
             ds_time = 0
             md_time = 0
     return embeddings_peek, inputs_peek
