@@ -113,7 +113,7 @@ endif()
 
 # headers
 include_directories(
-    ${PROJECT_SOURCE_DIR}/../coll-cache-lib
+    ${PROJECT_SOURCE_DIR}/../third_party/collcachelib
     ${PROJECT_SOURCE_DIR}/hps_cc/hps_cc_infra/include/
     ${PROJECT_SOURCE_DIR}/hps_cc/framework/kernels/
     ${PROJECT_SOURCE_DIR}/../
@@ -155,7 +155,7 @@ endif()
 # libs
 link_directories(
     ${TF_LINK_DIR}
-    ${PROJECT_SOURCE_DIR}/../coll-cache-lib/build
+    ${PROJECT_SOURCE_DIR}/../third_party/collcachelib/build
 )
 
 # building HPS infra C++ code
