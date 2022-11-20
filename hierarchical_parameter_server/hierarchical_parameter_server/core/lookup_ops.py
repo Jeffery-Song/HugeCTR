@@ -29,6 +29,7 @@ CommToolSet = set(["Strategy", "MPI", "Horovod", "OneDevice"])
 
 def get_global_replica_id(comm_tool=None, var=None):
     def _strategy():
+        return int(os.environ["HPS_WORKER_ID"])
         def _get_current_replica_id_in_group_sync():
             replica_ctx = tf_dist.get_replica_context()
             if replica_ctx:
@@ -54,6 +55,7 @@ def get_global_replica_id(comm_tool=None, var=None):
         return hvd.local_rank()
 
     def _OneDevice():
+        return int(os.environ["HPS_WORKER_ID"])
         return 0
 
     if comm_tool is None:

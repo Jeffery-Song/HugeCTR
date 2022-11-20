@@ -40,9 +40,9 @@ file.close()
 feature_spec = yaml.load(file_data, yaml.Loader)['feature_spec']
 
 # specify vocabulary range
-ranges = [[0, 0] for i in range(25)]
+ranges = [[0, 0] for i in range(args["slot_num"])]
 max_range = 0
-for i in range(25):
+for i in range(args["slot_num"]):
     feature_cat = feature_spec['cat_' + str(i) + '.bin']['cardinality']
     ranges[i][0] = max_range
     ranges[i][1] = max_range + feature_cat
@@ -108,10 +108,11 @@ def inference_with_saved_model(args):
         return logit
     @tf.function
     def _whole_infer_step(in_param):
-        return strategy.run(_infer_step, args=in_param)
+        inputs, labels = in_param
+        return _infer_step(inputs, labels)
     @tf.function
-    def _warmup_step(inputs, labels):
-        return inputs, labels
+    def _warmup_step(inputs):
+        return inputs
 
     embeddings_peek = list()
     inputs_peek = list()
@@ -123,7 +124,7 @@ def inference_with_saved_model(args):
         dataset = dataset.shard(num_replica, local_id)
         if dataset.element_spec[0].shape[0] != replica_batch_size:
             print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], replica_batch_size))
-            dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=56)
+            dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=10)
         else:
             print("loaded dataset has batch size we need, so directly use it")
         dataset = dataset.cache()
@@ -132,18 +133,25 @@ def inference_with_saved_model(args):
     dataset = _dataset_fn(args["gpu_num"], int(os.environ["HPS_WORKER_ID"]))
 
     ret_list = []
-    for sparse_keys, dense_features, labels in tqdm(dataset, "warmup run"):
+    ds_iter = iter(dataset)
+    barrier.wait()
+    for iter_num in tqdm(range(args["iter_num"]), "warmup run"):
+        sparse_keys, dense_features, labels = next(ds_iter)
         inputs = [sparse_keys, dense_features]
-        ret = strategy.run(_warmup_step, args=(inputs, labels))
+        ret = _warmup_step((inputs, labels))
         ret_list.append(ret)
+    barrier.wait()
     for i in tqdm(ret_list, "warmup should be done"):
-        ret = strategy.run(_warmup_step, args=i)
+        ret = _warmup_step(i)
+    barrier.wait()
     for i in tqdm(ret_list, "warmup should be done"):
-        ret = strategy.run(_warmup_step, args=i)
+        ret = _warmup_step(i)
+    barrier.wait()
 
     ds_time = 0
     md_time = 0
     os.environ["http_proxy"] = proxy
+    barrier.wait()
     for i in range(args["iter_num"]):
         t0 = time.time()
         t1 = time.time()
@@ -152,6 +160,7 @@ def inference_with_saved_model(args):
         ds_time += t1 - t0
         md_time += t2 - t1
         if i % 500 == 0:
+            barrier.wait()
             print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500))
             ds_time = 0
             md_time = 0
@@ -160,11 +169,13 @@ def inference_with_saved_model(args):
 def proc_func(id):
     print(f"worker {id} at process {os.getpid()}")
     os.environ["TF_CONFIG"] = '{"cluster": {"worker": ["localhost:12340", "localhost:12341", "localhost:12342", "localhost:12343", "localhost:12344", "localhost:12345", "localhost:12346", "localhost:12347"]}, "task": {"type": "worker", "index": ' + str(id) + '} }'
-    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[i], 'GPU')
+    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[id], 'GPU')
     os.environ["HPS_WORKER_ID"] = str(id)
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     embeddings_peek, inputs_peek = inference_with_saved_model(args)
     hps.Shutdown()
+
+barrier = multiprocessing.Barrier(args["gpu_num"])
 
 proc_list = [None for _ in range(args["gpu_num"])]
 for i in range(args["gpu_num"]):
