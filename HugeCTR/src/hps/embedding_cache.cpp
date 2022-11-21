@@ -129,7 +129,7 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
     for (size_t i = 0; i < cache_config_.num_emb_table_; i++) {
       size_t row_num = 0;
       if (inference_params.sparse_model_files[i].find("mock_") == 0) {
-        const std::string & path = inference_params.sparse_model_files[i];
+        const std::string& path = inference_params.sparse_model_files[i];
         row_num = std::stoull(path.substr(path.find('_') + 1));
       } else {
         const std::string& key_file = inference_params.sparse_model_files[i] + "/key";

@@ -235,9 +235,10 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
               : static_cast<size_t>(
                     volatile_db_cache_rate_ * static_cast<double>(volatile_capacity) + 0.5);
 
-      if (dynamic_cast<DirectMapBackend<TypeHashKey>*>(volatile_db_.get()) && rawreader->is_mock == false) {
+      if (dynamic_cast<DirectMapBackend<TypeHashKey>*>(volatile_db_.get()) &&
+          rawreader->is_mock == false) {
         auto keys_ptr = (const TypeHashKey*)(rawreader->getkeys());
-        #pragma omp parallel for
+#pragma omp parallel for
         for (TypeHashKey i = 0; i < volatile_cache_amount; i++) {
           HCTR_CHECK_HINT(keys_ptr[i] == i, "direct backend requries continious source");
         }

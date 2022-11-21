@@ -45,8 +45,10 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
   if (path.find("mock_") == 0) {
     this->is_mock = true;
     size_t num_key_offset = path.find('_') + 1, dim_offset = path.find_last_of('_') + 1;
-    size_t num_key = std::stoull(path.substr(num_key_offset)), dim = std::stoull(path.substr(dim_offset));
-    HCTR_LOG_S(ERROR, WORLD) << "using mock embedding with " << num_key << " * " << dim << " elements\n";
+    size_t num_key = std::stoull(path.substr(num_key_offset)),
+           dim = std::stoull(path.substr(dim_offset));
+    HCTR_LOG_S(ERROR, WORLD) << "using mock embedding with " << num_key << " * " << dim
+                             << " elements\n";
     embedding_table_->key_count = num_key;
     embedding_table_->keys.resize(num_key);
     size_t vec_file_size_in_byte = sizeof(float) * num_key * dim;
@@ -58,7 +60,7 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
     int ret = ftruncate(fd, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff);
     HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
     embedding_table_->vectors_ptr = mmap(nullptr, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff,
-                                        PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+                                         PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
     HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
     embedding_table_->umap_len = vec_file_size_in_byte;
     return;

@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 from hierarchical_parameter_server.core import lookup_ops
+from tensorflow.python.ops import array_ops
 
 
 class LookupLayer(tf.keras.layers.Layer):
@@ -99,6 +100,7 @@ class LookupLayer(tf.keras.layers.Layer):
                 the embedding vectors for the input keys. Its shape is
                 *inputs.get_shape() + emb_vec_size*.
         """
+        # inputs, idx = array_ops.unique(tf.reshape(inputs, [-1]))
         emb_vector = lookup_ops.lookup(
             values=inputs,
             model_name=self.model_name,
@@ -110,4 +112,5 @@ class LookupLayer(tf.keras.layers.Layer):
         )
         output_shape = inputs.get_shape() + self.emb_vec_size
         emb_vector.set_shape(output_shape)
+        # emb_vector = tf.gather(emb_vector, idx)
         return emb_vector
