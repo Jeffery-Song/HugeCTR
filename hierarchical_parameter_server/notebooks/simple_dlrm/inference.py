@@ -31,10 +31,11 @@ args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 args["optimizer"] = "plugin_adam"
-args["dataset_path"] = "/nvme/songxiaoniu/hps-dataset/simple_power1.2/saved_dataset"
+args["dataset_path_root"] = "/nvme/songxiaoniu/hps-dataset/simple_power1/"
+args["dataset_path"] = args["dataset_path_root"] + "saved_dataset"
 
 # load vocabulary_range_per_slot from yaml file
-file = open('/nvme/songxiaoniu/hps-dataset/simple_power1.2/desc.yaml', 'r', encoding="utf-8")
+file = open(args["dataset_path_root"] + 'desc.yaml', 'r', encoding="utf-8")
 file_data = file.read()
 file.close()
 feature_spec = yaml.load(file_data, yaml.Loader)['feature_spec']
@@ -128,7 +129,7 @@ def inference_with_saved_model(args):
         else:
             print("loaded dataset has batch size we need, so directly use it")
         dataset = dataset.cache()
-        dataset = dataset.prefetch(1000)
+        dataset = dataset.prefetch(10)
         return dataset
     dataset = _dataset_fn(args["gpu_num"], int(os.environ["HPS_WORKER_ID"]))
 

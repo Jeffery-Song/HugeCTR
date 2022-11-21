@@ -19,10 +19,11 @@ args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
-args["dataset_path"] = "/nvme/songxiaoniu/hps-dataset/simple_power1.2/saved_dataset"
+args["dataset_path_root"] = "/nvme/songxiaoniu/hps-dataset/simple_power1/"
+args["dataset_path"] = args["dataset_path_root"] + "saved_dataset"
 
 # load vocabulary_range_per_slot from yaml file
-file = open('/nvme/songxiaoniu/hps-dataset/simple_power1.2/desc.yaml', 'r', encoding="utf-8")
+file = open(args["dataset_path_root"] + 'desc.yaml', 'r', encoding="utf-8")
 file_data = file.read()
 file.close()
 feature_spec = yaml.load(file_data, yaml.Loader)['feature_spec']
@@ -58,7 +59,7 @@ def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim):
             # keys_per_slot = np.random.randint(low=vocab_range[0], high=vocab_range[1], size=(num_samples)).astype(key_dtype)
             while True:
                 print("pareto", i)
-                rnd_rst = np.random.pareto(1.2, int(num_samples * 1.5))
+                rnd_rst = np.random.pareto(1.0, int(num_samples * 1.5))
                 print("pareto filter", i)
                 rnd_rst = rnd_rst[rnd_rst < (vocab_range[1] - vocab_range[0])]
                 if len(rnd_rst >= num_samples):

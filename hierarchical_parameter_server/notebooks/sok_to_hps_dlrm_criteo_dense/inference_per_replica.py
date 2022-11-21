@@ -20,17 +20,18 @@ args["dense_dim"] = 13                            # the dimension of dense featu
 args["global_batch_size"] = 65536                    # the globally batchsize for all GPUs
 args["combiner"] = "mean"
 args["ps_config_file"] = "dlrm.json"
-args["dense_model_path"] = "dlrm_dense.model"
+args["dense_model_path"] = "/nvme/songxiaoniu/hps-model/dlrm_criteo/dense.model"
 # SOK requires 64bit key, but we may use different key type at inference
 args["np_key_type"] = np.int32
 args["np_vector_type"] = np.float32
 args["tf_key_type"] = tf.int32
 args["tf_vector_type"] = tf.float32
 args["optimizer"] = "plugin_adam"
-args["dataset_path"] = "saved_dataset_small"
+args["dataset_path"] = "/nvme/songxiaoniu/hps-dataset/criteo_like_uniform_small/saved_dataset"
+# args["dataset_path"] = "saved_dataset_small"
 
 # load vocabulary_range_per_slot from yaml file
-file = open('criteo_full.yaml', 'r', encoding="utf-8")
+file = open('/nvme/songxiaoniu/hps-dataset/criteo_like_uniform_small/desc.yaml', 'r', encoding="utf-8")
 file_data = file.read()
 file.close()
 feature_spec = yaml.load(file_data, yaml.Loader)['feature_spec']

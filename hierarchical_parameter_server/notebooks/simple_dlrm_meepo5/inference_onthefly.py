@@ -19,7 +19,7 @@ import numba
 args = dict()
 args["gpu_num"] = 4                               # the number of available GPUs
 args["iter_num"] = 3000                           # the number of training iteration
-args["slot_num"] = 100                             # the number of feature fields in this embedding layer
+args["slot_num"] = 50                             # the number of feature fields in this embedding layer
 args["embed_vec_size"] = 128                      # the dimension of embedding vectors
 args["dense_dim"] = 13                            # the dimension of dense features
 args["global_batch_size"] = 32768                    # the globally batchsize for all GPUs
