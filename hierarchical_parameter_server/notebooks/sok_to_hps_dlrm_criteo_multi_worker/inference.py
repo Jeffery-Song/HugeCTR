@@ -100,19 +100,23 @@ def inference_with_saved_model(args):
         return dataset
     dataset = _dataset_fn(args["gpu_num"], int(os.environ["HPS_WORKER_ID"]))
 
+    barrier.wait()
     ret_list = []
     for sparse_keys, dense_features, labels in tqdm(dataset, "warmup run"):
         inputs = [sparse_keys, dense_features]
         ret = strategy.run(_warmup_step, args=(inputs, labels))
         ret_list.append(ret)
+    barrier.wait()
     for i in tqdm(ret_list, "warmup should be done"):
         ret = strategy.run(_warmup_step, args=i)
     for i in tqdm(ret_list, "warmup should be done"):
         ret = strategy.run(_warmup_step, args=i)
+    barrier.wait()
 
     ds_time = 0
     md_time = 0
     os.environ["http_proxy"] = proxy
+    barrier.wait()
     for i in range(args["iter_num"]):
         t0 = time.time()
         t1 = time.time()
@@ -121,6 +125,7 @@ def inference_with_saved_model(args):
         ds_time += t1 - t0
         md_time += t2 - t1
         if i % 500 == 0:
+            barrier.wait()
             print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500))
             ds_time = 0
             md_time = 0
@@ -134,6 +139,8 @@ def proc_func(id):
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     embeddings_peek, inputs_peek = inference_with_saved_model(args)
     hps.Shutdown()
+
+barrier = multiprocessing.Barrier(args["gpu_num"])
 
 proc_list = [None for _ in range(args["gpu_num"])]
 for i in range(args["gpu_num"]):
