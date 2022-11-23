@@ -127,12 +127,18 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
   if (cache_config_.use_gpu_embedding_cache_) {
     cache_config_.num_set_in_cache_.reserve(cache_config_.num_emb_table_);
     for (size_t i = 0; i < cache_config_.num_emb_table_; i++) {
-      const std::string& key_file = inference_params.sparse_model_files[i] + "/key";
-      const size_t key_file_size = std::filesystem::file_size(key_file);
-      if (key_file_size % sizeof(long long) != 0) {
-        HCTR_OWN_THROW(Error_t::WrongInput, "Error: embeddings file size is not correct");
+      size_t row_num = 0;
+      if (inference_params.sparse_model_files[i].find("mock_") == 0) {
+        const std::string& path = inference_params.sparse_model_files[i];
+        row_num = std::stoull(path.substr(path.find('_') + 1));
+      } else {
+        const std::string& key_file = inference_params.sparse_model_files[i] + "/key";
+        const size_t key_file_size = std::filesystem::file_size(key_file);
+        if (key_file_size % sizeof(long long) != 0) {
+          HCTR_OWN_THROW(Error_t::WrongInput, "Error: embeddings file size is not correct");
+        }
+        row_num = key_file_size / sizeof(long long);
       }
-      const size_t row_num = key_file_size / sizeof(long long);
       const size_t num_feature_in_cache = static_cast<size_t>(
           static_cast<double>(cache_config_.cache_size_percentage_) * static_cast<double>(row_num));
       cache_config_.num_set_in_cache_.emplace_back(

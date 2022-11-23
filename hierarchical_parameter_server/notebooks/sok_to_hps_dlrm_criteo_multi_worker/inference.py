@@ -14,6 +14,9 @@ import yaml
 import atexit
 import multiprocessing
 from numba import njit
+import sys
+sys.path.append(os.path.dirname(os.path.realpath(__file__)) + "/../common_model")
+from inference_model import InferenceModel
 
 args = dict()
 args["gpu_num"] = 8                               # the number of available GPUs
@@ -57,46 +60,12 @@ print(args['max_vocabulary_size'])
 # os.environ["CUDA_VISIBLE_DEVICES"] = ",".join(map(str, range(args["gpu_num"])))
 # os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
 
-class InferenceModel(tf.keras.models.Model):
-    def __init__(self,
-                 slot_num,
-                 embed_vec_size,
-                 dense_dim,
-                 dense_model_path,
-                 **kwargs):
-        super(InferenceModel, self).__init__(**kwargs)
-        
-        self.slot_num = slot_num
-        self.embed_vec_size = embed_vec_size
-        self.dense_dim = dense_dim
-        
-        self.lookup_layer = hps.LookupLayer(model_name = "dlrm", 
-                                            table_id = 0,
-                                            emb_vec_size = self.embed_vec_size,
-                                            emb_vec_dtype = args["tf_vector_type"])
-        self.dense_model = tf.keras.models.load_model(dense_model_path, compile=False)
-    
-    def call(self, inputs):
-        input_cat = inputs[0]
-        input_dense = inputs[1]
-
-        embeddings = tf.reshape(self.lookup_layer(input_cat),
-                                shape=[-1, self.slot_num, self.embed_vec_size])
-        logit = self.dense_model([embeddings, input_dense])
-        return logit
-
-    def summary(self):
-        inputs = [tf.keras.Input(shape=(self.slot_num, ), sparse=False, dtype=args["tf_key_type"]), 
-                  tf.keras.Input(shape=(self.dense_dim, ), dtype=tf.float32)]
-        model = tf.keras.models.Model(inputs=inputs, outputs=self.call(inputs))
-        return model.summary()
-
 def inference_with_saved_model(args):
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
         hps.Init(global_batch_size = args["global_batch_size"],
                 ps_config_file = args["ps_config_file"])
-        model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"])
+        model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"], args["tf_key_type"], args["tf_vector_type"])
         model.summary()
     # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
     atexit.register(strategy._extended._cross_device_ops._pool.close) # type: ignore
@@ -123,7 +92,7 @@ def inference_with_saved_model(args):
         dataset = dataset.shard(num_replica, local_id)
         if dataset.element_spec[0].shape[0] != replica_batch_size:
             print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], replica_batch_size))
-            dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=56)
+            dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=12)
         else:
             print("loaded dataset has batch size we need, so directly use it")
         dataset = dataset.cache()
@@ -131,19 +100,23 @@ def inference_with_saved_model(args):
         return dataset
     dataset = _dataset_fn(args["gpu_num"], int(os.environ["HPS_WORKER_ID"]))
 
+    barrier.wait()
     ret_list = []
     for sparse_keys, dense_features, labels in tqdm(dataset, "warmup run"):
         inputs = [sparse_keys, dense_features]
         ret = strategy.run(_warmup_step, args=(inputs, labels))
         ret_list.append(ret)
+    barrier.wait()
     for i in tqdm(ret_list, "warmup should be done"):
         ret = strategy.run(_warmup_step, args=i)
     for i in tqdm(ret_list, "warmup should be done"):
         ret = strategy.run(_warmup_step, args=i)
+    barrier.wait()
 
     ds_time = 0
     md_time = 0
     os.environ["http_proxy"] = proxy
+    barrier.wait()
     for i in range(args["iter_num"]):
         t0 = time.time()
         t1 = time.time()
@@ -152,6 +125,7 @@ def inference_with_saved_model(args):
         ds_time += t1 - t0
         md_time += t2 - t1
         if i % 500 == 0:
+            barrier.wait()
             print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500))
             ds_time = 0
             md_time = 0
@@ -160,11 +134,13 @@ def inference_with_saved_model(args):
 def proc_func(id):
     print(f"worker {id} at process {os.getpid()}")
     os.environ["TF_CONFIG"] = '{"cluster": {"worker": ["localhost:12340", "localhost:12341", "localhost:12342", "localhost:12343", "localhost:12344", "localhost:12345", "localhost:12346", "localhost:12347"]}, "task": {"type": "worker", "index": ' + str(id) + '} }'
-    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[i], 'GPU')
+    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[id], 'GPU')
     os.environ["HPS_WORKER_ID"] = str(id)
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     embeddings_peek, inputs_peek = inference_with_saved_model(args)
     hps.Shutdown()
+
+barrier = multiprocessing.Barrier(args["gpu_num"])
 
 proc_list = [None for _ in range(args["gpu_num"])]
 for i in range(args["gpu_num"]):

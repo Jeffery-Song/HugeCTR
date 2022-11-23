@@ -235,6 +235,14 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
               : static_cast<size_t>(
                     volatile_db_cache_rate_ * static_cast<double>(volatile_capacity) + 0.5);
 
+      if (dynamic_cast<DirectMapBackend<TypeHashKey>*>(volatile_db_.get()) &&
+          rawreader->is_mock == false) {
+        auto keys_ptr = (const TypeHashKey*)(rawreader->getkeys());
+#pragma omp parallel for
+        for (TypeHashKey i = 0; i < volatile_cache_amount; i++) {
+          HCTR_CHECK_HINT(keys_ptr[i] == i, "direct backend requries continious source");
+        }
+      }
       HCTR_CHECK(volatile_db_->insert(tag_name, volatile_cache_amount,
                                       reinterpret_cast<const TypeHashKey*>(rawreader->getkeys()),
                                       reinterpret_cast<const char*>(rawreader->getvectors()),
@@ -803,11 +811,6 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
   size_t num_key = raw_data_holder->getkeycount();
   // const size_t embedding_size = ps_config_.embedding_vec_size_[inference_params.model_name][0];
   // Populate volatile database(s).
-  auto key_ptr = reinterpret_cast<uint32_t*>(raw_data_holder->getkeys());
-#pragma omp parallel for
-  for (uint32_t i = 0; i < num_key; i++) {
-    HCTR_CHECK(key_ptr[i] == i);
-  }
   // auto val_ptr = reinterpret_cast<const char*>(raw_data_holder->getvectors());
 
   coll_cache_lib::common::RunConfig::cache_percentage = inference_params.cache_size_percentage;

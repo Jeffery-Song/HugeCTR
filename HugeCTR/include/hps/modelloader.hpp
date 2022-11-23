@@ -53,6 +53,7 @@ struct UnifiedEmbeddingTable {
  */
 class IModelLoader {
  public:
+  bool is_mock = false;
   static std::shared_ptr<IModelLoader> preserved_model_loader;
   ~IModelLoader() = default;
   /**

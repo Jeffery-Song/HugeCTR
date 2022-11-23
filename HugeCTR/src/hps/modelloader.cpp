@@ -22,6 +22,7 @@
 #include <hps/inference_utils.hpp>
 #include <hps/modelloader.hpp>
 #include <parser.hpp>
+#include <string>
 #include <unordered_set>
 #include <utils.hpp>
 
@@ -40,6 +41,30 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
   const std::string emb_file_prefix = path + "/";
   const std::string key_file = emb_file_prefix + "key";
   const std::string vec_file = emb_file_prefix + "emb_vector";
+
+  if (path.find("mock_") == 0) {
+    this->is_mock = true;
+    size_t num_key_offset = path.find('_') + 1, dim_offset = path.find_last_of('_') + 1;
+    size_t num_key = std::stoull(path.substr(num_key_offset)),
+           dim = std::stoull(path.substr(dim_offset));
+    HCTR_LOG_S(ERROR, WORLD) << "using mock embedding with " << num_key << " * " << dim
+                             << " elements\n";
+    embedding_table_->key_count = num_key;
+    embedding_table_->keys.resize(num_key);
+    size_t vec_file_size_in_byte = sizeof(float) * num_key * dim;
+    std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
+    HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr,
+                    "Env HPS_WORKER_ID must be set before loading hps lib\n");
+    int fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    HCTR_CHECK_HINT(fd != -1, "shm open vec file shm failed\n");
+    int ret = ftruncate(fd, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff);
+    HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
+    embedding_table_->vectors_ptr = mmap(nullptr, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff,
+                                         PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+    HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
+    embedding_table_->umap_len = vec_file_size_in_byte;
+    return;
+  }
 
   std::ifstream key_stream(key_file);
   std::ifstream vec_stream(vec_file);
@@ -85,10 +110,10 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
   embedding_table_->vectors_ptr = mmap(nullptr, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff,
                                        PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
   HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
+  embedding_table_->umap_len = vec_file_size_in_byte;
   if (std::stoi(getenv("HPS_WORKER_ID")) == 0) {
     HCTR_LOG_S(ERROR, WORLD) << "I'm worker 0, I should read the data " << vec_file_size_in_byte
                              << "\n";
-    embedding_table_->umap_len = vec_file_size_in_byte;
     vec_stream.read(reinterpret_cast<char*>(embedding_table_->vectors_ptr), vec_file_size_in_byte);
   }
 

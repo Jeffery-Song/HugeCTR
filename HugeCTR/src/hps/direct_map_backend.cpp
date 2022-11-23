@@ -69,10 +69,6 @@ bool DirectMapBackend<TKey>::insert(const std::string& table_name, const size_t 
     HCTR_CHECK_HINT(false, "this direct map backend is already inited\n");
   }
   single_table_name = table_name;
-#pragma omp parallel for
-  for (TKey i = 0; i < num_pairs; i++) {
-    HCTR_CHECK_HINT(keys[i] == i, "direct backend requries continious source");
-  }
   this->num_keys_ = num_pairs;
   this->val_ptr = values;
   this->val_len_nbytes = value_size;

@@ -52,6 +52,7 @@ def get_cmake_args():
         "-DSM='{}'".format(";".join(gpu_capabilities)),
         "-DCMAKE_BUILD_TYPE={}".format(cmake_build_type),
         f"-DCMAKE_PREFIX_PATH={CONDA_PREFIX}",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
     ]
     return cmake_args
 
