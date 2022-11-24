@@ -20,6 +20,18 @@ from enum import Enum
 import copy
 import json
 
+def percent_gen(lb, ub, gap=1):
+  ret = []
+  i = lb
+  while i <= ub:
+    ret.append(i/100)
+    i += gap
+  return ret
+
+def reverse_percent_gen(lb, ub, gap=1):
+  ret = percent_gen(lb, ub, gap)
+  return list(reversed(ret))
+
 datetime_str = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
 LOG_DIR='run-logs/logs_samgraph_' + datetime_str
 CONFIG_DIR='run-configs/config_hps_' + datetime_str
@@ -27,6 +39,12 @@ CONFIG_DIR='run-configs/config_hps_' + datetime_str
 class System(Enum):
   hps = 0
   collcache = 1
+
+  def __str__(self):
+    if self is System.hps:
+      return "HPS"
+    else:
+      return "COLL"
 
 class Model(Enum):
   dlrm = 0
@@ -49,12 +67,29 @@ class Dataset(Enum):
       return 'simple_power0.2_slot100'
     return self.name
 
+  def short(self):
+    if self is Dataset.criteo_like_uniform:
+      return "CRU"
+    elif self is Dataset.criteo_like_uniform_small:
+      return "CRU_S"
+    elif self is Dataset.dlrm_datasets:
+      return "DLRM"
+    elif self is Dataset.simple_power02:
+      return 'SP_02'
+    elif self is Dataset.simple_power02_slot100:
+      return 'SP_02_S100'    
+    elif self is Dataset.simple_power1:
+      return 'SP_1'
+    elif self is Dataset.simple_power1_slot100:
+      return 'SP_1_S100'
+    return self.name
+
 class CachePolicy(Enum):
   cache_by_degree=0
   cache_by_heuristic=1
   cache_by_pre_sample=2
   cache_by_degree_hop=3
-  cache_by_pre_sample_static=4
+  cache_by_presample_static=4
   cache_by_fake_optimal=5
   dynamic_cache=6
   cache_by_random=7
@@ -67,63 +102,132 @@ class CachePolicy(Enum):
   clique_part=14
   clique_part_by_degree=15
 
+  def __str__(self):
+    name_list = [
+      'degree',
+      'heuristic',
+      'pre_sample',
+      'degree_hop',
+      'presample_static',
+      'fake_optimal',
+      'dynamic_cache',
+      'random',
+      'coll_cache',
+      'coll_intuitive',
+      'partition',
+      'part_rep',
+      'rep',
+      'coll_asymm',
+      'cliq_part',
+      'cliq_part_degree'
+    ]
+    return name_list[self.value]
+  
+  def short(self):
+    policy_str_short = [
+      "Deg",
+      "Heuristic",
+      "PreS",
+      "DegH",
+      "PreSS",
+      "FakeOpt",
+      "DynCache",
+      "Rand",
+      "Coll",
+      "CollIntui",
+      "Part",
+      "PartRep",
+      "Rep",
+      "CollAsymm",
+      "CliqPart",
+      "CliqPartDeg",
+    ]
+    return policy_str_short[self.value]
+
 class RunConfig:
   def __init__(self, system:System, model:Model, dataset:Dataset, 
-               cache_policy:CachePolicy=CachePolicy.coll_cache_asymm_link, 
-               cache_percent:float=0.0, 
+               gpu_num: int=8,
+               global_batch_size: int=65536,
+               coll_cache_policy:CachePolicy=CachePolicy.coll_cache_asymm_link, 
+               cache_percent:float=0.1, 
                logdir:str=LOG_DIR,
                confdir:str=CONFIG_DIR):
+    # arguments
     self.system         = system
     self.model          = model
     self.dataset        = dataset
     self.logdir         = logdir
     self.confdir        = confdir
-    self.gpu_num        = 8
+    self.gpu_num        = gpu_num
     self.epoch          = 5
     self.iter_num       = 6000
-    self.coll_cache_enable_iter   = 1000
-    self.iteration_per_epoch   = 1000
     self.slot_num       = 26
     self.dense_dim      = 13
     self.embed_vec_size = 128
-    self.global_batch_size  = 65536
     self.combiner       = "mean"
     self.optimizer      = "plugin_adam"
-    self.cache_policy   = cache_policy
-    self.cache_percent  = cache_percent
-    self.sparse_file_path   = "/nvme/songxiaoniu/hps-model/dlrm_criteo/sparse.model"
-    self.dense_model_path   = "/nvme/songxiaoniu/hps-model/dlrm_criteo/dense.model"
-    self.dataset_root_path   = "/nvme/songxiaoniu/hps-dataset"
-    self.profile_level  = 1
-    self.multi_gpu      = True
+    self.global_batch_size      = global_batch_size
+    self.dataset_root_path      = "/nvme/songxiaoniu/hps-dataset/"
+    self.model_root_path        = "/nvme/songxiaoniu/hps-model/dlrm_criteo/"
+    # hps json
+    self.cache_percent          = cache_percent
+    self.coll_cache_policy      = coll_cache_policy
+    self.mock_embedding         = False    # if true, mock embedding table by emb_vec_sz and max_voc_sz
+    self.max_vocabulary_size    = 187767399
+    self.coll_cache_enable_iter = 1000
+    self.iteration_per_epoch    = 1000
+    # env variables
+    self.coll_cache_no_group    = False
+    self.coll_cache_concurrent_link   = False
+    self.log_level              = "warn"
+    self.profile_level          = 3
+
+  def get_mock_sparse_name(self):
+    if self.mock_embedding:
+      return '_'.join(['mock', f'{self.max_vocabulary_size}', f'{self.embed_vec_size}'])
+    else:
+      return 'nomock'
+
+  def get_output_fname_base(self):
+    std_out_fname = '_'.join(
+      [str(self.system), self.model.name, self.dataset.short()] + 
+      [f'policy_{self.coll_cache_policy.short()}', f'cache_rate_{self.cache_percent}'] +
+      [f'batch_size_{self.global_batch_size}'])
+    if self.mock_embedding:
+      std_out_fname += '_' + self.get_mock_sparse_name()
+    return std_out_fname
 
   def get_conf_fname(self):
     std_out_conf = f'{self.confdir}/'
-    std_out_conf += '_'.join(
-      [self.system.name, self.model.name, str(self.dataset), f'batch_size_{self.global_batch_size}'])
+    std_out_conf += self.get_output_fname_base()
     std_out_conf += '.json'
     return std_out_conf
 
   def get_log_fname(self):
     std_out_log = f'{self.logdir}/'
-    std_out_log += '_'.join(
-      [self.system.name, self.model.name, str(self.dataset), f'batch_size_{self.global_batch_size}'])
+    std_out_log += self.get_output_fname_base()
     return std_out_log
 
   def beauty(self):
     msg = ' '.join(
-      ['Running', self.system.name, self.model.name, str(self.dataset)] +
-      [f'batch size:{self.batch_size}', f'emd vec size: {self.embed_vec_size}'])
-    return datetime.datetime.now().strftime('[%H:%M:%S]') + msg
+      ['Running', str(self.system), self.model.name, str(self.dataset)] +
+      [str(self.coll_cache_policy), f'cache_rate {self.cache_percent}'])
+    if self.mock_embedding:
+      msg += f' mock({self.max_vocabulary_size} vocabs, {self.embed_vec_size} emb_vec_sz'
+    return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
-    # assert(self.model is Model.dlrm)
-    cmd_line = ''
-    cmd_line += f'COLL_NUM_REPLICA={self.gpu_num} '
+    assert((self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter) == self.iter_num)
+    cmd_line = f'COLL_NUM_REPLICA={self.gpu_num} '
+    if self.coll_cache_no_group != False:
+      cmd_line += f'SAMGRAPH_COLL_CACHE_NO_GROUP=1 '
+    if self.coll_cache_concurrent_link != False:
+      cmd_line += f'SAMGRAPH_COLL_CACHE_CONCURRENT_LINK=1 '
+    cmd_line += f'SAMGRAPH_LOG_LEVEL={self.log_level} '
+    cmd_line += f'SAMGRAPH_PROFILE_LEVEL={self.profile_level} '
 
-    if self.multi_gpu:
-        cmd_line += f'python ../examples/inference.py'
-        cmd_line += f' --gpu_num {self.gpu_num} '
+    cmd_line += f'python ../examples/inference.py'
+    cmd_line += f' --gpu_num {self.gpu_num} '
     
     cmd_line += f' --iter_num {self.iter_num} '
     cmd_line += f' --slot_num {self.slot_num} '
@@ -132,11 +236,9 @@ class RunConfig:
     cmd_line += f' --global_batch_size {self.global_batch_size} '
     cmd_line += f' --combiner {self.combiner} '
     cmd_line += f' --optimizer {self.optimizer} '
-    cmd_line += f' --dense_model_path {self.dense_model_path}'
+    cmd_line += f' --dense_model_path {self.model_root_path}dense.model'
     cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
     cmd_line += f' --ps_config_file {self.get_conf_fname()}'
-
-    cmd_line += f' --profile-level {self.profile_level}'
 
     if durable_log:
       std_out_log = self.get_log_fname() + '.log'
@@ -147,6 +249,7 @@ class RunConfig:
     return cmd_line
 
   def generate_ps_config(self):
+    assert((self.global_batch_size % self.gpu_num) == 0)
     conf = {
       "supportlonglong": True,
       "models": [{
@@ -154,51 +257,49 @@ class RunConfig:
           "num_of_refresher_buffer_in_pool": 0,
           "embedding_table_names":["sparse_embedding0"],
           "default_value_for_each_table": [1.0],
-          "max_batch_size": 8192,
           "i64_input_key": False,
           "cache_refresh_percentage_per_iteration": 0,
           "hit_rate_threshold": 1.1,
-          "gpucacheper": 0.1,
           "gpucache": True,
           }
       ],
       "volatile_db": {
           "type": "direct_map",
           "num_partitions": 56
-      }
+      },
+      "use_multi_worker": True,
     }
     conf['models'][0]['model'] = self.model.name
-    conf['models'][0]['sparse_files'] = [self.sparse_file_path]
+    conf['models'][0]['sparse_files'] = [self.model_root_path + 'sparse_cont.model']
+    if self.mock_embedding: conf['models'][0]['embedding_table_names'] = [self.get_mock_sparse_name()]
     conf['models'][0]['embedding_vecsize_per_table'] = [self.embed_vec_size]
     conf['models'][0]['maxnum_catfeature_query_per_table_per_sample'] = [self.slot_num]
     conf['models'][0]['deployed_device_list'] = list(range(self.gpu_num))
-    conf['models'][0]['max_batch_size'] = [self.embed_vec_size]
-    if self.dataset == Dataset.criteo_tb:
-      conf['models'][0]['max_vocabulary_size'] = [882774559]
-    else:
-      conf['models'][0]['max_vocabulary_size'] = [187767399]
-    if self.system == System.hps:
-      conf['use_coll_cache'] = False
-    else:
-      conf['use_coll_cache'] = True
+    conf['models'][0]['max_batch_size'] = self.global_batch_size // self.gpu_num
+    conf['models'][0]['gpucacheper'] = self.cache_percent
+
+    # TODO: add more info for other datasets?
+    if self.dataset == Dataset.criteo_tb: conf['models'][0]['max_vocabulary_size'] = [882774559]
+    else: conf['models'][0]['max_vocabulary_size'] = [self.max_vocabulary_size]
+    if self.system == System.hps: conf['use_coll_cache'] = False
+    else: conf['use_coll_cache'] = True
     conf['coll_cache_enable_iter'] = self.coll_cache_enable_iter
     conf['iteration_per_epoch'] = self.iteration_per_epoch
     conf['epoch'] = self.epoch
-    conf['coll_cache_policy'] = self.cache_policy.value
-    print(conf['models'])
+    conf['coll_cache_policy'] = self.coll_cache_policy.value
 
     result = json.dumps(conf, indent=4)
     with open(self.get_conf_fname(), "w") as outfile:
       outfile.write(result)
 
   def run(self, mock=False, durable_log=True, callback = None):
+    os.system('mkdir -p {}'.format(self.confdir))
+    self.generate_ps_config()
+
     if mock:
       print(self.form_cmd(durable_log))
     else:
       print(self.beauty())
-
-      os.system('mkdir -p {}'.format(self.confdir))
-      self.generate_ps_config()
 
       if durable_log:
         os.system('mkdir -p {}'.format(self.logdir))
@@ -219,9 +320,7 @@ def run_in_list(conf_list : list, mock=False, durable_log=True, callback = None)
 class ConfigList:
   def __init__(self):
     self.conf_list = [
-      RunConfig(System.hps, Model.dlrm, Dataset.criteo_like_uniform, 
-      cache_policy=CachePolicy.coll_cache_asymm_link, cache_percent=1.0),
-    ]
+      RunConfig(System.hps, Model.dlrm, Dataset.criteo_like_uniform)]
 
   def select(self, key, val_indicator):
     '''

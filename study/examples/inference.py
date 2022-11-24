@@ -1,8 +1,6 @@
 import argparse
 import time
 import os
-# this must be set before hps is imported
-os.environ["COLL_NUM_REPLICA"] = "8"
 proxy = None
 if "http_proxy" in os.environ:
     proxy = os.environ["http_proxy"]
@@ -11,40 +9,22 @@ import hierarchical_parameter_server as hps
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
-import yaml
 import atexit
 import multiprocessing
-from numba import njit
 from common_config import *
-
-# TODO: config parse debugging
+import json
 
 def parse_args(default_run_config):
     argparser = argparse.ArgumentParser("RM INFERENCE")
-
     add_common_arguments(argparser, default_run_config)
-
-    # argparser.add_argument('--fanout', nargs='+',
-    #                        type=int, default=default_run_config['fanout'])
-    # argparser.add_argument('--lr', type=float,
-    #                        default=default_run_config['lr'])
-    # argparser.add_argument('--dropout', type=float,
-    #                        default=default_run_config['dropout'])
-    # argparser.add_argument('--weight-decay', type=float,
-    #                        default=default_run_config['weight_decay'])
-
     return vars(argparser.parse_args())
 
 def get_run_config():
     run_config = {}
-
     run_config.update(get_default_common_config())
     run_config.update(parse_args(run_config))
-
     process_common_config(run_config)
-
     print_run_config(run_config)
-
     return run_config
 
 class InferenceModel(tf.keras.models.Model):
@@ -133,7 +113,7 @@ def inference_with_saved_model(args):
 
     ds_time = 0
     md_time = 0
-    # os.environ["http_proxy"] = proxy
+    os.environ["http_proxy"] = proxy
     for i in range(args["iter_num"]):
         t0 = time.time()
         t1 = time.time()
@@ -149,8 +129,10 @@ def inference_with_saved_model(args):
 
 def proc_func(id):
     print(f"worker {id} at process {os.getpid()}")
-    os.environ["TF_CONFIG"] = '{"cluster": {"worker": ["localhost:12340", "localhost:12341", "localhost:12342", "localhost:12343", "localhost:12344", "localhost:12345", "localhost:12346", "localhost:12347"]}, "task": {"type": "worker", "index": ' + str(id) + '} }'
-    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[i], 'GPU')
+    tf_config = {"task": {"type": "worker", "index": id}, "cluster": {"worker": []}}
+    for i in range(args["gpu_num"]): tf_config['cluster']['worker'].append("localhost:" + str(12340+i))
+    os.environ["TF_CONFIG"] = json.dumps(tf_config)
+    tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[id], 'GPU')
     os.environ["HPS_WORKER_ID"] = str(id)
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     embeddings_peek, inputs_peek = inference_with_saved_model(args)
