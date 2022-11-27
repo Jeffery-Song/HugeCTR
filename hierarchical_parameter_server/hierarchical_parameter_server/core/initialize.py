@@ -243,3 +243,6 @@ def Init(**kwargs):
             return _horovod_init(**kwargs)
     else:
         return _one_device_init(**kwargs)
+
+def GetStepProfileValue(**kwargs):
+    hps_lib.get_step_profile_value(kwargs)

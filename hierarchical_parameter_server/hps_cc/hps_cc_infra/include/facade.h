@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include <cstdint>
 #include "hps/inference_utils.hpp"
 #include "lookup_manager.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -22,6 +23,29 @@
 namespace HierarchicalParameterServer {
 
 using namespace HugeCTR;
+
+enum StepProfileItem {
+  // L1
+  kLogL1NumSample = 0,
+  kLogL1NumNode,
+  kLogL1CopyTime,
+  kLogL1RemoteBytes,
+  // L2
+  kLogL2ExtractTime,
+  kLogL2FeatCopyTime,
+  kLogL2CacheCopyTime,
+  // L3
+  kLogL3CacheGetIndexTime,
+  KLogL3CacheCopyIndexTime,
+  kLogL3CacheExtractMissTime,
+  kLogL3CacheCopyMissTime,
+  kLogL3CacheCombineMissTime,
+  kLogL3CacheCombineCacheTime,
+  kLogL3CacheCombineRemoteTime,
+  kLogL3LabelExtractTime,
+  // Number of items
+  kNumLogStepItems
+};
 
 class Facade final {
  private:
@@ -45,6 +69,8 @@ class Facade final {
                const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor,
                tensorflow::OpKernelContext* ctx);
   void report_avg();
+  void get_step_profile_value(const int32_t epoch, const int32_t step, 
+                              const int32_t type, int32_t &value);
   parameter_server_config* ps_config;
 };
 
