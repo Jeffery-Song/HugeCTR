@@ -50,40 +50,29 @@ class Model(Enum):
   dlrm = 0
 
 class Dataset(Enum):
-  criteo_like_uniform=0
-  criteo_like_uniform_small=1
-  dlrm_datasets=2
-  simple_power02=3
-  simple_power02_slot100=4
-  simple_power1=5
-  simple_power1_slot100=6
-  simple_uniform=7
-  criteo_tb=8
-
+  def __new__(cls, *args, **kwds):
+    value = len(cls.__members__) + 1
+    obj = object.__new__(cls)
+    obj._value_ = value
+    return obj
+  def __init__(self, path, short_name, vocabulary, slot_num):
+    self.path = path if path else self.name
+    self.short_name = short_name if short_name else self.name
+    self.vocabulary = vocabulary
+    self.slot_num = slot_num
   def __str__(self):
-    if self is Dataset.simple_power02:
-      return 'simple_power0.2'
-    elif self is Dataset.simple_power02_slot100:
-      return 'simple_power0.2_slot100'
-    return self.name
-
+    return self.path
   def short(self):
-    if self is Dataset.criteo_like_uniform:
-      return "CRU"
-    elif self is Dataset.criteo_like_uniform_small:
-      return "CRU_S"
-    elif self is Dataset.dlrm_datasets:
-      return "DLRM"
-    elif self is Dataset.simple_power02:
-      return 'SP_02'
-    elif self is Dataset.simple_power02_slot100:
-      return 'SP_02_S100'    
-    elif self is Dataset.simple_power1:
-      return 'SP_1'
-    elif self is Dataset.simple_power1_slot100:
-      return 'SP_1_S100'
-    return self.name
-
+    return self.short_name
+  criteo_like_uniform       = None,                      "CRU",        187767399, 26
+  criteo_like_uniform_small = None,                      "CRU_S",      187767399, 26
+  dlrm_datasets             = None,                      "DLRM",       None,      None
+  simple_power02            = "simple_power0.2",         "SP_02",      100000000, 25
+  simple_power02_slot100    = "simple_power0.2_slot100", "SP_02_S100", 100000000, 100
+  simple_power1             = None,                      "SP_1",       100000000, 25
+  simple_power1_slot100     = None,                      "SP_1_S100",  100000000, 100
+  simple_uniform            = None,                      None,         100000000, 25
+  criteo_tb                 = None,                      None,         882774559, 26
 class CachePolicy(Enum):
   cache_by_degree=0
   cache_by_heuristic=1
@@ -160,8 +149,8 @@ class RunConfig:
     self.confdir        = confdir
     self.gpu_num        = gpu_num
     self.epoch          = 5
-    self.iter_num       = 6000
-    self.slot_num       = 26
+    # self.iter_num       = 6000
+    self.slot_num       = None
     self.dense_dim      = 13
     self.embed_vec_size = 128
     self.combiner       = "mean"
@@ -173,7 +162,7 @@ class RunConfig:
     self.cache_percent          = cache_percent
     self.coll_cache_policy      = coll_cache_policy
     self.mock_embedding         = False    # if true, mock embedding table by emb_vec_sz and max_voc_sz
-    self.max_vocabulary_size    = 187767399
+    self.max_vocabulary_size    = None
     self.coll_cache_enable_iter = 1000
     self.iteration_per_epoch    = 1000
     # env variables
@@ -249,6 +238,9 @@ class RunConfig:
     return cmd_line
 
   def generate_ps_config(self):
+    self.iter_num = self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter
+    self.max_vocabulary_size = self.dataset.vocabulary
+    self.slot_num = self.dataset.slot_num
     assert((self.global_batch_size % self.gpu_num) == 0)
     conf = {
       "supportlonglong": True,
@@ -278,9 +270,7 @@ class RunConfig:
     conf['models'][0]['max_batch_size'] = self.global_batch_size // self.gpu_num
     conf['models'][0]['gpucacheper'] = self.cache_percent
 
-    # TODO: add more info for other datasets?
-    if self.dataset == Dataset.criteo_tb: conf['models'][0]['max_vocabulary_size'] = [882774559]
-    else: conf['models'][0]['max_vocabulary_size'] = [self.max_vocabulary_size]
+    conf['models'][0]['max_vocabulary_size'] = [self.max_vocabulary_size]
     if self.system == System.hps: conf['use_coll_cache'] = False
     else: conf['use_coll_cache'] = True
     conf['coll_cache_enable_iter'] = self.coll_cache_enable_iter
