@@ -27,47 +27,26 @@ def get_run_config():
     print_run_config(run_config)
     return run_config
 
-class InferenceModel(tf.keras.models.Model):
-    def __init__(self,
-                 slot_num,
-                 embed_vec_size,
-                 dense_dim,
-                 dense_model_path,
-                 **kwargs):
-        super(InferenceModel, self).__init__(**kwargs)
-        
-        self.slot_num = slot_num
-        self.embed_vec_size = embed_vec_size
-        self.dense_dim = dense_dim
-        
-        self.lookup_layer = hps.LookupLayer(model_name = "dlrm", 
-                                            table_id = 0,
-                                            emb_vec_size = self.embed_vec_size,
-                                            emb_vec_dtype = args["tf_vector_type"])
-        self.dense_model = tf.keras.models.load_model(dense_model_path, compile=False)
-    
-    def call(self, inputs):
-        input_cat = inputs[0]
-        input_dense = inputs[1]
-
-        embeddings = tf.reshape(self.lookup_layer(input_cat),
-                                shape=[-1, self.slot_num, self.embed_vec_size])
-        logit = self.dense_model([embeddings, input_dense])
-        return logit
-
-    def summary(self):
-        inputs = [tf.keras.Input(shape=(self.slot_num, ), sparse=False, dtype=args["tf_key_type"]), 
-                  tf.keras.Input(shape=(self.dense_dim, ), dtype=tf.float32)]
-        model = tf.keras.models.Model(inputs=inputs, outputs=self.call(inputs))
-        return model.summary()
+def prepare_model(args):
+    if args["dense_model_path"] == "plain":
+        from model_zoo import DLRMHPS
+        model = DLRMHPS("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
+            arch_bot = [256, 128, args["embed_vec_size"]],
+            arch_top = [256, 128, 1],
+            tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"], 
+            self_interaction=False)
+    else:
+        from model_zoo import InferenceModelHPS
+        model = InferenceModelHPS(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"], tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"])
+    return model
 
 def inference_with_saved_model(args):
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
         hps.Init(global_batch_size = args["global_batch_size"],
                 ps_config_file = args["ps_config_file"])
-        model = InferenceModel(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"])
-        model.summary()
+        model = prepare_model(args)
+        # model.summary()
     # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
     atexit.register(strategy._extended._cross_device_ops._pool.close) # type: ignore
     atexit.register(strategy._extended._host_cross_device_ops._pool.close) #type: ignore

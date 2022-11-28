@@ -162,6 +162,7 @@ class RunConfig:
     self.cache_percent          = cache_percent
     self.coll_cache_policy      = coll_cache_policy
     self.mock_embedding         = False    # if true, mock embedding table by emb_vec_sz and max_voc_sz
+    self.plain_dense_model      = False
     self.max_vocabulary_size    = None
     self.coll_cache_enable_iter = 1000
     self.iteration_per_epoch    = 1000
@@ -225,7 +226,10 @@ class RunConfig:
     cmd_line += f' --global_batch_size {self.global_batch_size} '
     cmd_line += f' --combiner {self.combiner} '
     cmd_line += f' --optimizer {self.optimizer} '
-    cmd_line += f' --dense_model_path {self.model_root_path}dense.model'
+    if self.plain_dense_model:
+      cmd_line += f' --dense_model_path plain'
+    else:
+      cmd_line += f' --dense_model_path {self.model_root_path}dense.model'
     cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
     cmd_line += f' --ps_config_file {self.get_conf_fname()}'
 
