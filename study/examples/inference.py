@@ -14,9 +14,16 @@ import multiprocessing
 from common_config import *
 import json
 
+from ds_generator import generate_random_samples_zipf as generate_random_samples
+
 def parse_args(default_run_config):
     argparser = argparse.ArgumentParser("RM INFERENCE")
     add_common_arguments(argparser, default_run_config)
+
+    argparser.add_argument('--random_request', type=bool, default=False)
+    argparser.add_argument('--alpha', type=float, default=None)
+    argparser.add_argument('--max_vocabulary_size', type=int, default=100000000)
+
     return vars(argparser.parse_args())
 
 def get_run_config():
@@ -24,6 +31,20 @@ def get_run_config():
     run_config.update(get_default_common_config())
     run_config.update(parse_args(run_config))
     process_common_config(run_config)
+    if run_config["random_request"]:
+        if run_config["alpha"] == None:
+            raise Exception("when random request is used, alpha must be provided")
+        feature_spec = {"cat_" + str(i) + ".bin" : {'cardinality' : run_config["max_vocabulary_size"] // run_config["slot_num"]} for i in range(run_config["slot_num"])}
+        # specify vocabulary range
+        ranges = [[0, 0] for i in range(run_config["slot_num"])]
+        max_range = 0
+        for i in range(run_config["slot_num"]):
+            feature_cat = feature_spec['cat_' + str(i) + '.bin']['cardinality']
+            ranges[i][0] = max_range
+            ranges[i][1] = max_range + feature_cat
+            max_range += feature_cat
+        run_config["vocabulary_range_per_slot"] = ranges
+        assert(max_range == run_config["max_vocabulary_size"])
     print_run_config(run_config)
     return run_config
 
@@ -68,13 +89,25 @@ def inference_with_saved_model(args):
     def _dataset_fn(num_replica, local_id):
         assert(args["global_batch_size"] % num_replica == 0)
         replica_batch_size = args["global_batch_size"] // num_replica
-        dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
-        dataset = dataset.shard(num_replica, local_id)
-        if dataset.element_spec[0].shape[0] != replica_batch_size:
-            print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], replica_batch_size))
-            dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=56)
+        if args["random_request"] == False:
+            dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
+            dataset = dataset.shard(num_replica, local_id)
+            if dataset.element_spec[0].shape[0] != replica_batch_size:
+                print("loaded dataset has batch size {}, but we need {}, so we have to rebatch it!".format(dataset.element_spec[0].shape[0], replica_batch_size))
+                dataset = dataset.unbatch().batch(replica_batch_size, num_parallel_calls=56)
+            else:
+                print("loaded dataset has batch size we need, so directly use it")
         else:
-            print("loaded dataset has batch size we need, so directly use it")
+            sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
+            def sequential_batch_gen():
+                for i in range(0, replica_batch_size * args["iter_num"], replica_batch_size):
+                    sparse_keys, dense_features, labels
+                    yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
+            dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
+                output_signature=(
+                    tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=tf.int32), 
+                    tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=tf.float32),
+                    tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
         dataset = dataset.cache()
         dataset = dataset.prefetch(1000)
         return dataset

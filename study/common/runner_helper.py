@@ -73,6 +73,18 @@ class Dataset(Enum):
   simple_power1_slot100     = None,                      "SP_1_S100",  100000000, 100
   simple_uniform            = None,                      None,         100000000, 25
   criteo_tb                 = None,                      None,         882774559, 26
+
+class RandomDataset:
+  def __init__(self, path, short_name, vocabulary, slot_num):
+    self.path = path
+    self.short_name = short_name
+    self.vocabulary = vocabulary
+    self.slot_num = slot_num
+  def short(self):
+    return self.short_name
+  def __str__(self):
+    return self.path
+
 class CachePolicy(Enum):
   cache_by_degree=0
   cache_by_heuristic=1
@@ -163,6 +175,8 @@ class RunConfig:
     self.coll_cache_policy      = coll_cache_policy
     self.mock_embedding         = False    # if true, mock embedding table by emb_vec_sz and max_voc_sz
     self.plain_dense_model      = False
+    self.random_request         = False
+    self.alpha                  = 0.2
     self.max_vocabulary_size    = None
     self.coll_cache_enable_iter = 1000
     self.iteration_per_epoch    = 1000
@@ -230,7 +244,13 @@ class RunConfig:
       cmd_line += f' --dense_model_path plain'
     else:
       cmd_line += f' --dense_model_path {self.model_root_path}dense.model'
-    cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
+
+    cmd_line += f' --max_vocabulary_size {self.max_vocabulary_size}'
+    if self.random_request:
+      cmd_line += f' --random_request {self.random_request} '
+      cmd_line += f' --alpha {self.alpha} '
+    else:
+      cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
     cmd_line += f' --ps_config_file {self.get_conf_fname()}'
 
     if durable_log:
