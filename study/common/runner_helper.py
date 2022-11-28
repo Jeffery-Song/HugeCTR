@@ -213,7 +213,7 @@ class RunConfig:
       ['Running', str(self.system), self.model.name, str(self.dataset)] +
       [str(self.coll_cache_policy), f'cache_rate {self.cache_percent}'])
     if self.mock_embedding:
-      msg += f' mock({self.max_vocabulary_size} vocabs, {self.embed_vec_size} emb_vec_sz'
+      msg += f' mock({self.max_vocabulary_size} vocabs, {self.embed_vec_size} emb_vec_sz)'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
@@ -271,7 +271,7 @@ class RunConfig:
     }
     conf['models'][0]['model'] = self.model.name
     conf['models'][0]['sparse_files'] = [self.model_root_path + 'sparse_cont.model']
-    if self.mock_embedding: conf['models'][0]['embedding_table_names'] = [self.get_mock_sparse_name()]
+    if self.mock_embedding: conf['models'][0]['sparse_files'] = [self.get_mock_sparse_name()]
     conf['models'][0]['embedding_vecsize_per_table'] = [self.embed_vec_size]
     conf['models'][0]['maxnum_catfeature_query_per_table_per_sample'] = [self.slot_num]
     conf['models'][0]['deployed_device_list'] = list(range(self.gpu_num))

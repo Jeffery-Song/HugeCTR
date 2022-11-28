@@ -113,7 +113,8 @@ def inference_with_saved_model(args):
 
     ds_time = 0
     md_time = 0
-    os.environ["http_proxy"] = proxy
+    if proxy:
+      os.environ["http_proxy"] = proxy
     for i in range(args["iter_num"]):
         t0 = time.time()
         t1 = time.time()
@@ -143,5 +144,10 @@ proc_list = [None for _ in range(args["gpu_num"])]
 for i in range(args["gpu_num"]):
     proc_list[i] = multiprocessing.Process(target=proc_func, args=(i,))
     proc_list[i].start()
+ret_code = 0
 for i in range(args["gpu_num"]):
     proc_list[i].join()
+    if proc_list[i].exitcode != 0:
+        ret_code = 1
+import sys
+sys.exit(ret_code)
