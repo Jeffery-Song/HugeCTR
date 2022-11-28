@@ -261,10 +261,14 @@ class RunConfig:
       cmd_line += ';'
     return cmd_line
 
-  def generate_ps_config(self):
+  # some members are lazy initialized
+  def handle_mock_params(self):
     self.iter_num = self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter
     self.max_vocabulary_size = self.dataset.vocabulary
     self.slot_num = self.dataset.slot_num
+
+  def generate_ps_config(self):
+    self.handle_mock_params()
     assert((self.global_batch_size % self.gpu_num) == 0)
     conf = {
       "supportlonglong": True,

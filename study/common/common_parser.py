@@ -92,6 +92,7 @@ class BenchInstance:
     self.fname = ""
   def init_from_cfg(self, cfg):
     try:
+      cfg.handle_mock_params()
       fname = cfg.get_log_fname() + '.log'
       self.vals = {}
       self.fname = fname
