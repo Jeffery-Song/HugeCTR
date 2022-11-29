@@ -185,10 +185,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     HCTR_CHECK_HINT(lookup_session_map_.begin()->second.count(0) > 0,
                     "replica 0's must have device 0's lookup session\n");
     auto freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
-    for (int32_t i = 1; i < num_replicas_in_sync; i++) {
-      // freq_recorder->Combine(lookup_session_map_.begin()->second[i]->freq_recorder_.get());
-      freq_recorder->Combine(i);
-    }
+    freq_recorder->Combine();
 
     rank_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
     freq_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);

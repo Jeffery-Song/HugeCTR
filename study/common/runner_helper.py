@@ -181,8 +181,8 @@ class RunConfig:
     self.coll_cache_enable_iter = 1000
     self.iteration_per_epoch    = 1000
     # env variables
-    self.coll_cache_no_group    = False
-    self.coll_cache_concurrent_link   = False
+    self.coll_cache_no_group    = ""
+    self.coll_cache_concurrent_link   = ""
     self.log_level              = "warn"
     self.profile_level          = 3
 
@@ -199,6 +199,10 @@ class RunConfig:
       [f'batch_size_{self.global_batch_size}'])
     if self.mock_embedding:
       std_out_fname += '_' + self.get_mock_sparse_name()
+    if self.coll_cache_no_group != "":
+      std_out_fname += '_nogroup_' + self.coll_cache_no_group
+    if self.coll_cache_concurrent_link != "":
+      std_out_fname += '_concurrent_impl_' + self.coll_cache_concurrent_link
     return std_out_fname
 
   def get_conf_fname(self):
@@ -218,15 +222,21 @@ class RunConfig:
       [str(self.coll_cache_policy), f'cache_rate {self.cache_percent}'])
     if self.mock_embedding:
       msg += f' mock({self.max_vocabulary_size} vocabs, {self.embed_vec_size} emb_vec_sz)'
+    if self.coll_cache_no_group != "":
+      msg += f' nogroup={self.coll_cache_no_group}'
+    if self.coll_cache_concurrent_link != "":
+      msg += f' concurrent_link={self.coll_cache_concurrent_link}'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
     assert((self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter) == self.iter_num)
     cmd_line = f'COLL_NUM_REPLICA={self.gpu_num} '
-    if self.coll_cache_no_group != False:
-      cmd_line += f'SAMGRAPH_COLL_CACHE_NO_GROUP=1 '
-    if self.coll_cache_concurrent_link != False:
-      cmd_line += f'SAMGRAPH_COLL_CACHE_CONCURRENT_LINK=1 '
+    if self.coll_cache_no_group != "":
+      cmd_line += f'SAMGRAPH_COLL_CACHE_NO_GROUP={self.coll_cache_no_group} '
+    if self.coll_cache_concurrent_link != "":
+      cmd_line += f' SAMGRAPH_COLL_CACHE_CONCURRENT_LINK_IMPL={self.coll_cache_concurrent_link} SAMGRAPH_COLL_CACHE_CONCURRENT_LINK=1 '
+    else:
+      cmd_line += f' SAMGRAPH_COLL_CACHE_CONCURRENT_LINK=0 '
     cmd_line += f'SAMGRAPH_LOG_LEVEL={self.log_level} '
     cmd_line += f'SAMGRAPH_PROFILE_LEVEL={self.profile_level} '
 
