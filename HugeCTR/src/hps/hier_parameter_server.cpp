@@ -860,6 +860,7 @@ void CollCacheParameterServer::init_per_replica(int global_replica_id,
     HCTR_LOG_S(ERROR, WORLD) << "cudaDevAttrCanUseHostPointerForRegisteredMem is " << value << "\n";
   }
 
+  coll_cache_lib::common::RunConfig::worker_id = global_replica_id;
   this->coll_cache_ptr_->build_v2(global_replica_id, ranking_nodes_list_ptr,
                                   ranking_nodes_freq_list_ptr, num_key, gpu_mem_allocator, cpu_data,
                                   dtype, dim, cache_percentage, stream);

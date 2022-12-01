@@ -25,12 +25,11 @@ namespace tensorflow {
 
 using GPUDevice = Eigen::GpuDevice;
 using CPUDevice = Eigen::ThreadPoolDevice;
-using StepProfileItem = HierarchicalParameterServer::StepProfileItem;
 
 template <typename Device>
-class GetStepProfileValue : public OpKernel {
+class AddEpochProfileValue : public OpKernel {
  public:
-  explicit GetStepProfileValue(OpKernelConstruction* ctx) : OpKernel(ctx) {
+  explicit AddEpochProfileValue(OpKernelConstruction* ctx) : OpKernel(ctx) {
     // OP_REQUIRES_OK(ctx, ctx->GetAttr("global_batch_size", &global_batch_size_));
     // OP_REQUIRES(ctx, global_batch_size_ > 0,
     //             errors::Aborted(__FILE__, ":", __LINE__, " ", "global_batch_size must be > 0."));
@@ -41,23 +40,20 @@ class GetStepProfileValue : public OpKernel {
   void Compute(OpKernelContext* ctx) override {
     const Tensor* epoch_tensor = nullptr;
     OP_REQUIRES_OK(ctx, ctx->input("epoch", &epoch_tensor));
-    const Tensor* step_tensor = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->input("step", &step_tensor));
     const Tensor* profile_type_tensor = nullptr;
     OP_REQUIRES_OK(ctx, ctx->input("profile_type", &profile_type_tensor));
-
+    const Tensor* value_tensor = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->input("value", &value_tensor));
     try {
-      int32_t epoch = epoch_tensor->scalar<int32_t>()(0);
-      int32_t step = step_tensor->scalar<int32_t>()(0);
-      int32_t profile_type = profile_type_tensor->scalar<int32_t>()(0);
+      int64_t epoch = epoch_tensor->scalar<int64_t>()(0);
+      int64_t profile_type = profile_type_tensor->scalar<int64_t>()(0);
+      double value = value_tensor->scalar<double>()(0);
 
       auto device_ctx = ctx->op_device_context();
-      OP_REQUIRES(ctx, device_ctx != nullptr, errors::Aborted("No valid device context."));
+      OP_REQUIRES(ctx, device_ctx == nullptr, errors::Aborted("should have no device context."));
 
-      Tensor* value_tensor = nullptr;
-      OP_REQUIRES_OK(ctx, ctx->allocate_output(0, {}, &value_tensor));
-      HierarchicalParameterServer::Facade::instance()->get_step_profile_value(
-          epoch, step, profile_type, value_tensor->scalar<std::int32_t>()(0));
+      HierarchicalParameterServer::Facade::instance()->add_epoch_profile_value(
+          epoch, profile_type, value);
     } catch (const std::exception& error) {
       ctx->SetStatus(errors::Aborted(error.what()));
       return;
@@ -65,12 +61,11 @@ class GetStepProfileValue : public OpKernel {
   }
 };
 
-REGISTER_KERNEL_BUILDER(Name("GetStepProfileValue")
-                            // .Device(DEVICE_GPU)
+REGISTER_KERNEL_BUILDER(Name("AddEpochProfileValue")
+                            .Device(DEVICE_CPU)
                             .HostMemory("epoch")
-                            .HostMemory("step")
                             .HostMemory("profile_type")
                             .HostMemory("value"),
-                        GetStepProfileValue<CPUDevice>);
+                        AddEpochProfileValue<CPUDevice>);
 
 }  // namespace tensorflow

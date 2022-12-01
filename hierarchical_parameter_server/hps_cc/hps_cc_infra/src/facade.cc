@@ -64,9 +64,3 @@ void Facade::forward(const char* model_name, int32_t table_id, int32_t global_re
 
 void Facade::report_avg() { this->lookup_manager_->report_avg(); }
 }  // namespace HierarchicalParameterServer
-
-// TODO: impl profile func
-void Facade::get_step_profile_value(const int32_t epoch, const int32_t step, 
-                                      const int32_t type, int32_t &value) {
-    value = 0;
-}

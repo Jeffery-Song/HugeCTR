@@ -21,6 +21,7 @@ from tensorflow import function
 from tensorflow.python.framework import config
 from tensorflow.dtypes import int32, int64
 from tensorflow.python.ops import array_ops
+from hierarchical_parameter_server.core import lookup_ops
 
 MirroredStrategy = tf_dist.MirroredStrategy
 try:
@@ -244,5 +245,12 @@ def Init(**kwargs):
     else:
         return _one_device_init(**kwargs)
 
-def GetStepProfileValue(**kwargs):
-    hps_lib.get_step_profile_value(kwargs)
+def SetStepProfileValue(**kwargs):
+    # global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
+    # hps_lib.set_step_profile_value(global_replica_id, **kwargs)
+    hps_lib.set_step_profile_value(**kwargs)
+
+def AddEpochProfileValue(**kwargs):
+    # global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
+    # hps_lib.add_epoch_profile_value(global_replica_id, **kwargs)
+    hps_lib.add_epoch_profile_value(**kwargs)

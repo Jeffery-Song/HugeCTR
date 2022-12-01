@@ -69,9 +69,16 @@ class Facade final {
                const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor,
                tensorflow::OpKernelContext* ctx);
   void report_avg();
-  void get_step_profile_value(const int32_t epoch, const int32_t step, 
-                              const int32_t type, int32_t &value);
   parameter_server_config* ps_config;
+
+  // for profiler
+  inline void set_step_profile_value(const int64_t epoch, const int64_t step, const int64_t type, double value) {
+    this->lookup_manager_->set_step_profile_value(epoch, step, type, value);
+  }
+
+  inline void add_epoch_profile_value(const int64_t epoch, const int64_t type, const double value) {
+    this->lookup_manager_->add_epoch_profile_value(epoch, type, value);
+  }
 };
 
 }  // namespace HierarchicalParameterServer

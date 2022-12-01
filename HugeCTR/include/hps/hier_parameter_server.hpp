@@ -98,6 +98,8 @@ class CollCacheParameterServer {
   using IdType = coll_cache_lib::common::IdType;
   using MemHandle = coll_cache_lib::common::MemHandle;
   using DataType = coll_cache_lib::common::DataType;
+  using LogEpochItem = coll_cache_lib::common::LogEpochItem;
+  using LogStepItem = coll_cache_lib::common::LogStepItem;
   virtual ~CollCacheParameterServer() = default;
   CollCacheParameterServer(const parameter_server_config& ps_config);
   CollCacheParameterServer(CollCacheParameterServer const&) = delete;
@@ -123,6 +125,12 @@ class CollCacheParameterServer {
   void lookup(int replica_id, const void* keys, size_t length, void* vectors,
               const std::string& model_name, size_t table_id, cudaStream_t cu_stream,
               uint64_t iter_key);
+  inline void set_step_profile_value(uint64_t epoch, uint64_t step, uint64_t item, double val) {
+    this->coll_cache_ptr_->set_step_profile_value(epoch, step, static_cast<LogStepItem>(item), val);
+  }
+  inline void add_epoch_profile_value(uint64_t epoch, uint64_t item, double val) {
+    this->coll_cache_ptr_->add_epoch_profile_value(epoch, static_cast<LogEpochItem>(item), val);
+  }
   void report_avg();
   static void barrier();
   // virtual void refresh_embedding_cache(const std::string& model_name, int device_id);

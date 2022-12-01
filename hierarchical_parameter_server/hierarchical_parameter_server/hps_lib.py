@@ -54,4 +54,5 @@ hps_ops = load_library.load_op_library(lib_file)
 lookup = hps_ops.lookup
 init = hps_ops.init
 shutdown = hps_ops.shutdown
-get_step_profile_value=hps_ops.get_step_profile_value
+set_step_profile_value=hps_ops.set_step_profile_value
+add_epoch_profile_value=hps_ops.add_epoch_profile_value
