@@ -263,6 +263,9 @@ class RunConfig:
       cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
     cmd_line += f' --ps_config_file {self.get_conf_fname()}'
 
+    cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
+    cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
+
     if durable_log:
       std_out_log = self.get_log_fname() + '.log'
       std_err_log = self.get_log_fname() + '.err.log'
