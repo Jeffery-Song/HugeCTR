@@ -39,17 +39,14 @@ class SetStepProfileValue : public OpKernel {
   }
 
   void Compute(OpKernelContext* ctx) override {
-    const Tensor* epoch_tensor = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->input("epoch", &epoch_tensor));
-    const Tensor* step_tensor = nullptr;
-    OP_REQUIRES_OK(ctx, ctx->input("step", &step_tensor));
+    const Tensor* global_replica_id_tensor = nullptr;
+    OP_REQUIRES_OK(ctx, ctx->input("global_replica_id", &global_replica_id_tensor));
     const Tensor* profile_type_tensor = nullptr;
     OP_REQUIRES_OK(ctx, ctx->input("profile_type", &profile_type_tensor));
     const Tensor* value_tensor = nullptr;
     OP_REQUIRES_OK(ctx, ctx->input("value", &value_tensor));
     try {
-      int64_t epoch = epoch_tensor->scalar<int64_t>()(0);
-      int64_t step = step_tensor->scalar<int64_t>()(0);
+      int global_replica_id = global_replica_id_tensor->scalar<int32_t>()(0);
       int64_t profile_type = profile_type_tensor->scalar<int64_t>()(0);
       double value = value_tensor->scalar<double>()(0);
 
@@ -57,7 +54,7 @@ class SetStepProfileValue : public OpKernel {
       OP_REQUIRES(ctx, device_ctx == nullptr, errors::Aborted("should have no device context."));
 
       HierarchicalParameterServer::Facade::instance()->set_step_profile_value(
-          epoch, step, profile_type, value);
+          global_replica_id, profile_type, value);
     } catch (const std::exception& error) {
       ctx->SetStatus(errors::Aborted(error.what()));
       return;
@@ -67,8 +64,7 @@ class SetStepProfileValue : public OpKernel {
 
 REGISTER_KERNEL_BUILDER(Name("SetStepProfileValue")
                             .Device(DEVICE_CPU)
-                            .HostMemory("epoch")
-                            .HostMemory("step")
+                            .HostMemory("global_replica_id")
                             .HostMemory("profile_type")
                             .HostMemory("value"),
                         SetStepProfileValue<CPUDevice>);

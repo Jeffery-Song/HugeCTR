@@ -125,11 +125,13 @@ class CollCacheParameterServer {
   void lookup(int replica_id, const void* keys, size_t length, void* vectors,
               const std::string& model_name, size_t table_id, cudaStream_t cu_stream,
               uint64_t iter_key);
-  inline void set_step_profile_value(uint64_t epoch, uint64_t step, uint64_t item, double val) {
-    this->coll_cache_ptr_->set_step_profile_value(epoch, step, static_cast<LogStepItem>(item), val);
+  inline void set_step_profile_value(int replica_id, uint64_t iter_key, uint64_t item, double val) {
+    auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + replica_id;
+    this->coll_cache_ptr_->set_step_profile_value(key, static_cast<LogStepItem>(item), val);
   }
-  inline void add_epoch_profile_value(uint64_t epoch, uint64_t item, double val) {
-    this->coll_cache_ptr_->add_epoch_profile_value(epoch, static_cast<LogEpochItem>(item), val);
+  inline void add_epoch_profile_value(int replica_id, uint64_t iter_key, uint64_t item, double val) {
+    auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + replica_id;
+    this->coll_cache_ptr_->add_epoch_profile_value(key, static_cast<LogEpochItem>(item), val);
   }
   void report_avg();
   static void barrier();

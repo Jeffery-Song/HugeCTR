@@ -246,11 +246,11 @@ def Init(**kwargs):
         return _one_device_init(**kwargs)
 
 def SetStepProfileValue(**kwargs):
-    # global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
-    # hps_lib.set_step_profile_value(global_replica_id, **kwargs)
-    hps_lib.set_step_profile_value(**kwargs)
+    global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
+    hps_lib.set_step_profile_value(global_replica_id=global_replica_id, **kwargs)
+    # hps_lib.set_step_profile_value(**kwargs)
 
 def AddEpochProfileValue(**kwargs):
-    # global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
-    # hps_lib.add_epoch_profile_value(global_replica_id, **kwargs)
-    hps_lib.add_epoch_profile_value(**kwargs)
+    global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
+    hps_lib.add_epoch_profile_value(global_replica_id=global_replica_id, **kwargs)
+    # hps_lib.add_epoch_profile_value(**kwargs)

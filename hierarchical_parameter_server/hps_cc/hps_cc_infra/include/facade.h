@@ -24,29 +24,6 @@ namespace HierarchicalParameterServer {
 
 using namespace HugeCTR;
 
-enum StepProfileItem {
-  // L1
-  kLogL1NumSample = 0,
-  kLogL1NumNode,
-  kLogL1CopyTime,
-  kLogL1RemoteBytes,
-  // L2
-  kLogL2ExtractTime,
-  kLogL2FeatCopyTime,
-  kLogL2CacheCopyTime,
-  // L3
-  kLogL3CacheGetIndexTime,
-  KLogL3CacheCopyIndexTime,
-  kLogL3CacheExtractMissTime,
-  kLogL3CacheCopyMissTime,
-  kLogL3CacheCombineMissTime,
-  kLogL3CacheCombineCacheTime,
-  kLogL3CacheCombineRemoteTime,
-  kLogL3LabelExtractTime,
-  // Number of items
-  kNumLogStepItems
-};
-
 class Facade final {
  private:
   Facade();
@@ -72,12 +49,12 @@ class Facade final {
   parameter_server_config* ps_config;
 
   // for profiler
-  inline void set_step_profile_value(const int64_t epoch, const int64_t step, const int64_t type, double value) {
-    this->lookup_manager_->set_step_profile_value(epoch, step, type, value);
+  inline void set_step_profile_value(const int global_replica_id, const int64_t type, double value) {
+    this->lookup_manager_->set_step_profile_value(global_replica_id, type, value);
   }
 
-  inline void add_epoch_profile_value(const int64_t epoch, const int64_t type, const double value) {
-    this->lookup_manager_->add_epoch_profile_value(epoch, type, value);
+  inline void add_epoch_profile_value(const int global_replica_id, const int64_t type, const double value) {
+    this->lookup_manager_->add_epoch_profile_value(global_replica_id, type, value);
   }
 };
 
