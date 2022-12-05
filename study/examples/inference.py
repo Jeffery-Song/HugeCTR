@@ -14,7 +14,7 @@ import multiprocessing
 from common_config import *
 import json
 
-from ds_generator import generate_random_samples_zipf as generate_random_samples
+from ds_generator import generate_random_samples as generate_random_samples
 
 def parse_args(default_run_config):
     argparser = argparse.ArgumentParser("RM INFERENCE")
