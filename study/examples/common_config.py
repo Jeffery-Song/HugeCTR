@@ -20,7 +20,9 @@ def get_default_common_config(**kwargs):
     default_common_config["slot_num"] = 26                             # the number of feature fields in this embedding layer
     default_common_config["embed_vec_size"] = 128                      # the dimension of embedding vectors
     default_common_config["dense_dim"] = 13                            # the dimension of dense features
-    default_common_config["global_batch_size"] = 65536                    # the globally batchsize for all GPUs
+    default_common_config["global_batch_size"] = 65536                 # the globally batchsize for all GPUs
+    default_common_config["iteration_per_epoch"] = 1000
+    default_common_config["coll_cache_enable_iter"] = 1000
     default_common_config["combiner"] = "mean"
     default_common_config["optimizer"] = "plugin_adam"
     default_common_config["np_key_type"] = np.int32
@@ -48,6 +50,10 @@ def add_common_arguments(argparser, run_config):
                             default=run_config['embed_vec_size'])
     argparser.add_argument('--global_batch_size', type=int,
                             default=run_config['global_batch_size'])
+    argparser.add_argument('--iteration_per_epoch', type=int,
+                            default=run_config['iteration_per_epoch'])   
+    argparser.add_argument('--coll_cache_enable_iter', type=int,
+                            default=run_config['coll_cache_enable_iter'])                        
     argparser.add_argument('--combiner', type=str,
                             default=run_config['combiner'])
     argparser.add_argument('--optimizer', type=str,

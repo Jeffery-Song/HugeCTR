@@ -15,6 +15,7 @@
  */
 
 #include "facade.h"
+#include <cstdint>
 
 #include "hps/inference_utils.hpp"
 

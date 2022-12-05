@@ -15,6 +15,7 @@
  */
 
 #pragma once
+#include <cstdint>
 #include "hps/inference_utils.hpp"
 #include "lookup_manager.h"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -46,6 +47,15 @@ class Facade final {
                tensorflow::OpKernelContext* ctx);
   void report_avg();
   parameter_server_config* ps_config;
+
+  // for profiler
+  inline void set_step_profile_value(const int global_replica_id, const int64_t type, double value) {
+    this->lookup_manager_->set_step_profile_value(global_replica_id, type, value);
+  }
+
+  inline void add_epoch_profile_value(const int global_replica_id, const int64_t type, const double value) {
+    this->lookup_manager_->add_epoch_profile_value(global_replica_id, type, value);
+  }
 };
 
 }  // namespace HierarchicalParameterServer
