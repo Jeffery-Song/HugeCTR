@@ -165,7 +165,10 @@ def proc_func(id):
     tf_config = {"task": {"type": "worker", "index": id}, "cluster": {"worker": []}}
     for i in range(args["gpu_num"]): tf_config['cluster']['worker'].append("localhost:" + str(12340+i))
     os.environ["TF_CONFIG"] = json.dumps(tf_config)
+    os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2"
     tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[id], 'GPU')
+    from tensorflow.keras import mixed_precision
+    mixed_precision.set_global_policy('mixed_float16')
     os.environ["HPS_WORKER_ID"] = str(id)
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     embeddings_peek, inputs_peek = inference_with_saved_model(args)

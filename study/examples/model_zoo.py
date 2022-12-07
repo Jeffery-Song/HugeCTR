@@ -117,7 +117,7 @@ class SecondOrderFeatureInteraction(tf.keras.layers.Layer):
 
         dot_products = tf.matmul(inputs, inputs, transpose_b=True)
 
-        ones = tf.ones_like(dot_products)
+        ones = tf.ones_like(dot_products, dtype=tf.float32)
         mask = tf.linalg.band_part(ones, 0, -1)
         out_dim = num_feas * (num_feas + 1) // 2
 
