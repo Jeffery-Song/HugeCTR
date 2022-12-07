@@ -49,7 +49,8 @@ class MLP(tf.keras.layers.Layer):
             index+=1
         self.layers.append(tf.keras.layers.Dense(arch[-1], activation=None, name="{}_{}".format(kwargs['name'], index)))
         if out_activation:
-          self.final_act = tf.keras.layers.Activation(out_activation, dtype='float32')
+          # self.final_act = tf.keras.layers.Activation(out_activation, dtype='float32')
+          self.final_act = tf.keras.layers.Activation(out_activation)
 
             
     def call(self, inputs, training=False):
@@ -148,9 +149,10 @@ class DCNHPS(tf.keras.models.Model):
     # (batch_size, emb).
     dense_embedding_vec = self._bottom_stack(input_dense)
 
-    interaction_output = tf.concat([sparse_embeddings, dense_embedding_vec], axis=1)
+    interaction_output = tf.concat([tf.cast(sparse_embeddings, tf.float16), dense_embedding_vec], axis=1)
     
-    interaction_output = interaction_output * tf.cast(self._cross_dense(interaction_output), tf.float32) + interaction_output
+    # interaction_output = interaction_output * tf.cast(self._cross_dense(interaction_output), tf.float32) + interaction_output
+    interaction_output = interaction_output * self._cross_dense(interaction_output) + interaction_output
 
     # interaction_output = self._feature_interaction([sparse_embeddings, dense_embedding_vec])
     feature_interaction_output = tf.concat(
