@@ -148,10 +148,10 @@ def inference_with_saved_model(args):
     if proxy:
       os.environ["http_proxy"] = proxy
     for i in range(args["iter_num"]):
-        t0 = time.time()
-        t1 = time.time()
-        logits = _whole_infer_step(ret_list[i])
-        t2 = time.time()
+        t0 = tf.timestamp()
+        t1 = tf.timestamp()
+        output = _whole_infer_step(ret_list[i])[0][0].numpy()
+        t2 = tf.timestamp()
         ds_time += t1 - t0
         md_time += t2 - t1
         # profile
