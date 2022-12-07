@@ -1,5 +1,7 @@
 from numba import njit
 import numpy as np
+import tensorflow as tf
+import os
 
 @njit(parallel=True)
 def generate_dense_keys_zipf(num_samples, num_slots, vocabulary_range_per_slot, key_dtype, alpha):
@@ -38,3 +40,33 @@ def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim, k
         cat_keys = generate_dense_keys_zipf(num_samples, num_slots, vocabulary_range_per_slot, key_dtype, alpha)
     dense_features, labels = generate_cont_feats(num_samples, dense_dim)
     return cat_keys, dense_features, labels
+
+def criteo_tb(fname, replica_batch_size, iter_num, num_replica):
+    print("load criteo from ", fname + ".sparse")
+
+    file_num_samples = os.stat(fname+".label").st_size
+    assert(file_num_samples % 4 == 0)
+    file_num_samples = file_num_samples // 4
+
+    sparse_keys = np.memmap(fname+".sparse", dtype='int32', mode='r', shape=(file_num_samples, 26))
+    dense_features = np.memmap(fname+".dense", dtype='float32', mode='r', shape=(file_num_samples, 13))
+    labels = np.memmap(fname+".label", dtype='int32', mode='r', shape=(file_num_samples, 1))
+    print(sparse_keys.shape)
+
+    assert(sparse_keys.shape[0] >= iter_num * replica_batch_size * num_replica)
+
+    sparse_keys = sparse_keys[:iter_num * replica_batch_size * num_replica, :]
+    dense_features = dense_features[:iter_num * replica_batch_size * num_replica, :]
+    labels = labels[:iter_num * replica_batch_size * num_replica, :]
+
+    def sequential_batch_gen():
+        for i in range(0, replica_batch_size * iter_num * num_replica, replica_batch_size):
+            sparse_keys, dense_features, labels
+            yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
+    dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
+        output_signature=(
+            tf.TensorSpec(shape=(replica_batch_size, 26), dtype=tf.int32), 
+            tf.TensorSpec(shape=(replica_batch_size, 13), dtype=tf.float32),
+            tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
+
+    return dataset

@@ -72,7 +72,7 @@ class Dataset(Enum):
   simple_power1             = None,                      "SP_1",       100000000, 25
   simple_power1_slot100     = None,                      "SP_1_S100",  100000000, 100
   simple_uniform            = None,                      None,         100000000, 25
-  criteo_tb                 = None,                      None,         882774559, 26
+  criteo_tb                 = "criteo_tb",               "CR",         882774585, 26
 
 class RandomDataset:
   def __init__(self, path, short_name, vocabulary, slot_num):
@@ -185,6 +185,7 @@ class RunConfig:
     self.coll_cache_concurrent_link   = ""
     self.log_level              = "warn"
     self.profile_level          = 3
+    self.custom_env = ""
 
   def get_mock_sparse_name(self):
     if self.mock_embedding:
@@ -230,7 +231,8 @@ class RunConfig:
 
   def form_cmd(self, durable_log=True):
     assert((self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter) == self.iter_num)
-    cmd_line = f'COLL_NUM_REPLICA={self.gpu_num} '
+    cmd_line = f'{self.custom_env} '
+    cmd_line += f'COLL_NUM_REPLICA={self.gpu_num} '
     if self.coll_cache_no_group != "":
       cmd_line += f'SAMGRAPH_COLL_CACHE_NO_GROUP={self.coll_cache_no_group} '
     if self.coll_cache_concurrent_link != "":

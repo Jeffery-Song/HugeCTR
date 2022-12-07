@@ -66,11 +66,14 @@ def inference_with_saved_model(args):
     with strategy.scope():
         hps.Init(global_batch_size = args["global_batch_size"],
                 ps_config_file = args["ps_config_file"])
+        barrier.wait()
         model = prepare_model(args)
         # model.summary()
     # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
     atexit.register(strategy._extended._cross_device_ops._pool.close) # type: ignore
     atexit.register(strategy._extended._host_cross_device_ops._pool.close) #type: ignore
+    time.sleep(5)
+    barrier.wait()
 
     @tf.function
     def _infer_step(inputs, labels):
@@ -89,7 +92,13 @@ def inference_with_saved_model(args):
     def _dataset_fn(num_replica, local_id):
         assert(args["global_batch_size"] % num_replica == 0)
         replica_batch_size = args["global_batch_size"] // num_replica
-        if args["random_request"] == False:
+        print(args["dataset_path"])
+        if args["dataset_path"].endswith("criteo_tb/saved_dataset"):
+            print("loading criteo")
+            from ds_generator import criteo_tb
+            dataset = criteo_tb("/nvme/songxiaoniu/criteo-TB/processed/day_6", replica_batch_size, args["iter_num"], num_replica)
+            dataset = dataset.shard(num_replica, local_id)
+        elif args["random_request"] == False:
             dataset = tf.data.experimental.load(args["dataset_path"], compression="GZIP")
             dataset = dataset.shard(num_replica, local_id)
             if dataset.element_spec[0].shape[0] != replica_batch_size:
@@ -118,10 +127,13 @@ def inference_with_saved_model(args):
         inputs = [sparse_keys, dense_features]
         ret = strategy.run(_warmup_step, args=(inputs, labels))
         ret_list.append(ret)
+    barrier.wait()
     for i in tqdm(ret_list, "warmup should be done"):
         ret = strategy.run(_warmup_step, args=i)
+    barrier.wait()
     for i in tqdm(ret_list, "warmup should be done"):
         ret = strategy.run(_warmup_step, args=i)
+    barrier.wait()
 
     ds_time = 0
     md_time = 0
@@ -138,13 +150,18 @@ def inference_with_saved_model(args):
         if i >= args["coll_cache_enable_iter"]:
             hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
         if i % 500 == 0:
-            print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500))
+            print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500), flush=True)
             ds_time = 0
             md_time = 0
+            barrier.wait()
     return embeddings_peek, inputs_peek
 
 def proc_func(id):
     print(f"worker {id} at process {os.getpid()}")
+    with open(f"/tmp/infer_{id}.pid", 'w') as f:
+        print(f"{os.getpid()}", file=f)
+    time.sleep(5)
+    # time.sleep(20)
     tf_config = {"task": {"type": "worker", "index": id}, "cluster": {"worker": []}}
     for i in range(args["gpu_num"]): tf_config['cluster']['worker'].append("localhost:" + str(12340+i))
     os.environ["TF_CONFIG"] = json.dumps(tf_config)
@@ -156,6 +173,7 @@ def proc_func(id):
 
 args = get_run_config()
 proc_list = [None for _ in range(args["gpu_num"])]
+barrier = multiprocessing.Barrier(args["gpu_num"])
 for i in range(args["gpu_num"]):
     proc_list[i] = multiprocessing.Process(target=proc_func, args=(i,))
     proc_list[i].start()
