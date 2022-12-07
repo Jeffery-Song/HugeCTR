@@ -49,6 +49,14 @@ def get_run_config():
     return run_config
 
 def prepare_model(args):
+    if args["model"] == "dcn":
+        # from model_zoo import DCNHPS
+        # model = DCNHPS(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
+        # from newdcn import DCNModel
+        # model = DCNModel(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
+        from tfrs_dcn import DCNHPS
+        model = DCNHPS(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
+        return model
     if args["dense_model_path"] == "plain":
         from model_zoo import DLRMHPS
         model = DLRMHPS("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 

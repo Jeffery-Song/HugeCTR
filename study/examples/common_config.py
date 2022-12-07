@@ -23,6 +23,7 @@ def get_default_common_config(**kwargs):
     default_common_config["global_batch_size"] = 65536                 # the globally batchsize for all GPUs
     default_common_config["iteration_per_epoch"] = 1000
     default_common_config["coll_cache_enable_iter"] = 1000
+    default_common_config["model"] = "DLRM"
     default_common_config["combiner"] = "mean"
     default_common_config["optimizer"] = "plugin_adam"
     default_common_config["np_key_type"] = np.int32
@@ -38,6 +39,8 @@ def get_default_common_config(**kwargs):
     return default_common_config
 
 def add_common_arguments(argparser, run_config):
+    argparser.add_argument('--model', type=str,
+                            default=run_config['model'])
     argparser.add_argument('--gpu_num', type=int,
                             default=run_config['gpu_num'])
     argparser.add_argument('--iter_num', type=int,

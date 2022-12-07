@@ -48,6 +48,7 @@ class System(Enum):
 
 class Model(Enum):
   dlrm = 0
+  dcn  = 1
 
 class Dataset(Enum):
   def __new__(cls, *args, **kwds):
@@ -252,6 +253,7 @@ class RunConfig:
     cmd_line += f' --global_batch_size {self.global_batch_size} '
     cmd_line += f' --combiner {self.combiner} '
     cmd_line += f' --optimizer {self.optimizer} '
+    cmd_line += f' --model {self.model.name} '
     if self.plain_dense_model:
       cmd_line += f' --dense_model_path plain'
     else:
