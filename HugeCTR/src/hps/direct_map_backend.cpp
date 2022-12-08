@@ -59,6 +59,20 @@ size_t DirectMapBackend<TKey>::contains(const std::string& table_name, const siz
   return num_keys;
 }
 
+
+namespace {
+
+std::string GetEnv(std::string key) {
+  const char *env_var_val = getenv(key.c_str());
+  if (env_var_val != nullptr) {
+    return std::string(env_var_val);
+  } else {
+    return "";
+  }
+}
+
+}
+
 template <typename TKey>
 bool DirectMapBackend<TKey>::insert(const std::string& table_name, const size_t num_pairs,
                                     const TKey* const keys, const char* const values,
@@ -72,6 +86,11 @@ bool DirectMapBackend<TKey>::insert(const std::string& table_name, const size_t 
   this->num_keys_ = num_pairs;
   this->val_ptr = values;
   this->val_len_nbytes = value_size;
+
+  if (GetEnv("SAMGRAPH_EMPTY_FEAT") != "") {
+    this->option_empty_feat = std::stoull(GetEnv("SAMGRAPH_EMPTY_FEAT"));
+  }
+
   return true;
 }
 
@@ -103,7 +122,11 @@ size_t DirectMapBackend<TKey>::fetch(const std::string& table_name, const size_t
         size_t batch_size = 0;
         for (; k != keys_end; k++) {
           if ((ulong)(*k) % parallel_level == i) {
-            on_hit((ulong)(k - keys), this->val_ptr + (size_t)(k - keys) * val_len_nbytes,
+            size_t src_off = (size_t)(*k);
+            if (this->option_empty_feat != 0) {
+              src_off = src_off % (1 << this->option_empty_feat);
+            }
+            on_hit((ulong)(k - keys), this->val_ptr + src_off * val_len_nbytes,
                    val_len_nbytes);
             if (++batch_size >= this->max_get_batch_size_) {
               break;
@@ -160,7 +183,11 @@ size_t DirectMapBackend<TKey>::fetch(const std::string& table_name, const size_t
               for (; i != indices_end; i++) {
                 const TKey& k = keys[*i];
                 if ((ulong)(k) % parallel_level == partidx) {
-                  on_hit((*i), val_ptr + (size_t)k * val_len_nbytes, val_len_nbytes);
+                  size_t src_off = (size_t)(k);
+                  if (this->option_empty_feat != 0) {
+                    src_off = src_off % (1 << this->option_empty_feat);
+                  }
+                  on_hit((*i), val_ptr + src_off * val_len_nbytes, val_len_nbytes);
                   if (++batch_size >= this->max_get_batch_size_) {
                     break;
                   }

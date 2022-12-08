@@ -99,6 +99,7 @@ class DirectMapBackend final : public VolatileBackend<TKey> {
   std::string single_table_name;
   std::atomic_bool inited_{false};
   ulong parallel_level = 16;
+  size_t option_empty_feat = 0;
 };
 
 // TODO: Remove me!

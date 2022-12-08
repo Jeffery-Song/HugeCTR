@@ -221,7 +221,7 @@ class RunConfig:
   def beauty(self):
     msg = ' '.join(
       ['Running', str(self.system), self.model.name, str(self.dataset)] +
-      [str(self.coll_cache_policy), f'cache_rate {self.cache_percent}'])
+      [str(self.coll_cache_policy), f'cache_rate {self.cache_percent}', f'batch_size {self.global_batch_size}'])
     if self.mock_embedding:
       msg += f' mock({self.max_vocabulary_size} vocabs, {self.embed_vec_size} emb_vec_sz)'
     if self.coll_cache_no_group != "":

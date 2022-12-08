@@ -36,6 +36,19 @@ RawModelLoader<TKey, TValue>::RawModelLoader() : IModelLoader() {
   embedding_table_ = new UnifiedEmbeddingTable<TKey, TValue>();
 }
 
+namespace {
+
+std::string GetEnv(std::string key) {
+  const char *env_var_val = getenv(key.c_str());
+  if (env_var_val != nullptr) {
+    return std::string(env_var_val);
+  } else {
+    return "";
+  }
+}
+
+}
+
 template <typename TKey, typename TValue>
 void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std::string& path) {
   const std::string emb_file_prefix = path + "/";
@@ -51,7 +64,12 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
                              << " elements\n";
     embedding_table_->key_count = num_key;
     embedding_table_->keys.resize(num_key);
+
     size_t vec_file_size_in_byte = sizeof(float) * num_key * dim;
+    if (GetEnv("SAMGRAPH_EMPTY_FEAT") != "") {
+      size_t empty_feat_num_key = 1 << std::stoull(GetEnv("SAMGRAPH_EMPTY_FEAT"));
+      vec_file_size_in_byte = sizeof(float) * empty_feat_num_key * dim;
+    }
     std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
     HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr,
                     "Env HPS_WORKER_ID must be set before loading hps lib\n");
@@ -63,6 +81,7 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
                                          PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
     HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
     embedding_table_->umap_len = vec_file_size_in_byte;
+
     return;
   }
 
