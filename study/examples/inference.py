@@ -6,6 +6,7 @@ if "http_proxy" in os.environ:
     proxy = os.environ["http_proxy"]
     del os.environ["http_proxy"]
 import hierarchical_parameter_server as hps
+import sparse_operation_kit as sok
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -15,6 +16,7 @@ from common_config import *
 import json
 
 from ds_generator import generate_random_samples as generate_random_samples
+from ds_generator import generate_random_samples_sok as generate_random_samples_sok
 
 def parse_args(default_run_config):
     argparser = argparse.ArgumentParser("RM INFERENCE")
@@ -58,12 +60,20 @@ def prepare_model(args):
         model = DCNHPS(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
         return model
     if args["dense_model_path"] == "plain":
-        from model_zoo import DLRMHPS
-        model = DLRMHPS("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
-            arch_bot = [256, 128, args["embed_vec_size"]],
-            arch_top = [256, 128, 1],
-            tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"], 
-            self_interaction=False)
+        if args["coll_cache_policy"] == "sok":
+            from model_zoo import DLRMSOK
+            model = DLRMSOK("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
+                arch_bot = [256, 128, args["embed_vec_size"]],
+                arch_top = [256, 128, 1],
+                tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"], 
+                self_interaction=False)
+        else:
+            from model_zoo import DLRMHPS
+            model = DLRMHPS("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
+                arch_bot = [256, 128, args["embed_vec_size"]],
+                arch_top = [256, 128, 1],
+                tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"],
+                self_interaction=False)
     else:
         from model_zoo import InferenceModelHPS
         model = InferenceModelHPS(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"], tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"])
@@ -74,6 +84,7 @@ def inference_with_saved_model(args):
     with strategy.scope():
         hps.Init(global_batch_size = args["global_batch_size"],
                 ps_config_file = args["ps_config_file"])
+        sok.Init(global_batch_size = args["global_batch_size"])
         barrier.wait()
         model = prepare_model(args)
         # model.summary()
@@ -115,16 +126,24 @@ def inference_with_saved_model(args):
             else:
                 print("loaded dataset has batch size we need, so directly use it")
         else:
-            sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
             def sequential_batch_gen():
                 for i in range(0, replica_batch_size * args["iter_num"], replica_batch_size):
                     sparse_keys, dense_features, labels
                     yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
-            dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
-                output_signature=(
-                    tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=tf.int32), 
-                    tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=tf.float32),
-                    tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
+            if args["coll_cache_policy"] == "sok":
+                sparse_keys, dense_features, labels = generate_random_samples_sok(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
+                dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
+                    output_signature=(
+                        tf.TensorSpec(shape=(replica_batch_size, args["slot_num"], 1), dtype=args["tf_key_type"]), 
+                        tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=args["tf_vector_type"]),
+                        tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
+            else:
+                sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
+                dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
+                    output_signature=(
+                        tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=args["tf_key_type"]), 
+                        tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=args["tf_vector_type"]),
+                        tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
         dataset = dataset.cache()
         dataset = dataset.prefetch(1000)
         return dataset

@@ -103,6 +103,7 @@ class CachePolicy(Enum):
   coll_cache_asymm_link=13
   clique_part=14
   clique_part_by_degree=15
+  sok = 16
 
   def __str__(self):
     name_list = [
@@ -121,7 +122,8 @@ class CachePolicy(Enum):
       'rep',
       'coll_asymm',
       'cliq_part',
-      'cliq_part_degree'
+      'cliq_part_degree',
+      'sok'
     ]
     return name_list[self.value]
   
@@ -143,6 +145,7 @@ class CachePolicy(Enum):
       "CollAsymm",
       "CliqPart",
       "CliqPartDeg",
+      "SOK"
     ]
     return policy_str_short[self.value]
 
@@ -269,6 +272,8 @@ class RunConfig:
 
     cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
     cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
+    
+    cmd_line += f' --coll_cache_policy {str(self.coll_cache_policy)}'
 
     if durable_log:
       std_out_log = self.get_log_fname() + '.log'
