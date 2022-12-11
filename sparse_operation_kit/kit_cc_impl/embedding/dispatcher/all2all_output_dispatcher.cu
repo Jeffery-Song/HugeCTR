@@ -193,6 +193,7 @@ class All2AllOutputDispatcher : public Dispatcher {
           /*chunks=*/global_gpu_count,
           /*max_chunk_size=*/num_keys_per_rank_,
           /*chunk_sizes=*/replica_num_selected_keys->GetPtrWithType<uint32_t>());
+      CK_CUDA(cudaStreamSynchronize(local_gpu->get_stream()));
       CK_CUDA(cudaGetLastError());
     }
   }
