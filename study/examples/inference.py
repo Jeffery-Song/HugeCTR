@@ -82,9 +82,11 @@ def prepare_model(args):
 def inference_with_saved_model(args):
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
-        hps.Init(global_batch_size = args["global_batch_size"],
+        if args["coll_cache_policy"] == "sok":
+            sok.Init(global_batch_size = args["global_batch_size"])
+        else:
+            hps.Init(global_batch_size = args["global_batch_size"],
                 ps_config_file = args["ps_config_file"])
-        sok.Init(global_batch_size = args["global_batch_size"])
         barrier.wait()
         model = prepare_model(args)
         # model.summary()
@@ -174,8 +176,11 @@ def inference_with_saved_model(args):
         ds_time += t1 - t0
         md_time += t2 - t1
         # profile
-        if args["coll_cache_policy"] == "sok" or i >= args["coll_cache_enable_iter"]:
-            hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
+        if args["coll_cache_policy"] == "sok":
+            sok.SetStepProfileValue(profile_type=sok.kLogL1TrainTime, value=(t2 - t1))
+        else:
+            if i >= args["coll_cache_enable_iter"]:
+                hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
         if i % 500 == 0:
             print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500), flush=True)
             ds_time = 0
@@ -199,7 +204,10 @@ def proc_func(id):
     os.environ["HPS_WORKER_ID"] = str(id)
     os.environ['TF_FORCE_GPU_ALLOW_GROWTH'] = 'true'
     embeddings_peek, inputs_peek = inference_with_saved_model(args)
-    hps.Shutdown()
+    if args["coll_cache_policy"] == "sok":
+        sok.Shutdown()
+    else:
+        hps.Shutdown()
 
 args = get_run_config()
 proc_list = [None for _ in range(args["gpu_num"])]

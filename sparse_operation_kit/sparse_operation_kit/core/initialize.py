@@ -21,6 +21,7 @@ from __future__ import print_function
 from sparse_operation_kit import kit_lib
 from tensorflow.python.ops import collective_ops
 import tensorflow.distribute as tf_dist
+from sparse_operation_kit.embeddings import embedding_ops
 
 MirroredStrategy = tf_dist.MirroredStrategy
 try:
@@ -303,3 +304,10 @@ def Init(**kwargs):
     else:
         # horovod not imported
         return _one_device_init(**kwargs)
+
+def Shutdown():
+    kit_lib.shutdown()
+
+def SetStepProfileValue(**kwargs):
+    global_replica_id = embedding_ops.get_global_replica_id(embedding_ops._get_comm_tool())
+    kit_lib.set_step_profile_value(global_replica_id=global_replica_id, **kwargs)

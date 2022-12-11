@@ -114,8 +114,6 @@ def embedding_lookup(embedding_variable, values, training=True, dynamic_input=Fa
 
     global_replica_id = get_global_replica_id(_get_comm_tool(), embedding_variable)
 
-    t1 = timestamp()
-    # print("embedding_lookup")
     vector, _ = kit_lib.plugin_dense_fprop(
         embedding_variable._handle,
         embedding_layer.handle,
@@ -126,8 +124,6 @@ def embedding_lookup(embedding_variable, values, training=True, dynamic_input=Fa
         dynamic_input=dynamic_input,
         dtype=embedding_layer.compute_dtype,
     )
-    t2 = timestamp()
-    hps_lib.set_step_profile_value(global_replica_id=global_replica_id, profile_type=hps.kLogL2CacheCopyTime, value=(t2 - t1))
 
     return vector
 

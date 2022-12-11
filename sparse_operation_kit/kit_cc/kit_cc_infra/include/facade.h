@@ -17,6 +17,7 @@
 #ifndef EMBEDDING_PLUGIN_FACADE_H
 #define EMBEDDING_PLUGIN_FACADE_H
 
+#include <cstdio>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -28,6 +29,8 @@
 #include "resources/manager.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/resource_var.h"
+#include "coll_cache_lib/profiler.h"
+#include "coll_cache_lib/run_config.h"
 
 namespace SparseOperationKit {
 
@@ -61,6 +64,8 @@ class Facade final {
 
   std::mutex mu_;
   std::vector<std::shared_ptr<std::mutex>> init_mus_;
+  std::shared_ptr<coll_cache_lib::common::Profiler> _profiler;
+  std::vector<size_t> current_steps_for_each_replica_;
 
  public:
   static Facade* instance();
@@ -74,6 +79,18 @@ class Facade final {
             const int32_t* nccl_unique_id, const uint64_t global_seed,
             const int32_t* visible_devices, const int64_t visible_device_count,
             const size_t global_batch_size, const cudaStream_t& tf_stream);
+
+  inline void set_step_profile_value(const int global_replica_id, const int64_t type, double value) {
+    int iter_key = current_steps_for_each_replica_[global_replica_id];
+    if (type == coll_cache_lib::common::kLogL1TrainTime) current_steps_for_each_replica_[global_replica_id]++;
+    auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + global_replica_id;
+    this->_profiler->LogStep(key, static_cast<coll_cache_lib::common::LogStepItem>(type), value);
+  }
+
+  inline void report_avg() {
+    this->_profiler->ReportStepAverage(coll_cache_lib::common::RunConfig::num_epoch - 1, 
+                                        coll_cache_lib::common::RunConfig::num_global_step_per_epoch - 1);
+  }
 
   void generate_unique_name(const bool trainable, std::string& variable_name);
 
