@@ -55,9 +55,14 @@ def prepare_model(args):
         # model = DCNHPS(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
         # from newdcn import DCNModel
         # model = DCNModel(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
-        from tfrs_dcn import DCNHPS
-        model = DCNHPS(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
-        return model
+        if args["coll_cache_policy"] == "sok":
+            from tfrs_dcn import DCNSOK
+            model = DCNSOK(args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"])
+            return model
+        else:
+            from tfrs_dcn import DCNHPS
+            model = DCNHPS(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
+            return model
     if args["dense_model_path"] == "plain":
         if args["coll_cache_policy"] == "sok":
             from model_zoo import DLRMSOK
