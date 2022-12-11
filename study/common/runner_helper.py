@@ -245,6 +245,9 @@ class RunConfig:
       cmd_line += f' SAMGRAPH_COLL_CACHE_CONCURRENT_LINK=0 '
     cmd_line += f'SAMGRAPH_LOG_LEVEL={self.log_level} '
     cmd_line += f'SAMGRAPH_PROFILE_LEVEL={self.profile_level} '
+    if self.coll_cache_policy == CachePolicy.sok:
+      cmd_line += f'ITERATION_PER_EPOCH={self.iteration_per_epoch} '
+      cmd_line += f'EPOCH={self.epoch} '
 
     cmd_line += f'python ../examples/inference.py'
     cmd_line += f' --gpu_num {self.gpu_num} '
@@ -268,7 +271,8 @@ class RunConfig:
       cmd_line += f' --alpha {self.alpha} '
     else:
       cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
-    cmd_line += f' --ps_config_file {self.get_conf_fname()}'
+    if self.coll_cache_policy != CachePolicy.sok:
+      cmd_line += f' --ps_config_file {self.get_conf_fname()}'
 
     cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
     cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
@@ -292,6 +296,7 @@ class RunConfig:
   def generate_ps_config(self):
     self.handle_mock_params()
     assert((self.global_batch_size % self.gpu_num) == 0)
+    if self.coll_cache_policy == CachePolicy.sok: return
     conf = {
       "supportlonglong": True,
       "models": [{
