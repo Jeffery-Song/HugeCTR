@@ -207,6 +207,7 @@ def proc_func(id):
     else:
         hps.Shutdown()
 
+print(os.environ, flush=True)
 args = get_run_config()
 proc_list = [None for _ in range(args["gpu_num"])]
 barrier = multiprocessing.Barrier(args["gpu_num"])
