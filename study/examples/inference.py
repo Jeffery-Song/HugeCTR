@@ -16,7 +16,6 @@ from common_config import *
 import json
 
 from ds_generator import generate_random_samples as generate_random_samples
-from ds_generator import generate_random_samples_sok as generate_random_samples_sok
 
 def parse_args(default_run_config):
     argparser = argparse.ArgumentParser("RM INFERENCE")
@@ -132,20 +131,13 @@ def inference_with_saved_model(args):
                 for i in range(0, replica_batch_size * args["iter_num"], replica_batch_size):
                     sparse_keys, dense_features, labels
                     yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
-            if args["coll_cache_policy"] == "sok":
-                sparse_keys, dense_features, labels = generate_random_samples_sok(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
-                dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
-                    output_signature=(
-                        tf.TensorSpec(shape=(replica_batch_size, args["slot_num"], 1), dtype=args["tf_key_type"]), 
-                        tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=args["tf_vector_type"]),
-                        tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
-            else:
-                sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
-                dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
-                    output_signature=(
-                        tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=args["tf_key_type"]), 
-                        tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=args["tf_vector_type"]),
-                        tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
+
+            sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
+            dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
+                output_signature=(
+                    tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=args["tf_key_type"]), 
+                    tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=args["tf_vector_type"]),
+                    tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
         dataset = dataset.cache()
         dataset = dataset.prefetch(1000)
         return dataset

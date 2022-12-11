@@ -233,6 +233,7 @@ class DLRMSOK(tf.keras.models.Model):
         input_cat = inputs[0]
         input_dense = inputs[1]
         
+        input_cat = tf.reshape(input_cat, [-1, input_cat.shape[1], 1])
         embedding_vector = self.lookup_layer(input_cat, training)
         embedding_vector = self.reshape_layer0(embedding_vector)
         dense_x = self.bot_nn(input_dense)
