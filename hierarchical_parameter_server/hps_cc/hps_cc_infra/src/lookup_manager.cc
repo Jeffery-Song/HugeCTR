@@ -15,12 +15,9 @@
  */
 
 #include "lookup_manager.h"
-#include <cstdio>
-#include <memory>
 
 #include "base/debug/logger.hpp"
 #include "coll_cache_lib/atomic_barrier.h"
-#include "coll_cache_lib/common.h"
 #include "coll_cache_lib/facade.h"
 #include "hps/hier_parameter_server.hpp"
 #include "hps/inference_utils.hpp"
@@ -99,17 +96,6 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
     h_values_map_.emplace(inference_params.model_name, h_values);
   }
   this->tf_ctx_list.resize(num_replicas_in_sync);
-
-  // for SOK statistic
-  if (ps_config.coll_cache_policy == coll_cache_lib::common::kSOK) { // sok
-    coll_cache_lib::common::RunConfig::cache_policy =
-        (coll_cache_lib::common::CachePolicy)ps_config.coll_cache_policy;
-    coll_cache_lib::common::RunConfig::num_device = num_replicas_in_sync;
-    coll_cache_lib::common::RunConfig::num_global_step_per_epoch =
-        ps_config.iteration_per_epoch * coll_cache_lib::common::RunConfig::num_device;
-    coll_cache_lib::common::RunConfig::num_epoch = ps_config.epoch;
-    profiler_ = std::make_shared<coll_cache_lib::common::Profiler>();
-  }
 }
 
 void LookupManager::forward(const std::string& model_name, int32_t table_id,
@@ -255,14 +241,6 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
 void LookupManager::report_avg() {
   if (coll_parameter_server_) {
     coll_parameter_server_->report_avg();
-  } else if (coll_cache_lib::common::RunConfig::cache_policy == coll_cache_lib::common::kSOK) {
-    printf("report_avg: current_steps_for_each_replica_ = ");
-    for (auto steps : current_steps_for_each_replica_) {
-      printf("%lu ", steps);
-    }
-    printf("\n");
-    profiler_->ReportStepAverage(coll_cache_lib::common::RunConfig::num_epoch - 1, coll_cache_lib::common::RunConfig::num_global_step_per_epoch - 1);
-    std::cout.flush();
   }
 }
 }  // namespace HierarchicalParameterServer

@@ -18,8 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import hierarchical_parameter_server as hps
-from hierarchical_parameter_server import hps_lib
 from sparse_operation_kit import kit_lib
 import tensorflow.distribute as tf_dist
 from tensorflow.python.framework import sparse_tensor
@@ -27,7 +25,6 @@ from tensorflow.python.distribute import distribute_lib
 from tensorflow.python.ops import check_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import resource_variable_ops
-from tensorflow import timestamp
 import sys, os
 
 CommToolSet = set(["Strategy", "MPI", "Horovod", "OneDevice"])
@@ -124,7 +121,6 @@ def embedding_lookup(embedding_variable, values, training=True, dynamic_input=Fa
         dynamic_input=dynamic_input,
         dtype=embedding_layer.compute_dtype,
     )
-
     return vector
 
 

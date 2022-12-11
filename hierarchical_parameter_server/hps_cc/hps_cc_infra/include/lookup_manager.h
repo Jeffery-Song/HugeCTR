@@ -15,12 +15,8 @@
  */
 
 #pragma once
-#include <cstdio>
-#include <memory>
 #include "coll_cache_lib/atomic_barrier.h"
 #include "coll_cache_lib/facade.h"
-#include "coll_cache_lib/profiler.h"
-#include "coll_cache_lib/run_config.h"
 #include "hps/embedding_cache.hpp"
 #include "hps/hier_parameter_server.hpp"
 #include "hps/lookup_session.hpp"
@@ -56,28 +52,15 @@ class LookupManager final {
   void report_avg();
   // for profiler
   inline void set_step_profile_value(const int global_replica_id, const uint64_t type, const double value) {
-    // if (global_replica_id == 0) printf("set step profile value type=%lu, value = %f\n", type, value);
-    // if (global_replica_id == 0 && type == 27) printf("set step profile value type=27 111\n");
     if (coll_parameter_server_) {
       auto step = this->current_steps_for_each_replica_[global_replica_id] - 1;
       coll_parameter_server_->set_step_profile_value(global_replica_id, step, type, value);
-    } else if (coll_cache_lib::common::RunConfig::cache_policy == coll_cache_lib::common::kSOK) {
-      // if (global_replica_id == 0 && type == 27) 
-      // printf("set step profile value type=27 222\n");
-      auto iter_key = this->current_steps_for_each_replica_[global_replica_id];
-      if (type == coll_cache_lib::common::kLogL1TrainTime) this->current_steps_for_each_replica_[global_replica_id]++;
-      auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + global_replica_id;
-      profiler_->LogStep(key, static_cast<coll_cache_lib::common::LogStepItem>(type), value);
     }
   }
   inline void add_epoch_profile_value(const int global_replica_id, const uint64_t type, const double value) {
     if (coll_parameter_server_) {
       auto step = this->current_steps_for_each_replica_[global_replica_id] - 1;
       coll_parameter_server_->add_epoch_profile_value(global_replica_id, step, type, value);
-    } else if (coll_cache_lib::common::RunConfig::cache_policy == coll_cache_lib::common::kSOK) {
-      auto iter_key = this->current_steps_for_each_replica_[global_replica_id];
-      auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + global_replica_id;
-      profiler_->LogEpochAdd(key, static_cast<coll_cache_lib::common::LogEpochItem>(type), value);
     }
   }
  private:
@@ -93,7 +76,6 @@ class LookupManager final {
   std::vector<size_t> current_steps_for_each_replica_;
   std::once_flag atomic_creation_flag_;
   std::shared_ptr<CollCacheParameterServer> coll_parameter_server_;
-  std::shared_ptr<coll_cache_lib::common::Profiler> profiler_;
 
  public:
   std::vector<tensorflow::OpKernelContext*> tf_ctx_list;
