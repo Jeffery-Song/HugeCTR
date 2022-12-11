@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import hierarchical_parameter_server as hps
+from hierarchical_parameter_server import hps_lib
 from sparse_operation_kit import kit_lib
 import tensorflow.distribute as tf_dist
 from tensorflow.python.framework import sparse_tensor
@@ -25,6 +27,7 @@ from tensorflow.python.distribute import distribute_lib
 from tensorflow.python.ops import check_ops
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import resource_variable_ops
+from tensorflow import timestamp
 import sys, os
 
 CommToolSet = set(["Strategy", "MPI", "Horovod", "OneDevice"])
@@ -111,6 +114,8 @@ def embedding_lookup(embedding_variable, values, training=True, dynamic_input=Fa
 
     global_replica_id = get_global_replica_id(_get_comm_tool(), embedding_variable)
 
+    t1 = timestamp()
+    # print("embedding_lookup")
     vector, _ = kit_lib.plugin_dense_fprop(
         embedding_variable._handle,
         embedding_layer.handle,
@@ -121,6 +126,9 @@ def embedding_lookup(embedding_variable, values, training=True, dynamic_input=Fa
         dynamic_input=dynamic_input,
         dtype=embedding_layer.compute_dtype,
     )
+    t2 = timestamp()
+    hps_lib.set_step_profile_value(global_replica_id=global_replica_id, profile_type=hps.kLogL2CacheCopyTime, value=(t2 - t1))
+
     return vector
 
 

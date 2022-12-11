@@ -174,7 +174,7 @@ def inference_with_saved_model(args):
         ds_time += t1 - t0
         md_time += t2 - t1
         # profile
-        if i >= args["coll_cache_enable_iter"]:
+        if args["coll_cache_policy"] == "sok" or i >= args["coll_cache_enable_iter"]:
             hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
         if i % 500 == 0:
             print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500), flush=True)
