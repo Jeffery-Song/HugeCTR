@@ -24,6 +24,7 @@ class InferenceModelHPS(tf.keras.models.Model):
                                             emb_vec_size = self.embed_vec_size,
                                             emb_vec_dtype = self.tf_vector_type)
         self.dense_model = tf.keras.models.load_model(dense_model_path, compile=False)
+        self.reshape_layer_final = tf.keras.layers.Reshape((), name = "reshape_final")
     
     def call(self, inputs):
         input_cat = inputs[0]
@@ -32,7 +33,7 @@ class InferenceModelHPS(tf.keras.models.Model):
         embeddings = tf.reshape(self.lookup_layer(input_cat),
                                 shape=[-1, self.slot_num, self.embed_vec_size])
         logit = self.dense_model([embeddings, input_dense])
-        return logit
+        return self.reshape_layer_final(logit)
 
     def summary(self):
         inputs = [tf.keras.Input(shape=(self.slot_num, ), sparse=False, dtype=self.tf_key_type),
@@ -68,6 +69,7 @@ class InferenceModelSOK(tf.keras.models.Model):
                                                         nnz_per_slot=1, use_hashtable=False)
 
         self.dense_model = tf.keras.models.load_model(dense_model_path, compile=False)
+        self.reshape_layer_final = tf.keras.layers.Reshape((), name = "reshape_final")
 
     def call(self, inputs):
         input_cat = inputs[0]
@@ -76,7 +78,7 @@ class InferenceModelSOK(tf.keras.models.Model):
         embeddings = tf.reshape(self.lookup_layer(input_cat),
                                 shape=[-1, self.slot_num, self.embed_vec_size])
         logit = self.dense_model([embeddings, input_dense])
-        return logit
+        return self.reshape_layer_final(logit)
 
     def summary(self):
         inputs = [tf.keras.Input(shape=(self.slot_num, ), sparse=False, dtype=self.tf_key_type),
@@ -163,6 +165,7 @@ class DLRMHPS(tf.keras.models.Model):
             self.interaction_out_dim = self.slot_num * (self.slot_num+1) // 2
         self.reshape_layer0 = tf.keras.layers.Reshape((slot_num, arch_bot[-1]), name="reshape0")
         self.reshape_layer1 = tf.keras.layers.Reshape((1, arch_bot[-1]), name = "reshape1")
+        self.reshape_layer_final = tf.keras.layers.Reshape((), name = "reshape_final")
         self.concat1 = tf.keras.layers.Concatenate(axis=1, name = "concat1")
         self.concat2 = tf.keras.layers.Concatenate(axis=1, name = "concat2")
             
@@ -178,7 +181,7 @@ class DLRMHPS(tf.keras.models.Model):
         Z = self.interaction_op(concat_features)
         z = self.concat2([dense_x, Z])
         logit = self.top_nn(z)
-        return logit, embedding_vector
+        return self.reshape_layer_final(logit)
 
     def summary(self):
         inputs = [tf.keras.Input(shape=(self.slot_num, ), sparse=False, dtype=self.tf_key_type), 
@@ -227,6 +230,7 @@ class DLRMSOK(tf.keras.models.Model):
         self.reshape_layer  = tf.keras.layers.Reshape((slot_num, 1), name = "reshape")
         self.reshape_layer0 = tf.keras.layers.Reshape((slot_num, arch_bot[-1]), name="reshape0")
         self.reshape_layer1 = tf.keras.layers.Reshape((1, arch_bot[-1]), name = "reshape1")
+        self.reshape_layer_final = tf.keras.layers.Reshape((), name = "reshape_final")
         self.concat1 = tf.keras.layers.Concatenate(axis=1, name = "concat1")
         self.concat2 = tf.keras.layers.Concatenate(axis=1, name = "concat2")
             
@@ -243,7 +247,7 @@ class DLRMSOK(tf.keras.models.Model):
         Z = self.interaction_op(concat_features)
         z = self.concat2([dense_x, Z])
         logit = self.top_nn(z)
-        return logit, embedding_vector
+        return self.reshape_layer_final(logit)
 
     def summary(self):
         inputs = [tf.keras.Input(shape=(self.slot_num, ), sparse=False, dtype=self.tf_key_type), 

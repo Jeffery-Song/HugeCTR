@@ -127,12 +127,12 @@ def inference_with_saved_model(args):
             else:
                 print("loaded dataset has batch size we need, so directly use it")
         else:
+            sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
             def sequential_batch_gen():
                 for i in range(0, replica_batch_size * args["iter_num"], replica_batch_size):
                     sparse_keys, dense_features, labels
                     yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
 
-            sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
             dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
                 output_signature=(
                     tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=args["tf_key_type"]), 
@@ -163,7 +163,7 @@ def inference_with_saved_model(args):
     for i in range(args["iter_num"]):
         t0 = tf.timestamp()
         t1 = tf.timestamp()
-        output = _whole_infer_step(ret_list[i])[0][0].numpy()
+        output = _whole_infer_step(ret_list[i])[0].numpy()
         t2 = tf.timestamp()
         ds_time += t1 - t0
         md_time += t2 - t1
@@ -183,13 +183,14 @@ def inference_with_saved_model(args):
 def proc_func(id):
     print(f"worker {id} at process {os.getpid()}")
     with open(f"/tmp/infer_{id}.pid", 'w') as f:
-        print(f"{os.getpid()}", file=f)
+        print(f"{os.getpid()}", file=f, flush=True)
     time.sleep(5)
     # time.sleep(20)
     tf_config = {"task": {"type": "worker", "index": id}, "cluster": {"worker": []}}
     for i in range(args["gpu_num"]): tf_config['cluster']['worker'].append("localhost:" + str(12340+i))
     os.environ["TF_CONFIG"] = json.dumps(tf_config)
     os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=2"
+    # os.environ["TF_XLA_FLAGS"] = "--tf_xla_auto_jit=fusible"
     tf.config.set_visible_devices(tf.config.list_physical_devices('GPU')[id], 'GPU')
     from tensorflow.keras import mixed_precision
     mixed_precision.set_global_policy('mixed_float16')
