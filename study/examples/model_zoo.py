@@ -224,6 +224,7 @@ class DLRMSOK(tf.keras.models.Model):
             self.interaction_out_dim = (self.slot_num+1) * (self.slot_num+2) // 2
         else:
             self.interaction_out_dim = self.slot_num * (self.slot_num+1) // 2
+        self.reshape_layer  = tf.keras.layers.Reshape((slot_num, 1), name = "reshape")
         self.reshape_layer0 = tf.keras.layers.Reshape((slot_num, arch_bot[-1]), name="reshape0")
         self.reshape_layer1 = tf.keras.layers.Reshape((1, arch_bot[-1]), name = "reshape1")
         self.concat1 = tf.keras.layers.Concatenate(axis=1, name = "concat1")
@@ -233,7 +234,7 @@ class DLRMSOK(tf.keras.models.Model):
         input_cat = inputs[0]
         input_dense = inputs[1]
         
-        input_cat = tf.reshape(input_cat, [-1, input_cat.shape[1], 1])
+        input_cat = self.reshape_layer(input_cat)
         embedding_vector = self.lookup_layer(input_cat, training)
         embedding_vector = self.reshape_layer0(embedding_vector)
         dense_x = self.bot_nn(input_dense)
