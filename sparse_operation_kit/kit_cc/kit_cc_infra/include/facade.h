@@ -90,6 +90,7 @@ class Facade final {
   inline void report_avg() {
     this->_profiler->ReportStepAverage(coll_cache_lib::common::RunConfig::num_epoch - 1, 
                                         coll_cache_lib::common::RunConfig::num_global_step_per_epoch - 1);
+    std::cout.flush();
   }
 
   void generate_unique_name(const bool trainable, std::string& variable_name);
