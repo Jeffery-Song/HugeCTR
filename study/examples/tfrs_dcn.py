@@ -134,7 +134,9 @@ class DCNSOK(tf.keras.models.Model):
                                                     key_dtype=tf.uint32,
                                                     nnz_per_slot=1, use_hashtable=False)
 
-    self.reshape_layer  = tf.keras.layers.Reshape((slot_num, 1), name = "reshape")
+    self.reshape_layer1  = tf.keras.layers.Reshape((slot_num, 1), name = "reshape1")
+    self.reshape_layer2  = tf.keras.layers.Reshape((self.slot_num * self.embed_vec_size,), name = "reshape2")
+    self.reshape_layer_final  = tf.keras.layers.Reshape((), name = "reshape_final")
     self._bottom_stack = bottom_stack if bottom_stack else MLP(arch=[256, 64, 16], out_activation="relu", name="bottom")
     self._top_stack = top_stack if top_stack else MLP(arch=[256, 256, 1], out_activation="sigmoid", name="top")
     self._cross_dense = tf.keras.layers.Dense(
@@ -149,7 +151,7 @@ class DCNSOK(tf.keras.models.Model):
 
   @tf.function(jit_compile=True) 
   def __non_lookup(self, sparse_embeddings, input_dense):
-    sparse_embeddings = tf.reshape(sparse_embeddings, [-1, self.slot_num * self.embed_vec_size])
+    sparse_embeddings = self.reshape_layer2(sparse_embeddings)
     # sparse_embeddings = tf.ones([input_cat.shape[0], self.slot_num * self.embed_vec_size])
     # (batch_size, emb).
     dense_embedding_vec = self._bottom_stack(input_dense)
@@ -165,7 +167,7 @@ class DCNSOK(tf.keras.models.Model):
 
     prediction = self._top_stack(feature_interaction_output)
 
-    return tf.reshape(prediction, [-1])
+    return self.reshape_layer_final(prediction)
 
   @tf.function
   def call(self, inputs, training=False):
@@ -178,7 +180,7 @@ class DCNSOK(tf.keras.models.Model):
     input_cat = inputs[0]
     input_dense = inputs[1]
 
-    input_cat = self.reshape_layer(input_cat)
+    input_cat = self.reshape_layer1(input_cat)
     sparse_embeddings = self._embedding_layer(input_cat, training)
     return self.__non_lookup(sparse_embeddings, input_dense)
 
@@ -250,7 +252,8 @@ class DCNHPS(tf.keras.models.Model):
                                         emb_vec_size = self.embed_vec_size,
                                         emb_vec_dtype = tf.float32)
 
-
+    self.reshape_layer2  = tf.keras.layers.Reshape((self.slot_num * self.embed_vec_size,), name = "reshape2")
+    self.reshape_layer_final  = tf.keras.layers.Reshape((), name = "reshape_final")
     self._bottom_stack = bottom_stack if bottom_stack else MLP(arch=[256, 64, 16], out_activation="relu", name="bottom")
     self._top_stack = top_stack if top_stack else MLP(arch=[256, 256, 1], out_activation="sigmoid", name="top")
     self._cross_dense = tf.keras.layers.Dense(
@@ -265,7 +268,7 @@ class DCNHPS(tf.keras.models.Model):
 
   @tf.function(jit_compile=True) 
   def __non_lookup(self, sparse_embeddings, input_dense):
-    sparse_embeddings = tf.reshape(sparse_embeddings, [-1, self.slot_num * self.embed_vec_size])
+    sparse_embeddings = self.reshape_layer2(sparse_embeddings)
     # sparse_embeddings = tf.ones([input_cat.shape[0], self.slot_num * self.embed_vec_size])
     # (batch_size, emb).
     dense_embedding_vec = self._bottom_stack(input_dense)
@@ -281,8 +284,7 @@ class DCNHPS(tf.keras.models.Model):
 
     prediction = self._top_stack(feature_interaction_output)
 
-    # return tf.reshape(prediction, [-1])
-    return prediction
+    return self.reshape_layer_final(prediction)
 
   @tf.function
   def call(self, inputs):
