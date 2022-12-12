@@ -73,7 +73,7 @@ class Dataset(Enum):
   simple_power1             = None,                      "SP_1",       100000000, 25
   simple_power1_slot100     = None,                      "SP_1_S100",  100000000, 100
   simple_uniform            = None,                      None,         100000000, 25
-  criteo_tb                 = "criteo_tb",               "CR",         882774585, 26
+  criteo_tb                 = "criteo_tb",               "CR",         882774592, 26
 
 class RandomDataset:
   def __init__(self, path, short_name, vocabulary, slot_num):
