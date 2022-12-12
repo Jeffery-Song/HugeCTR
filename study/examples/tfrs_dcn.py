@@ -122,9 +122,10 @@ class DCNSOK(tf.keras.models.Model):
     """
 
     super().__init__()
+    self.max_vocabulary_size_per_gpu = max_vocabulary_size_per_gpu
+    self.embed_vec_size = embed_vec_size
     self.slot_num = slot_num
     self.dense_dim = dense_dim
-    self.embed_vec_size = embed_vec_size
 
     self._embedding_layer = sok.All2AllDenseEmbedding(
                                                     max_vocabulary_size_per_gpu=self.max_vocabulary_size_per_gpu,
@@ -133,6 +134,7 @@ class DCNSOK(tf.keras.models.Model):
                                                     key_dtype=tf.uint32,
                                                     nnz_per_slot=1, use_hashtable=False)
 
+    self.reshape_layer  = tf.keras.layers.Reshape((slot_num, 1), name = "reshape")
     self._bottom_stack = bottom_stack if bottom_stack else MLP(arch=[256, 64, 16], out_activation="relu", name="bottom")
     self._top_stack = top_stack if top_stack else MLP(arch=[256, 256, 1], out_activation="sigmoid", name="top")
     self._cross_dense = tf.keras.layers.Dense(
@@ -176,6 +178,7 @@ class DCNSOK(tf.keras.models.Model):
     input_cat = inputs[0]
     input_dense = inputs[1]
 
+    input_cat = self.reshape_layer(input_cat)
     sparse_embeddings = self._embedding_layer(input_cat)
     return self.__non_lookup(sparse_embeddings, input_dense)
 
@@ -282,7 +285,7 @@ class DCNHPS(tf.keras.models.Model):
     return prediction
 
   @tf.function
-  def call(self, inputs):
+  def call(self, inputs, training=False):
     """Executes forward and backward pass, returns loss.
     Args:
       inputs: Model function inputs (features and labels).
@@ -292,5 +295,5 @@ class DCNHPS(tf.keras.models.Model):
     input_cat = inputs[0]
     input_dense = inputs[1]
 
-    sparse_embeddings = self._embedding_layer(input_cat)
+    sparse_embeddings = self._embedding_layer(input_cat, training)
     return self.__non_lookup(sparse_embeddings, input_dense)
