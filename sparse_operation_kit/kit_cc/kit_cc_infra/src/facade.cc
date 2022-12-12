@@ -17,6 +17,7 @@
 #include "facade.h"
 
 #include "coll_cache_lib/timer.h"
+#include "coll_profiler.h"
 #include "parameters/raw_manager.h"
 #include "tensor_buffer/tf_tensor_wrapper.h"
 #ifdef USE_NVTX
@@ -78,6 +79,9 @@ void Facade::init(const size_t global_replica_id, const size_t num_replicas_in_s
   }
   _profiler = std::make_shared<coll_cache_lib::common::Profiler>();
   current_steps_for_each_replica_.resize(coll_cache_lib::common::RunConfig::num_device, 0);
+  set_step_time = [this, global_replica_id](const int64_t type, double value)->void{
+    this->set_step_profile_value(global_replica_id, type, value);
+  };
 
   auto create_mutexs = [this]() {
     init_mus_.clear();
