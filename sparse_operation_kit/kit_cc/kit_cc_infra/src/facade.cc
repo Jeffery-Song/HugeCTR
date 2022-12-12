@@ -16,6 +16,8 @@
 
 #include "facade.h"
 
+#include "coll_cache_lib/timer.h"
+#include "coll_profiler.h"
 #include "parameters/raw_manager.h"
 #include "tensor_buffer/tf_tensor_wrapper.h"
 #ifdef USE_NVTX
@@ -24,6 +26,7 @@
 #include <atomic>
 #include <regex>
 #include <stdexcept>
+#include <cstdlib>
 
 namespace SparseOperationKit {
 
@@ -63,6 +66,22 @@ void Facade::init(const size_t global_replica_id, const size_t num_replicas_in_s
   // initialize embedding manager
   embedding_mgr_->init(global_replica_id, global_batch_size);
   // initialize other parts TODO:
+  coll_cache_lib::common::RunConfig::num_device = num_replicas_in_sync;
+  coll_cache_lib::common::RunConfig::num_global_step_per_epoch = 1000 * num_replicas_in_sync;
+  coll_cache_lib::common::RunConfig::num_epoch = 4;
+  if(const char* env_p = std::getenv("ITERATION_PER_EPOCH")) {
+    std::cout << "ITERATION_PER_EPOCH = " << env_p << '\n';
+    coll_cache_lib::common::RunConfig::num_global_step_per_epoch = std::atoi(env_p) * num_replicas_in_sync;
+  }
+  if(const char* env_p = std::getenv("EPOCH")) {
+    std::cout << "EPOCH = " << std::atoi(env_p)  << '\n';
+    coll_cache_lib::common::RunConfig::num_epoch = std::atoi(env_p);
+  }
+  _profiler = std::make_shared<coll_cache_lib::common::Profiler>();
+  current_steps_for_each_replica_.resize(coll_cache_lib::common::RunConfig::num_device, 0);
+  set_step_time = [this, global_replica_id](const int64_t type, double value)->void{
+    this->set_step_profile_value(global_replica_id, type, value);
+  };
 
   auto create_mutexs = [this]() {
     init_mus_.clear();
@@ -394,8 +413,10 @@ void Facade::forward(const tensorflow::Tensor* emb_handle, const tensorflow::Ten
                 "emb_vector.dtype is not consistent with compute_dtype.");
 
   // delegate embedding forward to embedding manager
+  coll_cache_lib::common::Timer t;
   embedding_mgr_->forward(embedding, values, global_replica_id, training, emb_vector,
                           h_replica_nnz);
+  this->set_step_profile_value(global_replica_id, static_cast<int64_t>(coll_cache_lib::common::kLogL2CacheCopyTime), t.Passed());
 
 #ifdef SOK_ASYNC
   resources_mgr_->event_record(global_replica_id, EventRecordType::RMyself,

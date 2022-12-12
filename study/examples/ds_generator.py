@@ -41,7 +41,7 @@ def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim, k
     dense_features, labels = generate_cont_feats(num_samples, dense_dim)
     return cat_keys, dense_features, labels
 
-def criteo_tb(fname, replica_batch_size, iter_num, num_replica):
+def criteo_tb(fname, replica_batch_size, iter_num, num_replica, key_type):
     print("load criteo from ", fname + ".sparse")
 
     file_num_samples = os.stat(fname+".label").st_size
@@ -65,7 +65,7 @@ def criteo_tb(fname, replica_batch_size, iter_num, num_replica):
             yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
     dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
         output_signature=(
-            tf.TensorSpec(shape=(replica_batch_size, 26), dtype=tf.int32), 
+            tf.TensorSpec(shape=(replica_batch_size, 26), dtype=key_type), 
             tf.TensorSpec(shape=(replica_batch_size, 13), dtype=tf.float32),
             tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
 

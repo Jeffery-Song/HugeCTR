@@ -23,6 +23,7 @@ def get_default_common_config(**kwargs):
     default_common_config["global_batch_size"] = 65536                 # the globally batchsize for all GPUs
     default_common_config["iteration_per_epoch"] = 1000
     default_common_config["coll_cache_enable_iter"] = 1000
+    default_common_config["coll_cache_policy"] = "coll_asymm"
     default_common_config["model"] = "DLRM"
     default_common_config["combiner"] = "mean"
     default_common_config["optimizer"] = "plugin_adam"
@@ -57,6 +58,8 @@ def add_common_arguments(argparser, run_config):
                             default=run_config['iteration_per_epoch'])   
     argparser.add_argument('--coll_cache_enable_iter', type=int,
                             default=run_config['coll_cache_enable_iter'])                        
+    argparser.add_argument('--coll_cache_policy', type=str,
+                            default=run_config['coll_cache_policy'])
     argparser.add_argument('--combiner', type=str,
                             default=run_config['combiner'])
     argparser.add_argument('--optimizer', type=str,
@@ -70,6 +73,8 @@ def add_common_arguments(argparser, run_config):
 
 def process_common_config(run_config):
     run_config["dataset_path"] += '/saved_dataset'
+    if run_config["coll_cache_policy"] == "sok":
+        run_config["tf_key_type"] = tf.uint32
     # os.environ['SAMGRAPH_LOG_LEVEL'] = run_config['_log_level']
     # os.environ["SAMGRAPH_PROFILE_LEVEL"] = run_config['_profile_level']
     # os.environ['SAMGRAPH_EMPTY_FEAT'] = run_config['_empty_feat']

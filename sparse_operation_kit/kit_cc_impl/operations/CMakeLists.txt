@@ -21,8 +21,13 @@ cmake_minimum_required(VERSION 3.8)
 
 message(STATUS "Building SOK Operations.")
 
+link_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/collcachelib/build
+)
+
 include_directories(
     ${PROJECT_SOURCE_DIR}/kit_cc_impl/
+    ${PROJECT_SOURCE_DIR}/../../../third_party/collcachelib
 )
 
 file(GLOB operations_src
@@ -37,7 +42,7 @@ file(GLOB framework_interface
 )
 
 add_library(sparse_operation_kit_compat_ops SHARED ${operations_src} ${framework_interface})
-target_link_libraries(sparse_operation_kit_compat_ops PUBLIC ${TF_LINK_FLAGS})
+target_link_libraries(sparse_operation_kit_compat_ops PUBLIC ${TF_LINK_FLAGS} coll_cache)
 
 set_target_properties(sparse_operation_kit_compat_ops PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 set_target_properties(sparse_operation_kit_compat_ops PROPERTIES CUDA_ARCHITECTURES OFF)

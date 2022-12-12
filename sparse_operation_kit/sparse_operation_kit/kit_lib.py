@@ -84,7 +84,8 @@ if not in_tensorflow2():
 
 create_global_adam_optimizer = kit_ops.create_global_adam_optimizer
 custom_optimizer_apply_gradients = kit_ops.custom_optimizer_apply_gradients
-
+set_step_profile_value = kit_ops.set_step_profile_value_sok
+shutdown = kit_ops.shutdown_sok
 
 @ops.RegisterGradient("Test")
 def _TestGrad(op, top_grad):

@@ -121,6 +121,7 @@ if(SKBUILD)
 # so we use a workaround here: copy the content of parent folder into
 # sparse_operation_kit/ before making pip package.
 include_directories(
+    ${PROJECT_SOURCE_DIR}/../third_party/collcachelib
     ${PROJECT_SOURCE_DIR}/kit_cc/kit_cc_infra/include/
     ${PROJECT_SOURCE_DIR}/kit_cc/kit_cc_infra/third_party/
     ${PROJECT_SOURCE_DIR}/kit_cc/framework/kernels/
@@ -159,6 +160,7 @@ link_directories(
     ${NCCL_LIB_PATHS}
     ${TF_LINK_DIR}/
     /usr/local/cuda/lib64/
+    ${PROJECT_SOURCE_DIR}/../third_party/collcachelib/build
 )
 
 # code sources related to framework
@@ -213,7 +215,7 @@ file(GLOB test_op
 
 # build dynamic lib
 add_library(sparse_operation_kit SHARED ${framework} ${kit_infra} ${kit_impl})
-target_link_libraries(sparse_operation_kit PUBLIC ${TF_LINK_FLAGS} nccl cusparse ${MPI_CXX_LIBRARIES})
+target_link_libraries(sparse_operation_kit PUBLIC ${TF_LINK_FLAGS} coll_cache nccl cusparse ${MPI_CXX_LIBRARIES})
 
 if(SKBUILD)
 # We haven't found a proper way to maintain the directory structure of

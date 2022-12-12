@@ -18,6 +18,9 @@
 
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/framework/variant_op_registry.h"
+#include "coll_profiler.h"
+#include "coll_cache_lib/timer.h"
+#include "coll_cache_lib/profiler.h"
 
 namespace SparseOperationKit {
 
@@ -54,13 +57,19 @@ void EmbeddingLayer::allocate_backward_spaces() {
 
 void EmbeddingLayer::forward(const Context_t& replica_context, const bool training) {
   // step 1 dispatch input to each GPU, Data-Parallel -> Model Parallel
+  coll_cache_lib::common::Timer t1;
   input_dispatcher_->Forward(replica_context, training);
+  double input_dispatch_time = t1.Passed();
 
   // step 2 do embedding lookup on each GPU independently
+  coll_cache_lib::common::Timer t2;
   embedding_lookuper_->Forward(replica_context, training);
+  double local_lookup_time = t2.Passed();
 
   // step 3 dispatch embedding vector to each GPU, Model-Parallel -> Data-Parallel
   output_dispatcher_->Forward(replica_context, training);
+  set_step_time(coll_cache_lib::common::KLogL3CacheCopyIndexTime, input_dispatch_time);
+  set_step_time(coll_cache_lib::common::kLogL3CacheExtractMissTime, local_lookup_time);
 }
 
 void EmbeddingLayer::backward(const Context_t& replica_context) {

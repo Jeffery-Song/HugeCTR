@@ -17,8 +17,13 @@ cmake_minimum_required(VERSION 3.8)
 
 message(STATUS "Building unit_test ops.")
 
+link_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/collcachelib/build
+)
+
 include_directories(
     ${PROJECT_SOURCE_DIR}/unit_test/
+    ${PROJECT_SOURCE_DIR}/../../../third_party/collcachelib
 )
 
 file(GLOB unit_test_src
@@ -33,7 +38,7 @@ file(GLOB recompile_for_unit_test
 add_definitions(-DUNIT_TEST)
 
 add_library(sok_unit_test SHARED ${unit_test_src} ${recompile_for_unit_test})
-target_link_libraries(sok_unit_test PUBLIC sparse_operation_kit)
+target_link_libraries(sok_unit_test PUBLIC sparse_operation_kit coll_cache)
 
 set_target_properties(sok_unit_test PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 set_target_properties(sok_unit_test PROPERTIES CUDA_ARCHITECTURES OFF)

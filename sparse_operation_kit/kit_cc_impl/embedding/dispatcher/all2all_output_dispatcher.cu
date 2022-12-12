@@ -16,6 +16,9 @@
 
 #include "common/include/forward_functions.h"
 #include "operation/operation_interface.h"
+#include "coll_profiler.h"
+#include "coll_cache_lib/timer.h"
+#include "coll_cache_lib/profiler.h"
 
 namespace SparseOperationKit {
 
@@ -156,6 +159,7 @@ class All2AllOutputDispatcher : public Dispatcher {
     const auto &replica_selected_indices_buf =
         replica_context->input("replica_selected_indices_buf");
 
+    coll_cache_lib::common::Timer t1;
     auto &replica_output = replica_context->output("replica_output");
     // step 1: exchange embedding values among all GPUs.
     const size_t embedding_vec_size = base_context()->get_param()->get_embedding_vec_size();
@@ -174,8 +178,11 @@ class All2AllOutputDispatcher : public Dispatcher {
                        local_gpu->get_stream()));
     }  // for dev_id in global_gpu_count
     CK_NCCL(ncclGroupEnd());
+    CK_CUDA(cudaStreamSynchronize(local_gpu->get_stream()));
+    double exchange_miss_time = t1.Passed();
 
     // step 2: reorder embedding values
+    coll_cache_lib::common::Timer t2;
     {
       // CK_CUDA(cudaMemsetAsync(replica_output->GetPtrWithType<float>(), 0,
       //                         replica_output->get_size_in_bytes(),
@@ -193,8 +200,12 @@ class All2AllOutputDispatcher : public Dispatcher {
           /*chunks=*/global_gpu_count,
           /*max_chunk_size=*/num_keys_per_rank_,
           /*chunk_sizes=*/replica_num_selected_keys->GetPtrWithType<uint32_t>());
+      CK_CUDA(cudaStreamSynchronize(local_gpu->get_stream()));
       CK_CUDA(cudaGetLastError());
     }
+    double reorder_time = t2.Passed();
+    set_step_time(coll_cache_lib::common::kLogL3CacheCopyMissTime, exchange_miss_time);
+    set_step_time(coll_cache_lib::common::kLogL3CacheCombineMissTime, reorder_time);
   }
 
   void backward(const Context_t &replica_context) override {

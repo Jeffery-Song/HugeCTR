@@ -128,6 +128,7 @@ class DenseGather : public EmbeddingLookuper {
     // write host_nnz in current iteration
     auto &host_nnz = replica_context->output("replica_host_nnz");
     host_nnz->GetPtrWithType<size_t>()[0] = static_cast<size_t>(h_local_nnz);
+    CK_CUDA(cudaStreamSynchronize(local_gpu->get_stream()));
   }
 
   void backward(const Context_t &replica_context) override {
