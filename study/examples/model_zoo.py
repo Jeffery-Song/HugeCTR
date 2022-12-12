@@ -75,7 +75,7 @@ class InferenceModelSOK(tf.keras.models.Model):
         input_cat = inputs[0]
         input_dense = inputs[1]
 
-        embeddings = tf.reshape(self.lookup_layer(input_cat),
+        embeddings = tf.reshape(self.lookup_layer(tf.cast(input_cat, tf.uint32)),
                                 shape=[-1, self.slot_num, self.embed_vec_size])
         logit = self.dense_model([embeddings, input_dense])
         return self.reshape_layer_final(logit)

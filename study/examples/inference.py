@@ -79,8 +79,14 @@ def prepare_model(args):
                 tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"],
                 self_interaction=False)
     else:
-        from model_zoo import InferenceModelHPS
-        model = InferenceModelHPS(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"], tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"])
+        if args["coll_cache_policy"] == "sok":
+            from model_zoo import InferenceModelSOK
+            model = InferenceModelSOK(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"], 
+                                    tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"],
+                                    max_vocabulary_size_per_gpu = args["max_vocabulary_size"] // args["gpu_num"])
+        else:
+            from model_zoo import InferenceModelHPS
+            model = InferenceModelHPS(args["slot_num"], args["embed_vec_size"], args["dense_dim"], args["dense_model_path"], tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"])
     return model
 
 def inference_with_saved_model(args):
@@ -173,10 +179,10 @@ def inference_with_saved_model(args):
         ds_time += t1 - t0
         md_time += t2 - t1
         # profile
-        if args["coll_cache_policy"] == "sok":
-            sok.SetStepProfileValue(profile_type=sok.kLogL1TrainTime, value=(t2 - t1))
-        else:
-            if i >= args["coll_cache_enable_iter"]:
+        if i >= args["coll_cache_enable_iter"]:
+            if args["coll_cache_policy"] == "sok":
+                sok.SetStepProfileValue(profile_type=sok.kLogL1TrainTime, value=(t2 - t1))
+            else:
                 hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
         if i % 500 == 0:
             print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500), flush=True)
