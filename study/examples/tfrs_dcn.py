@@ -168,7 +168,7 @@ class DCNSOK(tf.keras.models.Model):
     return tf.reshape(prediction, [-1])
 
   @tf.function
-  def call(self, inputs):
+  def call(self, inputs, training=False):
     """Executes forward and backward pass, returns loss.
     Args:
       inputs: Model function inputs (features and labels).
@@ -179,7 +179,7 @@ class DCNSOK(tf.keras.models.Model):
     input_dense = inputs[1]
 
     input_cat = self.reshape_layer(input_cat)
-    sparse_embeddings = self._embedding_layer(input_cat)
+    sparse_embeddings = self._embedding_layer(input_cat, training)
     return self.__non_lookup(sparse_embeddings, input_dense)
 
 
@@ -285,7 +285,7 @@ class DCNHPS(tf.keras.models.Model):
     return prediction
 
   @tf.function
-  def call(self, inputs, training=False):
+  def call(self, inputs):
     """Executes forward and backward pass, returns loss.
     Args:
       inputs: Model function inputs (features and labels).
@@ -295,5 +295,5 @@ class DCNHPS(tf.keras.models.Model):
     input_cat = inputs[0]
     input_dense = inputs[1]
 
-    sparse_embeddings = self._embedding_layer(input_cat, training)
+    sparse_embeddings = self._embedding_layer(input_cat)
     return self.__non_lookup(sparse_embeddings, input_dense)
