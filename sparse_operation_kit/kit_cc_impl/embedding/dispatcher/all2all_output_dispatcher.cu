@@ -106,6 +106,7 @@ __global__ void gatherExKernel(const size_t EmbeddingDimension, EmbeddingType co
 template <typename ValueType>
 class All2AllOutputDispatcher : public Dispatcher {
  public:
+  size_t time_inject_ = 0;
   explicit All2AllOutputDispatcher(ConstructionContext_t context)
       : Dispatcher(context),
         resource_mgr_(base_context()->get_resource_mgr()),
@@ -114,6 +115,9 @@ class All2AllOutputDispatcher : public Dispatcher {
     const size_t local_gpu_count = resource_mgr_->get_local_gpu_count();
     exchanged_embeddings_buf_.reserve(local_gpu_count);
     gathered_gradients_buf_.reserve(local_gpu_count);
+    if (std::getenv("COLL_SOK_TIME_INJECT") != nullptr && std::string(std::getenv("COLL_SOK_TIME_INJECT")) != "") {
+      time_inject_ = std::stoull(std::getenv("COLL_SOK_TIME_INJECT"));
+    }
   }
 
   void allocate_forward_spaces() override {
@@ -179,6 +183,10 @@ class All2AllOutputDispatcher : public Dispatcher {
     }  // for dev_id in global_gpu_count
     CK_NCCL(ncclGroupEnd());
     CK_CUDA(cudaStreamSynchronize(local_gpu->get_stream()));
+    if (time_inject_ != 0) {
+      coll_cache_lib::common::Timer t_inject;
+      while(t_inject.PassedMicro() < time_inject_) {}
+    }
     double exchange_miss_time = t1.Passed();
 
     // step 2: reorder embedding values

@@ -100,6 +100,7 @@ def inference_with_saved_model(args):
         barrier.wait()
         model = prepare_model(args)
         # model.summary()
+    barrier.wait()
     # from https://github.com/tensorflow/tensorflow/issues/50487#issuecomment-997304668
     atexit.register(strategy._extended._cross_device_ops._pool.close) # type: ignore
     atexit.register(strategy._extended._host_cross_device_ops._pool.close) #type: ignore
