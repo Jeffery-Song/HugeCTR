@@ -31,11 +31,11 @@ selected_col += ['coll_cache:z']
 cfg_list_collector = (cfg_list_collector.copy()
   # .select('dataset', [Dataset.twitter, Dataset.uk_2006_05])
   # .select('cache_policy', [CachePolicy.coll_cache_10])
-  # .select('pipeline', [False])
+#   .select('pipeline', [False])
   # .override_T('logdir', [
   #   # 'run-logs-backup-pcvyatta',
   #   # 'run-logs-backup',
-  #   'run-logs-backup-12-11',
+  #   'run-logs',
   # ])
 )
 

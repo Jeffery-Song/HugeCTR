@@ -1,0 +1,515 @@
+[INFO] hierarchical_parameter_server is imported
+[INFO]: sparse_operation_kit is imported
+environ({'SAMGRAPH_COLL_CACHE_CONCURRENT_LINK_IMPL': 'MPSPhase', 'SAMGRAPH_LOG_LEVEL': 'warn', 'SAMGRAPH_PROFILE_LEVEL': '3', 'SAMGRAPH_COLL_CACHE_CONCURRENT_LINK': '1', 'COLL_NUM_REPLICA': '8', 'SHELL': '/usr/bin/zsh', 'LSCOLORS': 'Gxfxcxdxbxegedabagacad', 'LESS': '-R', 'TMUX': '/tmp/tmux-0/default,222,0', 'PWD': '/hugectr_dev/study/exp-coll-hard-wired-8-v100-sxn-full', 'LOGNAME': 'root', '_': '/usr/bin/python', 'MOTD_SHOWN': 'pam', 'HOME': '/root', 'LANG': 'zh_HK.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'LC_TERMINAL': 'iTerm2', 'SSH_CONNECTION': '172.17.0.1 54686 172.17.0.3 22', 'TERM': 'screen', 'ZSH': '/root/.oh-my-zsh', 'GUROBI_HOME': '/opt/gurobi-install/gurobi-latest/linux64', 'USER': 'root', 'TMUX_PANE': '%0', 'LIBRARY_PATH': ':/opt/gurobi-install/gurobi-latest/linux64/lib:/opt/gurobi-install/gurobi-latest/linux64/lib', 'LC_TERMINAL_VERSION': '3.4.16', 'SHLVL': '3', 'PAGER': 'less', 'LD_LIBRARY_PATH': ':/opt/gurobi-install/gurobi-latest/linux64/lib', 'LC_CTYPE': 'C.UTF-8', 'SSH_CLIENT': '172.17.0.1 54686 22', 'PATH': '/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/gurobi-install/gurobi-latest/linux64/bin', 'SSH_TTY': '/dev/pts/1', 'OLDPWD': '/root', 'TF2_BEHAVIOR': '1', 'TF_FORCE_GPU_ALLOW_GROWTH': 'true', 'CUDA_DEVICE_ORDER': 'PCI_BUS_ID', 'NCCL_LAUNCH_MODE': 'PARALLEL', 'TF_GPU_THREAD_MODE': 'gpu_private'})
+config:eval_tsp="2022-12-12 01:27:21"
+config:gpu_num=8
+config:iter_num=3000
+config:slot_num=100
+config:embed_vec_size=128
+config:dense_dim=13
+config:global_batch_size=65536
+config:iteration_per_epoch=1000
+config:coll_cache_enable_iter=1000
+config:coll_cache_policy=coll_asymm
+config:embed_only=False
+config:model=dlrm
+config:combiner=mean
+config:optimizer=plugin_adam
+config:np_key_type=<class 'numpy.int32'>
+config:np_vector_type=<class 'numpy.float32'>
+config:tf_key_type=<dtype: 'int32'>
+config:tf_vector_type=<dtype: 'float32'>
+config:ps_config_file=run-configs/COLL_dlrm_SP_01_S100_policy_CollAsymm_cache_rate_0.05_batch_size_65536_mock_100000000_128_concurrent_impl_MPSPhase.json
+config:dense_model_path=plain
+config:dataset_path=/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+config:random_request=True
+config:alpha=0.1
+config:max_vocabulary_size=100000000
+config:vocabulary_range_per_slot=[[0, 1000000], [1000000, 2000000], [2000000, 3000000], [3000000, 4000000], [4000000, 5000000], [5000000, 6000000], [6000000, 7000000], [7000000, 8000000], [8000000, 9000000], [9000000, 10000000], [10000000, 11000000], [11000000, 12000000], [12000000, 13000000], [13000000, 14000000], [14000000, 15000000], [15000000, 16000000], [16000000, 17000000], [17000000, 18000000], [18000000, 19000000], [19000000, 20000000], [20000000, 21000000], [21000000, 22000000], [22000000, 23000000], [23000000, 24000000], [24000000, 25000000], [25000000, 26000000], [26000000, 27000000], [27000000, 28000000], [28000000, 29000000], [29000000, 30000000], [30000000, 31000000], [31000000, 32000000], [32000000, 33000000], [33000000, 34000000], [34000000, 35000000], [35000000, 36000000], [36000000, 37000000], [37000000, 38000000], [38000000, 39000000], [39000000, 40000000], [40000000, 41000000], [41000000, 42000000], [42000000, 43000000], [43000000, 44000000], [44000000, 45000000], [45000000, 46000000], [46000000, 47000000], [47000000, 48000000], [48000000, 49000000], [49000000, 50000000], [50000000, 51000000], [51000000, 52000000], [52000000, 53000000], [53000000, 54000000], [54000000, 55000000], [55000000, 56000000], [56000000, 57000000], [57000000, 58000000], [58000000, 59000000], [59000000, 60000000], [60000000, 61000000], [61000000, 62000000], [62000000, 63000000], [63000000, 64000000], [64000000, 65000000], [65000000, 66000000], [66000000, 67000000], [67000000, 68000000], [68000000, 69000000], [69000000, 70000000], [70000000, 71000000], [71000000, 72000000], [72000000, 73000000], [73000000, 74000000], [74000000, 75000000], [75000000, 76000000], [76000000, 77000000], [77000000, 78000000], [78000000, 79000000], [79000000, 80000000], [80000000, 81000000], [81000000, 82000000], [82000000, 83000000], [83000000, 84000000], [84000000, 85000000], [85000000, 86000000], [86000000, 87000000], [87000000, 88000000], [88000000, 89000000], [89000000, 90000000], [90000000, 91000000], [91000000, 92000000], [92000000, 93000000], [93000000, 94000000], [94000000, 95000000], [95000000, 96000000], [96000000, 97000000], [97000000, 98000000], [98000000, 99000000], [99000000, 100000000]]
+=====================================================HPS Parse====================================================
+=====================================================HPS Parse====================================================
+[HCTR][01:27:30.522][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.522][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.522][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.522][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.522][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.522][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.522][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.522][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.522][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.522][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.522][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.522][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.522][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.522][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.522][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.522][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.522][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.522][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.522][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.522][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.522][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.522][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.522][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: refresh_interval is not specified using default: 0
+[HCTR][01:27:30.522][INFO][RK0][main]: refresh_interval is not specified using default: 0
+====================================================HPS Create====================================================
+====================================================HPS Create====================================================
+[HCTR][01:27:30.522][INFO][RK0][main]: Creating DirectMap CPU database backend...
+[HCTR][01:27:30.522][INFO][RK0][main]: Creating DirectMap CPU database backend...
+[HCTR][01:27:30.523][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.523][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.523][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.523][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.523][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.523][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.523][DEBUG][RK0][main]: Created raw model loader in local memory!
+[HCTR][01:27:30.523][DEBUG][RK0][main]: Created raw model loader in local memory!
+=====================================================HPS Parse====================================================
+[HCTR][01:27:30.531][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.531][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.531][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.531][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.531][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.531][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.531][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.531][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.531][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.531][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.531][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.531][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.531][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.531][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.531][INFO][RK0][main]: refresh_interval is not specified using default: 0
+====================================================HPS Create====================================================
+[HCTR][01:27:30.531][INFO][RK0][main]: Creating DirectMap CPU database backend...
+[HCTR][01:27:30.531][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.531][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.531][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.531][DEBUG][RK0][main]: Created raw model loader in local memory!
+=====================================================HPS Parse====================================================
+=====================================================HPS Parse====================================================
+=====================================================HPS Parse====================================================
+=====================================================HPS Parse====================================================
+=====================================================HPS Parse====================================================
+[HCTR][01:27:30.533][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.533][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.533][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.533][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.533][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.533][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.533][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.533][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.533][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.533][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.533][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.533][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.533][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.533][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.533][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.533][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.533][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.533][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.533][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.533][INFO][RK0][main]: address is not specified using default: 127.0.0.1:7000
+[HCTR][01:27:30.533][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.533][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.533][INFO][RK0][main]: user_name is not specified using default: default
+[HCTR][01:27:30.533][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.533][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.533][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.533][INFO][RK0][main]: password is not specified using default: 
+[HCTR][01:27:30.533][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.533][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: allocation_rate is not specified using default: 268435456
+[HCTR][01:27:30.534][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.534][INFO][RK0][main]: max_get_batch_size is not specified using default: 10000
+[HCTR][01:27:30.534][INFO][RK0][main]: max_set_batch_size is not specified using default: 10000
+[HCTR][01:27:30.534][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.534][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_time_after_fetch is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.534][INFO][RK0][main]: overflow_margin is not specified using default: 18446744073709551615
+[HCTR][01:27:30.534][INFO][RK0][main]: overflow_resolution_target is not specified using default: 0.8
+[HCTR][01:27:30.534][INFO][RK0][main]: initial_cache_rate is not specified using default: 1
+[HCTR][01:27:30.534][INFO][RK0][main]: cache_missed_embeddings is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.534][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.534][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_interval is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: dense_file is not specified using default: 
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_interval is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_interval is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_interval is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: maxnum_des_feature_per_sample is not specified using default: 26
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_delay is not specified using default: 0
+[HCTR][01:27:30.534][INFO][RK0][main]: refresh_interval is not specified using default: 0
+====================================================HPS Create====================================================
+[HCTR][01:27:30.534][INFO][RK0][main]: Creating DirectMap CPU database backend...
+====================================================HPS Create====================================================
+====================================================HPS Create====================================================
+====================================================HPS Create====================================================
+[HCTR][01:27:30.534][INFO][RK0][main]: Creating DirectMap CPU database backend...
+[HCTR][01:27:30.534][INFO][RK0][main]: Creating DirectMap CPU database backend...
+[HCTR][01:27:30.534][INFO][RK0][main]: Creating DirectMap CPU database backend...
+====================================================HPS Create====================================================
+[HCTR][01:27:30.534][INFO][RK0][main]: Creating DirectMap CPU database backend...
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created raw model loader in local memory!
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created raw model loader in local memory!
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created raw model loader in local memory!
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created raw model loader in local memory!
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created blank database backend in local memory!
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: initial cache rate = 1
+[HCTR][01:27:30.534][INFO][RK0][main]: Volatile DB: cache missed embeddings = 0
+[HCTR][01:27:30.534][DEBUG][RK0][main]: Created raw model loader in local memory!
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][INFO][RK0][main]: Table: hps_et.dlrm.sparse_embedding0; cached 100000000 / 100000000 embeddings in volatile database (DirectMapBackend); load: 100000000 / 18446744073709551615 (0.00%).
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 1.
+[HCTR][01:27:30.748][DEBUG][RK0][main]: Real-time subscribers created!
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 4.
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 0.
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 2.
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 5.
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 7.
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 3.
+[HCTR][01:27:30.748][INFO][RK0][main]: Creating embedding cache in device 6.
+[HCTR][01:27:30.762][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.762][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.762][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.762][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.762][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.762][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.762][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.762][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.762][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.763][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.763][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.763][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.763][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.763][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.763][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.763][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.763][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.763][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.764][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.764][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.764][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.764][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.764][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.764][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.764][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.764][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.764][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.764][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.764][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.764][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.764][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.764][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.764][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.764][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.764][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.764][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.764][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.764][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.764][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.765][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.765][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.765][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.765][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.765][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.765][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.765][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.765][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.765][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:30.765][INFO][RK0][main]: Model name: dlrm
+[HCTR][01:27:30.765][INFO][RK0][main]: Number of embedding tables: 1
+[HCTR][01:27:30.765][INFO][RK0][main]: Use GPU embedding cache: True, cache size percentage: 0.050000
+[HCTR][01:27:30.765][INFO][RK0][main]: Use I64 input key: False
+[HCTR][01:27:30.765][INFO][RK0][main]: Configured cache hit rate threshold: 1.100000
+[HCTR][01:27:30.765][INFO][RK0][main]: The size of thread pool: 96
+[HCTR][01:27:30.765][INFO][RK0][main]: The size of worker memory pool: 1
+[HCTR][01:27:30.765][INFO][RK0][main]: The size of refresh memory pool: 0
+[HCTR][01:27:30.765][INFO][RK0][main]: The refresh percentage : 0.000000
+[HCTR][01:27:33.753][INFO][RK0][main]: Creating lookup session for dlrm on device: 5
+[HCTR][01:27:33.754][INFO][RK0][main]: Creating lookup session for dlrm on device: 2
+[HCTR][01:27:33.755][INFO][RK0][main]: Creating lookup session for dlrm on device: 3
+[HCTR][01:27:33.756][INFO][RK0][main]: Creating lookup session for dlrm on device: 6
+[HCTR][01:27:33.758][INFO][RK0][main]: Creating lookup session for dlrm on device: 7
+[HCTR][01:27:33.759][INFO][RK0][main]: Creating lookup session for dlrm on device: 4
+[HCTR][01:27:33.759][INFO][RK0][main]: Creating lookup session for dlrm on device: 1
+[HCTR][01:27:33.760][INFO][RK0][main]: Creating lookup session for dlrm on device: 0
+worker 6 at process 598156
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 5 at process 598155
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 1 at process 598151
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 7 at process 598157
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 4 at process 598154
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 2 at process 598152
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 0 at process 598150
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+worker 3 at process 598153
+/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+0 time 5.19753e-08 0.0661212
+0 time 4.19617e-08 0.068939
+0 time 4.19617e-08 0.0694091
+0 time 4.19617e-08 0.0695051
+0 time 5.19753e-08 0.0700505
+0 time 4.62532e-08 0.0700771
+0 time 4.19617e-08 0.0701562
+0 time 4.00543e-08 0.0702146
+500 time 1.36557e-05 0.0323167
+500 time 1.45574e-05 0.0324016
+500 time 1.32637e-05 0.0326649
+500 time 1.37701e-05 0.0326738
+500 time 1.36724e-05 0.0327317
+500 time 1.28636e-05 0.0328914
+500 time 1.59669e-05 0.0330508
+500 time 1.34439e-05 0.0330947
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+====================================================HPS Coll Create====================================================
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID
+Set parameter TimeLimit to value 200
+Set parameter MIPGap to value 0.05
+Set parameter GomoryPasses to value 0
+Set parameter Aggregate to value 0
+Set parameter LogFile to value "cppsolver.log"
+Set parameter Threads to value 80
+Academic license - for non-commercial use only - registered to xiaoniu.sxn@sjtu.edu.cn
+Gurobi Optimizer version 9.5.2 build v9.5.2rc0 (linux64)
+Thread count: 48 physical cores, 96 logical processors, using up to 80 threads
+Academic license - for non-commercial use only - registered to xiaoniu.sxn@sjtu.edu.cn
+Optimize a model with 270400 rows, 41993 columns and 679992 nonzeros
+Model fingerprint: 0x6d7b79a8
+Variable types: 9 continuous, 41984 integer (41984 binary)
+Coefficient statistics:
+  Matrix range     [9e-04, 4e+05]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 1e+05]
+Found heuristic solution: objective 563910.09294
+Presolve added 0 rows and 5 columns
+Presolve removed 229378 rows and 0 columns
+Presolve time: 0.93s
+Presolved: 41022 rows, 41998 columns, 191731 nonzeros
+Variable types: 1 continuous, 41997 integer (41984 binary)
+
+Deterministic concurrent LP optimizer: primal and dual simplex
+Showing first log only...
+
+
+Use crossover to convert LP symmetric solution to basic solution...
+Concurrent spin time: 0.01s
+
+Solved with primal simplex
+
+Root relaxation: objective 4.306554e+04, 811 iterations, 0.28 seconds (0.26 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+     0     0 43065.5411    0 10762 563910.093 43065.5411  92.4%     -    3s
+H    0     0                    519205.46037 43065.5411  91.7%     -    3s
+H    0     0                    362828.24555 43065.5411  88.1%     -    5s
+H    0     0                    266247.69481 44944.0274  83.1%     -    8s
+     0     0 44944.0274    0 8481 266247.695 44944.0274  83.1%     -    8s
+H    0     0                    155940.49636 44944.0274  71.2%     -   11s
+H    0     0                    102187.47162 45274.0522  55.7%     -   16s
+     0     0 45371.9130    0 8088 102187.472 45371.9130  55.6%     -   16s
+     0     0 45733.8440    0 6624 102187.472 45733.8440  55.2%     -   18s
+     0     0 46577.7719    0 7163 102187.472 46577.7719  54.4%     -   21s
+     0     0 46696.6772    0 6319 102187.472 46696.6772  54.3%     -   22s
+     0     0 46718.6964    0 6456 102187.472 46718.6964  54.3%     -   24s
+     0     0 46726.1088    0 7090 102187.472 46726.1088  54.3%     -   25s
+     0     0 46730.2685    0 7119 102187.472 46730.2685  54.3%     -   28s
+     0     0 46737.2012    0 7624 102187.472 46737.2012  54.3%     -   30s
+     0     0 46737.2012    0 7910 102187.472 46737.2012  54.3%     -   31s
+H    0     0                    100729.38749 46811.9401  53.5%     -   34s
+H    0     0                    100207.31468 46811.9401  53.3%     -   34s
+     0     0 46811.9401    0 7976 100207.315 46811.9401  53.3%     -   34s
+H    0     0                    100207.31467 46811.9401  53.3%     -   35s
+     0     0 46928.3350    0 8140 100207.315 46928.3350  53.2%     -   36s
+H    0     0                    58596.906493 46980.9798  19.8%     -   38s
+     0     0 46980.9798    0 8270 58596.9065 46980.9798  19.8%     -   38s
+     0     0 47068.9828    0 8155 58596.9065 47068.9828  19.7%     -   39s
+     0     0 47115.7121    0 8337 58596.9065 47115.7121  19.6%     -   40s
+     0     0 47148.2883    0 8425 58596.9065 47148.2883  19.5%     -   40s
+     0     0 47172.4693    0 8469 58596.9065 47172.4693  19.5%     -   41s
+     0     0 47190.9398    0 8554 58596.9065 47190.9398  19.5%     -   42s
+H    0     0                    50082.986806 47222.6612  5.71%     -   42s
+     0     0 47222.6612    0 8543 50082.9868 47222.6612  5.71%     -   42s
+     0     0 47249.2914    0 8392 50082.9868 47249.2914  5.66%     -   43s
+     0     0 47263.3174    0 8377 50082.9868 47263.3174  5.63%     -   43s
+     0     0 47272.8261    0 8376 50082.9868 47272.8261  5.61%     -   44s
+     0     0 47284.6096    0 8347 50082.9868 47284.6096  5.59%     -   44s
+     0     0 47295.0971    0 8368 50082.9868 47295.0971  5.57%     -   45s
+H    0     0                    49913.429506 47305.4097  5.23%     -   45s
+H    0     0                    49811.751265 47305.4097  5.03%     -   45s
+     0     0 47305.4097    0 8293 49811.7513 47305.4097  5.03%     -   45s
+     0     0 47308.2315    0 8276 49811.7513 47308.2315  5.03%     -   46s
+     0     0 47314.9326    0 8262 49811.7513 47314.9326  5.01%     -   47s
+     0     0 47322.0935    0 8310 49811.7513 47322.0935  5.00%     -   48s
+
+Cutting planes:
+  MIR: 69
+  Zero half: 3950
+
+Explored 1 nodes (74952 simplex iterations) in 48.63 seconds (58.73 work units)
+Thread count was 80 (of 96 available processors)
+
+Solution count 10: 49811.8 49913.4 50083 ... 266248
+
+Optimal solution found (tolerance 5.00e-02)
+Best objective 4.981175126522e+04, best bound 4.732209350848e+04, gap 4.9981%
+coll_cache:optimal_local_rate=0.352925,0.194173,0.202207,0.270658,0.270846,0.197856,0.278569,0.193102,
+coll_cache:optimal_remote_rate=0.587061,0.745812,0.737779,0.669328,0.66914,0.742129,0.661417,0.746883,
+coll_cache:optimal_cpu_rate=0.0600146,0.0600146,0.0600146,0.0600146,0.0600146,0.0600146,0.0600146,0.0600146,
+z=49811.8
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2542035968
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2552865792
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2564727296
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2564398080
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2545526272
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2563559424
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2563176448
+test_result:init:feat_nbytes=51200000000
+test_result:init:cache_nbytes=2564646400
+1000 time 1.32895e-05 0.327031
+1000 time 1.34974e-05 0.327064
+1000 time 1.35217e-05 0.32706
+1000 time 1.35026e-05 0.327063
+1000 time 1.38159e-05 0.32706
+1000 time 1.58238e-05 0.327062
+1000 time 1.35965e-05 0.327091
+1000 time 1.36991e-05 0.327066
+1500 time 1.30382e-05 0.0112672
+1500 time 1.29633e-05 0.0113596
+1500 time 1.28446e-05 0.0118372
+1500 time 1.37916e-05 0.0119749
+1500 time 1.441e-05 0.0119553
+1500 time 1.44677e-05 0.0119634
+1500 time 1.35698e-05 0.0119851
+1500 time 1.49999e-05 0.0120152
+2000 time 1.43776e-05 0.0112906
+2000 time 1.33977e-05 0.0113612
+2000 time 1.35894e-05 0.0117744
+2000 time 1.36299e-05 0.011774
+2000 time 1.45187e-05 0.0118674
+2000 time 1.49369e-05 0.0119502
+2000 time 1.43108e-05 0.0119675
+2000 time 1.43456e-05 0.0120158
+2500 time 1.42775e-05 0.0112511
+2500 time 1.39656e-05 0.0112906
+2500 time 1.38254e-05 0.0115392
+2500 time 1.36881e-05 0.0115696
+2500 time 1.42298e-05 0.0115924
+2500 time 1.43099e-05 0.0115684
+2500 time 1.38321e-05 0.0118157
+2500 time 1.4708e-05 0.0118615
+    [Step(average) Profiler Level 1 E1 S7999]
+        L1  sample           0.000000 | send           0.000000
+        L1  recv             0.000000 | copy           0.000000 | convert time 0.000000 | train  0.011659
+        L1  feature nbytes  400.00 MB | label nbytes 0.00 Bytes
+        L1  id nbytes      0.00 Bytes | graph nbytes 0.00 Bytes
+        L1  miss nbytes      24.60 MB | remote nbytes  277.49 MB
+        L1  num nodes               0 | num samples           0
+    [Step(average) Profiler Level 2 E1 S7999]
+        L2  shuffle     0.000000 | core sample  0.000000 | id remap        0.000000
+        L2  graph copy  0.000000 | id copy      0.000000 | cache feat copy 0.006402
+        L2  last layer sample time 0.000000 | size 0.000000
+    [Step(average) Profiler Level 3 E1 S7999]
+        L3  khop sample coo  0.000000 | khop sort coo      0.000000 | khop count edge     0.000000 | khop compact edge 0.000000
+        L3  walk sample coo  0.000000 | walk topk total    0.000000 | walk topk step1     0.000000 | walk topk step2   0.000000
+        L3  walk topk step3  0.000000 | walk topk step4    0.000000 | walk topk step5     0.000000
+        L3  walk topk step6  0.000000 | walk topk step7    0.000000
+        L3  remap unique     0.000000 | remap populate     0.000000 | remap mapnode       0.000000 | remap mapedge     0.000000
+        L3  cache get_index  0.000384 | cache copy_index   0.000000 | cache extract_miss  0.000000
+        L3  cache copy_miss  0.000000 | cache combine_miss 0.006000 | cache combine cache 0.001875 | cache combine remote 0.003463
+        L3  label extract  0.000000
