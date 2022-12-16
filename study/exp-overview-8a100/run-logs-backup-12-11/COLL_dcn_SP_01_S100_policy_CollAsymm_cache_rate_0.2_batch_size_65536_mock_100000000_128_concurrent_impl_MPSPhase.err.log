@@ -1,0 +1,677 @@
+2022-12-12 01:13:14.687143: I tensorflow/core/util/util.cc:169] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2022-12-12 01:13:22.329387: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.428555: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.452947: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.483093: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.524008: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.560748: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.621535: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:22.698642: I tensorflow/core/platform/cpu_feature_guard.cc:194] This TensorFlow binary is optimized with oneAPI Deep Neural Network Library (oneDNN) to use the following CPU instructions in performance-critical operations:  SSE3 SSE4.1 SSE4.2 AVX
+To enable them in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2022-12-12 01:13:23.545054: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.545121: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 1, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:25:00.0, compute capability: 8.0
+2022-12-12 01:13:23.558894: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:1/device:GPU:0 with 78724 MB memory:  -> device: 1, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:25:00.0, compute capability: 8.0
+2022-12-12 01:13:23.580123: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.580280: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.594175: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.594241: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 2, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:50:00.0, compute capability: 8.0
+2022-12-12 01:13:23.599991: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12341
+2022-12-12 01:13:23.603752: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.603808: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 3, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:55:00.0, compute capability: 8.0
+2022-12-12 01:13:23.608029: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:2/device:GPU:0 with 78724 MB memory:  -> device: 2, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:50:00.0, compute capability: 8.0
+2022-12-12 01:13:23.610966: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.611021: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 7, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:d0:00.0, compute capability: 8.0
+2022-12-12 01:13:23.619600: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:3/device:GPU:0 with 78724 MB memory:  -> device: 3, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:55:00.0, compute capability: 8.0
+2022-12-12 01:13:23.625118: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.625174: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 6, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:ca:00.0, compute capability: 8.0
+2022-12-12 01:13:23.625604: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:7/device:GPU:0 with 78724 MB memory:  -> device: 7, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:d0:00.0, compute capability: 8.0
+2022-12-12 01:13:23.631097: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.631155: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 0, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:1f:00.0, compute capability: 8.0
+2022-12-12 01:13:23.638533: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:6/device:GPU:0 with 78724 MB memory:  -> device: 6, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:ca:00.0, compute capability: 8.0
+2022-12-12 01:13:23.643776: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 0, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:1f:00.0, compute capability: 8.0
+2022-12-12 01:13:23.646101: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.646237: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.647230: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12347
+2022-12-12 01:13:23.649250: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.649291: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 4, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:8e:00.0, compute capability: 8.0
+2022-12-12 01:13:23.651222: W tensorflow/core/common_runtime/gpu/gpu_bfc_allocator.cc:42] Overriding orig_value setting because the TF_FORCE_GPU_ALLOW_GROWTH environment variable is set. Original config value was 0.
+2022-12-12 01:13:23.651262: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:localhost/replica:0/task:0/device:GPU:0 with 78724 MB memory:  -> device: 5, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:93:00.0, compute capability: 8.0
+2022-12-12 01:13:23.652362: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.652467: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.653413: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12342
+2022-12-12 01:13:23.659207: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.659336: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.660306: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12343
+2022-12-12 01:13:23.660979: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.661075: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.661924: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12346
+2022-12-12 01:13:23.663827: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:4/device:GPU:0 with 78724 MB memory:  -> device: 4, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:8e:00.0, compute capability: 8.0
+2022-12-12 01:13:23.665152: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1532] Created device /job:worker/replica:0/task:5/device:GPU:0 with 78724 MB memory:  -> device: 5, name: NVIDIA A100-SXM4-80GB, pci bus id: 0000:93:00.0, compute capability: 8.0
+2022-12-12 01:13:23.667012: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.667112: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.668167: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12340
+2022-12-12 01:13:23.684331: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.684441: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.685208: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12344
+2022-12-12 01:13:23.685348: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.685427: I tensorflow/core/distributed_runtime/rpc/grpc_channel.cc:272] Initialize GrpcChannelCache for job worker -> {0 -> localhost:12340, 1 -> localhost:12341, 2 -> localhost:12342, 3 -> localhost:12343, 4 -> localhost:12344, 5 -> localhost:12345, 6 -> localhost:12346, 7 -> localhost:12347}
+2022-12-12 01:13:23.686150: I tensorflow/core/distributed_runtime/rpc/grpc_server_lib.cc:438] Started server with target: grpc://localhost:12345
+[HCTR][01:13:25.808][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.811][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.811][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.811][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.812][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.813][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.849][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+[HCTR][01:13:25.852][ERROR][RK0][main]: using mock embedding with 100000000 * 128 elements
+warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 0it [00:00, ?it/s]warmup run: 1it [00:01,  1.50s/it]warmup run: 177it [00:01, 153.38it/s]warmup run: 358it [00:01, 336.10it/s]warmup run: 542it [00:01, 540.77it/s]warmup run: 1it [00:01,  1.34s/it]warmup run: 728it [00:01, 755.07it/s]warmup run: 184it [00:01, 176.35it/s]warmup run: 914it [00:02, 962.79it/s]warmup run: 370it [00:01, 379.25it/s]warmup run: 1096it [00:02, 1144.02it/s]warmup run: 557it [00:01, 598.11it/s]warmup run: 1it [00:01,  1.40s/it]warmup run: 1283it [00:02, 1311.75it/s]warmup run: 1it [00:01,  1.37s/it]warmup run: 746it [00:01, 821.99it/s]warmup run: 1it [00:01,  1.35s/it]warmup run: 186it [00:01, 172.13it/s]warmup run: 1470it [00:02, 1449.95it/s]warmup run: 1it [00:01,  1.35s/it]warmup run: 1it [00:01,  1.35s/it]warmup run: 1it [00:01,  1.34s/it]warmup run: 186it [00:01, 175.41it/s]warmup run: 933it [00:01, 1029.79it/s]warmup run: 163it [00:01, 156.02it/s]warmup run: 372it [00:01, 369.27it/s]warmup run: 1656it [00:02, 1557.48it/s]warmup run: 179it [00:01, 170.68it/s]warmup run: 183it [00:01, 174.85it/s]warmup run: 182it [00:01, 175.55it/s]warmup run: 1119it [00:01, 1212.62it/s]warmup run: 373it [00:01, 376.75it/s]warmup run: 329it [00:01, 337.08it/s]warmup run: 558it [00:01, 582.15it/s]warmup run: 1842it [00:02, 1638.69it/s]warmup run: 368it [00:01, 376.87it/s]warmup run: 371it [00:01, 379.93it/s]warmup run: 367it [00:01, 378.48it/s]warmup run: 1307it [00:02, 1372.41it/s]warmup run: 560it [00:01, 593.43it/s]warmup run: 495it [00:01, 530.80it/s]warmup run: 745it [00:01, 799.98it/s]warmup run: 2030it [00:02, 1706.14it/s]warmup run: 557it [00:01, 598.16it/s]warmup run: 560it [00:01, 600.88it/s]warmup run: 552it [00:01, 595.41it/s]warmup run: 750it [00:01, 817.30it/s]warmup run: 1495it [00:02, 1500.07it/s]warmup run: 667it [00:01, 736.63it/s]warmup run: 932it [00:01, 1007.74it/s]warmup run: 2239it [00:02, 1814.64it/s]warmup run: 748it [00:01, 824.41it/s]warmup run: 740it [00:01, 819.01it/s]warmup run: 750it [00:01, 825.01it/s]warmup run: 937it [00:01, 1024.40it/s]warmup run: 1683it [00:02, 1599.97it/s]warmup run: 838it [00:01, 928.83it/s]warmup run: 1116it [00:02, 1188.86it/s]warmup run: 2448it [00:02, 1894.12it/s]warmup run: 937it [00:01, 1034.34it/s]warmup run: 923it [00:01, 1020.19it/s]warmup run: 936it [00:01, 1029.67it/s]warmup run: 1128it [00:01, 1218.49it/s]warmup run: 1872it [00:02, 1678.03it/s]warmup run: 1007it [00:01, 1096.62it/s]warmup run: 1304it [00:02, 1352.11it/s]warmup run: 2655it [00:02, 1943.98it/s]warmup run: 1124it [00:01, 1218.18it/s]warmup run: 1106it [00:01, 1199.45it/s]warmup run: 1123it [00:01, 1214.84it/s]warmup run: 1319it [00:02, 1381.89it/s]warmup run: 2068it [00:02, 1756.13it/s]warmup run: 1176it [00:02, 1237.12it/s]warmup run: 1490it [00:02, 1480.28it/s]warmup run: 2864it [00:03, 1984.60it/s]warmup run: 1314it [00:02, 1381.24it/s]warmup run: 1292it [00:02, 1358.05it/s]warmup run: 1312it [00:02, 1375.32it/s]warmup run: 1510it [00:02, 1514.04it/s]warmup run: 2280it [00:02, 1859.70it/s]warmup run: 1345it [00:02, 1350.45it/s]warmup run: 3000it [00:03, 975.07it/s] warmup run: 1677it [00:02, 1582.56it/s]warmup run: 1504it [00:02, 1513.39it/s]warmup run: 1478it [00:02, 1484.96it/s]warmup run: 1503it [00:02, 1510.59it/s]warmup run: 1701it [00:02, 1618.91it/s]warmup run: 2489it [00:02, 1925.36it/s]warmup run: 1514it [00:02, 1439.07it/s]warmup run: 1865it [00:02, 1662.81it/s]warmup run: 1695it [00:02, 1618.02it/s]warmup run: 1663it [00:02, 1581.70it/s]warmup run: 1694it [00:02, 1615.27it/s]warmup run: 1893it [00:02, 1701.62it/s]warmup run: 2701it [00:02, 1980.34it/s]warmup run: 1681it [00:02, 1499.24it/s]warmup run: 2058it [00:02, 1737.86it/s]warmup run: 1887it [00:02, 1699.99it/s]warmup run: 1850it [00:02, 1661.02it/s]warmup run: 1886it [00:02, 1697.63it/s]warmup run: 2095it [00:02, 1789.70it/s]warmup run: 2913it [00:02, 2019.55it/s]warmup run: 1850it [00:02, 1552.10it/s]warmup run: 3000it [00:02, 1035.96it/s]warmup run: 2265it [00:02, 1833.12it/s]warmup run: 2086it [00:02, 1781.46it/s]warmup run: 2041it [00:02, 1730.64it/s]warmup run: 2086it [00:02, 1782.38it/s]warmup run: 2311it [00:02, 1893.88it/s]warmup run: 2022it [00:02, 1598.80it/s]warmup run: 2475it [00:02, 1910.65it/s]warmup run: 2301it [00:02, 1885.53it/s]warmup run: 2249it [00:02, 1830.97it/s]warmup run: 2300it [00:02, 1883.04it/s]warmup run: 2525it [00:02, 1964.87it/s]warmup run: 2234it [00:02, 1749.37it/s]warmup run: 2686it [00:02, 1967.01it/s]warmup run: 2513it [00:02, 1953.69it/s]warmup run: 2456it [00:02, 1899.47it/s]warmup run: 2512it [00:02, 1950.30it/s]warmup run: 2741it [00:02, 2020.01it/s]warmup run: 2442it [00:02, 1844.01it/s]warmup run: 2896it [00:02, 2004.18it/s]warmup run: 2727it [00:02, 2008.20it/s]warmup run: 2664it [00:02, 1952.48it/s]warmup run: 2726it [00:02, 2004.80it/s]warmup run: 2958it [00:02, 2061.56it/s]warmup run: 3000it [00:02, 1014.60it/s]warmup run: 2648it [00:02, 1906.47it/s]warmup run: 3000it [00:02, 1034.67it/s]warmup run: 2941it [00:02, 2045.47it/s]warmup run: 2872it [00:02, 1990.14it/s]warmup run: 2939it [00:02, 2039.37it/s]warmup run: 3000it [00:02, 1038.38it/s]warmup run: 2854it [00:02, 1950.54it/s]warmup run: 3000it [00:02, 1038.66it/s]warmup run: 3000it [00:02, 1032.68it/s]warmup run: 3000it [00:03, 989.33it/s] 
+
+
+
+
+
+
+
+warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:  10%|▉         | 294/3000 [00:00<00:00, 2939.56it/s]warmup should be done:   9%|▉         | 270/3000 [00:00<00:01, 2698.10it/s]warmup should be done:   8%|▊         | 232/3000 [00:00<00:01, 2318.36it/s]warmup should be done:  10%|▉         | 288/3000 [00:00<00:00, 2876.30it/s]warmup should be done:  10%|▉         | 290/3000 [00:00<00:00, 2894.98it/s]warmup should be done:  10%|▉         | 286/3000 [00:00<00:00, 2852.33it/s]warmup should be done:  10%|▉         | 285/3000 [00:00<00:00, 2841.03it/s]warmup should be done:   9%|▉         | 268/3000 [00:00<00:01, 2667.59it/s]warmup should be done:  18%|█▊        | 526/3000 [00:00<00:00, 2680.83it/s]warmup should be done:  19%|█▉        | 564/3000 [00:00<00:00, 2835.33it/s]warmup should be done:  20%|█▉        | 588/3000 [00:00<00:00, 2932.54it/s]warmup should be done:  19%|█▉        | 576/3000 [00:00<00:00, 2872.42it/s]warmup should be done:  19%|█▉        | 583/3000 [00:00<00:00, 2909.03it/s]warmup should be done:  18%|█▊        | 540/3000 [00:00<00:00, 2696.30it/s]warmup should be done:  19%|█▉        | 572/3000 [00:00<00:00, 2847.37it/s]warmup should be done:  19%|█▉        | 570/3000 [00:00<00:00, 2817.48it/s]warmup should be done:  29%|██▊       | 856/3000 [00:00<00:00, 2873.15it/s]warmup should be done:  29%|██▉       | 875/3000 [00:00<00:00, 2913.42it/s]warmup should be done:  27%|██▋       | 820/3000 [00:00<00:00, 2794.65it/s]warmup should be done:  29%|██▉       | 882/3000 [00:00<00:00, 2924.58it/s]warmup should be done:  29%|██▉       | 864/3000 [00:00<00:00, 2863.65it/s]warmup should be done:  29%|██▊       | 857/3000 [00:00<00:00, 2838.92it/s]warmup should be done:  28%|██▊       | 852/3000 [00:00<00:00, 2792.10it/s]warmup should be done:  27%|██▋       | 810/3000 [00:00<00:00, 2632.94it/s]warmup should be done:  37%|███▋      | 1111/3000 [00:00<00:00, 2839.70it/s]warmup should be done:  38%|███▊      | 1149/3000 [00:00<00:00, 2891.72it/s]warmup should be done:  39%|███▉      | 1167/3000 [00:00<00:00, 2907.68it/s]warmup should be done:  39%|███▉      | 1175/3000 [00:00<00:00, 2923.53it/s]warmup should be done:  38%|███▊      | 1151/3000 [00:00<00:00, 2859.74it/s]warmup should be done:  38%|███▊      | 1141/3000 [00:00<00:00, 2832.95it/s]warmup should be done:  38%|███▊      | 1132/3000 [00:00<00:00, 2774.70it/s]warmup should be done:  36%|███▌      | 1078/3000 [00:00<00:00, 2649.24it/s]warmup should be done:  47%|████▋     | 1402/3000 [00:00<00:00, 2863.68it/s]warmup should be done:  48%|████▊     | 1442/3000 [00:00<00:00, 2904.51it/s]warmup should be done:  49%|████▊     | 1458/3000 [00:00<00:00, 2904.56it/s]warmup should be done:  49%|████▉     | 1468/3000 [00:00<00:00, 2923.95it/s]warmup should be done:  48%|████▊     | 1437/3000 [00:00<00:00, 2859.27it/s]warmup should be done:  48%|████▊     | 1425/3000 [00:00<00:00, 2827.60it/s]warmup should be done:  47%|████▋     | 1410/3000 [00:00<00:00, 2763.12it/s]warmup should be done:  45%|████▍     | 1344/3000 [00:00<00:00, 2617.32it/s]warmup should be done:  58%|█████▊    | 1734/3000 [00:00<00:00, 2909.24it/s]warmup should be done:  56%|█████▋    | 1694/3000 [00:00<00:00, 2881.21it/s]warmup should be done:  59%|█████▊    | 1761/3000 [00:00<00:00, 2923.05it/s]warmup should be done:  58%|█████▊    | 1749/3000 [00:00<00:00, 2898.77it/s]warmup should be done:  57%|█████▋    | 1723/3000 [00:00<00:00, 2849.83it/s]warmup should be done:  57%|█████▋    | 1708/3000 [00:00<00:00, 2825.39it/s]warmup should be done:  56%|█████▌    | 1687/3000 [00:00<00:00, 2761.28it/s]warmup should be done:  54%|█████▎    | 1606/3000 [00:00<00:00, 2603.31it/s]warmup should be done:  68%|██████▊   | 2026/3000 [00:00<00:00, 2910.14it/s]warmup should be done:  66%|██████▌   | 1986/3000 [00:00<00:00, 2891.79it/s]warmup should be done:  66%|██████▋   | 1991/3000 [00:00<00:00, 2824.30it/s]warmup should be done:  68%|██████▊   | 2039/3000 [00:00<00:00, 2888.40it/s]warmup should be done:  67%|██████▋   | 2008/3000 [00:00<00:00, 2843.93it/s]warmup should be done:  68%|██████▊   | 2054/3000 [00:00<00:00, 2908.54it/s]warmup should be done:  65%|██████▌   | 1964/3000 [00:00<00:00, 2759.35it/s]warmup should be done:  62%|██████▏   | 1867/3000 [00:00<00:00, 2596.01it/s]warmup should be done:  77%|███████▋  | 2319/3000 [00:00<00:00, 2915.78it/s]warmup should be done:  76%|███████▌  | 2276/3000 [00:00<00:00, 2893.96it/s]warmup should be done:  78%|███████▊  | 2328/3000 [00:00<00:00, 2887.12it/s]warmup should be done:  78%|███████▊  | 2345/3000 [00:00<00:00, 2905.09it/s]warmup should be done:  76%|███████▌  | 2274/3000 [00:00<00:00, 2819.80it/s]warmup should be done:  76%|███████▋  | 2293/3000 [00:00<00:00, 2835.69it/s]warmup should be done:  75%|███████▍  | 2240/3000 [00:00<00:00, 2753.02it/s]warmup should be done:  71%|███████   | 2127/3000 [00:00<00:00, 2594.74it/s]warmup should be done:  86%|████████▌ | 2568/3000 [00:00<00:00, 2899.41it/s]warmup should be done:  87%|████████▋ | 2611/3000 [00:00<00:00, 2914.00it/s]warmup should be done:  87%|████████▋ | 2619/3000 [00:00<00:00, 2893.52it/s]warmup should be done:  85%|████████▌ | 2557/3000 [00:00<00:00, 2820.97it/s]warmup should be done:  88%|████████▊ | 2636/3000 [00:00<00:00, 2896.68it/s]warmup should be done:  86%|████████▌ | 2577/3000 [00:00<00:00, 2818.85it/s]warmup should be done:  84%|████████▍ | 2516/3000 [00:00<00:00, 2754.36it/s]warmup should be done:  80%|███████▉  | 2395/3000 [00:00<00:00, 2619.78it/s]warmup should be done:  95%|█████████▌| 2859/3000 [00:01<00:00, 2902.13it/s]warmup should be done:  97%|█████████▋| 2903/3000 [00:01<00:00, 2907.63it/s]warmup should be done:  97%|█████████▋| 2910/3000 [00:01<00:00, 2897.16it/s]warmup should be done:  95%|█████████▍| 2840/3000 [00:01<00:00, 2823.60it/s]warmup should be done:  95%|█████████▌| 2862/3000 [00:01<00:00, 2827.35it/s]warmup should be done:  98%|█████████▊| 2926/3000 [00:01<00:00, 2881.84it/s]warmup should be done:  93%|█████████▎| 2792/3000 [00:01<00:00, 2754.92it/s]warmup should be done:  89%|████████▉ | 2665/3000 [00:01<00:00, 2643.66it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2904.87it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2897.39it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2895.88it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2856.79it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2836.25it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2826.94it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2764.30it/s]warmup should be done:  98%|█████████▊| 2937/3000 [00:01<00:00, 2665.95it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2638.97it/s]
+
+
+
+
+
+warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]
+warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]
+warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:   0%|          | 0/3000 [00:00<?, ?it/s]warmup should be done:  10%|█         | 300/3000 [00:00<00:00, 2997.42it/s]warmup should be done:  10%|▉         | 292/3000 [00:00<00:00, 2918.18it/s]warmup should be done:   9%|▉         | 282/3000 [00:00<00:00, 2817.26it/s]warmup should be done:  10%|▉         | 291/3000 [00:00<00:00, 2905.29it/s]warmup should be done:  10%|▉         | 297/3000 [00:00<00:00, 2963.39it/s]warmup should be done:  10%|▉         | 299/3000 [00:00<00:00, 2981.78it/s]warmup should be done:  10%|▉         | 299/3000 [00:00<00:00, 2981.61it/s]warmup should be done:   9%|▉         | 276/3000 [00:00<00:00, 2749.95it/s]warmup should be done:  20%|██        | 603/3000 [00:00<00:00, 3014.49it/s]warmup should be done:  19%|█▉        | 570/3000 [00:00<00:00, 2850.08it/s]warmup should be done:  20%|█▉        | 585/3000 [00:00<00:00, 2921.52it/s]warmup should be done:  19%|█▊        | 560/3000 [00:00<00:00, 2801.16it/s]warmup should be done:  20%|██        | 601/3000 [00:00<00:00, 2999.41it/s]warmup should be done:  20%|█▉        | 594/3000 [00:00<00:00, 2951.71it/s]warmup should be done:  20%|█▉        | 598/3000 [00:00<00:00, 2962.87it/s]warmup should be done:  19%|█▉        | 584/3000 [00:00<00:00, 2885.20it/s]warmup should be done:  30%|███       | 905/3000 [00:00<00:00, 3015.57it/s]warmup should be done:  29%|██▊       | 856/3000 [00:00<00:00, 2854.25it/s]warmup should be done:  28%|██▊       | 841/3000 [00:00<00:00, 2802.62it/s]warmup should be done:  29%|██▉       | 878/3000 [00:00<00:00, 2922.02it/s]warmup should be done:  30%|███       | 903/3000 [00:00<00:00, 3004.42it/s]warmup should be done:  30%|██▉       | 895/3000 [00:00<00:00, 2978.16it/s]warmup should be done:  29%|██▉       | 876/3000 [00:00<00:00, 2899.41it/s]warmup should be done:  30%|██▉       | 895/3000 [00:00<00:00, 2952.60it/s]warmup should be done:  40%|████      | 1207/3000 [00:00<00:00, 3015.81it/s]warmup should be done:  37%|███▋      | 1124/3000 [00:00<00:00, 2811.53it/s]warmup should be done:  39%|███▉      | 1171/3000 [00:00<00:00, 2922.32it/s]warmup should be done:  40%|████      | 1204/3000 [00:00<00:00, 2998.01it/s]warmup should be done:  39%|███▉      | 1169/3000 [00:00<00:00, 2909.97it/s]warmup should be done:  40%|███▉      | 1193/3000 [00:00<00:00, 2961.42it/s]warmup should be done:  40%|███▉      | 1194/3000 [00:00<00:00, 2966.04it/s]warmup should be done:  38%|███▊      | 1142/3000 [00:00<00:00, 2808.97it/s]warmup should be done:  47%|████▋     | 1407/3000 [00:00<00:00, 2815.78it/s]warmup should be done:  49%|████▉     | 1465/3000 [00:00<00:00, 2926.74it/s]warmup should be done:  50%|█████     | 1509/3000 [00:00<00:00, 3005.49it/s]warmup should be done:  49%|████▉     | 1463/3000 [00:00<00:00, 2917.31it/s]warmup should be done:  50%|█████     | 1504/3000 [00:00<00:00, 2984.35it/s]warmup should be done:  50%|████▉     | 1493/3000 [00:00<00:00, 2971.42it/s]warmup should be done:  50%|████▉     | 1490/3000 [00:00<00:00, 2951.98it/s]warmup should be done:  48%|████▊     | 1426/3000 [00:00<00:00, 2819.62it/s]warmup should be done:  59%|█████▊    | 1759/3000 [00:00<00:00, 2927.81it/s]warmup should be done:  56%|█████▋    | 1689/3000 [00:00<00:00, 2812.87it/s]warmup should be done:  59%|█████▊    | 1757/3000 [00:00<00:00, 2922.32it/s]warmup should be done:  60%|█████▉    | 1793/3000 [00:00<00:00, 2980.08it/s]warmup should be done:  60%|█████▉    | 1789/3000 [00:00<00:00, 2963.14it/s]warmup should be done:  60%|██████    | 1803/3000 [00:00<00:00, 2972.00it/s]warmup should be done:  57%|█████▋    | 1711/3000 [00:00<00:00, 2827.27it/s]warmup should be done:  60%|██████    | 1810/3000 [00:00<00:00, 2969.27it/s]warmup should be done:  66%|██████▌   | 1971/3000 [00:00<00:00, 2814.76it/s]warmup should be done:  68%|██████▊   | 2053/3000 [00:00<00:00, 2930.17it/s]warmup should be done:  68%|██████▊   | 2051/3000 [00:00<00:00, 2926.44it/s]warmup should be done:  70%|██████▉   | 2087/3000 [00:00<00:00, 2968.45it/s]warmup should be done:  67%|██████▋   | 1996/3000 [00:00<00:00, 2834.16it/s]warmup should be done:  70%|███████   | 2101/3000 [00:00<00:00, 2946.79it/s]warmup should be done:  70%|██████▉   | 2092/3000 [00:00<00:00, 2680.18it/s]warmup should be done:  70%|███████   | 2108/3000 [00:00<00:00, 2584.76it/s]warmup should be done:  75%|███████▌  | 2254/3000 [00:00<00:00, 2817.35it/s]warmup should be done:  78%|███████▊  | 2347/3000 [00:00<00:00, 2930.31it/s]warmup should be done:  78%|███████▊  | 2344/3000 [00:00<00:00, 2927.21it/s]warmup should be done:  80%|███████▉  | 2386/3000 [00:00<00:00, 2975.25it/s]warmup should be done:  76%|███████▌  | 2282/3000 [00:00<00:00, 2841.77it/s]warmup should be done:  80%|███████▉  | 2396/3000 [00:00<00:00, 2929.88it/s]warmup should be done:  79%|███████▉  | 2366/3000 [00:00<00:00, 2480.57it/s]warmup should be done:  79%|███████▉  | 2375/3000 [00:00<00:00, 2452.92it/s]warmup should be done:  88%|████████▊ | 2641/3000 [00:00<00:00, 2929.46it/s]warmup should be done:  85%|████████▍ | 2536/3000 [00:00<00:00, 2813.00it/s]warmup should be done:  88%|████████▊ | 2639/3000 [00:00<00:00, 2932.36it/s]warmup should be done:  90%|████████▉ | 2687/3000 [00:00<00:00, 2983.85it/s]warmup should be done:  86%|████████▌ | 2567/3000 [00:00<00:00, 2843.40it/s]warmup should be done:  90%|████████▉ | 2696/3000 [00:00<00:00, 2949.23it/s]warmup should be done:  89%|████████▊ | 2662/3000 [00:00<00:00, 2613.92it/s]warmup should be done:  89%|████████▉ | 2677/3000 [00:00<00:00, 2609.00it/s]warmup should be done:  98%|█████████▊| 2935/3000 [00:01<00:00, 2930.37it/s]warmup should be done:  94%|█████████▍| 2818/3000 [00:01<00:00, 2811.77it/s]warmup should be done:  98%|█████████▊| 2935/3000 [00:01<00:00, 2938.72it/s]warmup should be done: 100%|█████████▉| 2987/3000 [00:01<00:00, 2988.28it/s]warmup should be done:  95%|█████████▌| 2852/3000 [00:01<00:00, 2843.75it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2973.33it/s]warmup should be done: 100%|█████████▉| 2991/3000 [00:01<00:00, 2940.28it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2958.93it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2926.24it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2923.90it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2838.06it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2811.58it/s]warmup should be done:  99%|█████████▊| 2960/3000 [00:01<00:00, 2716.52it/s]warmup should be done:  99%|█████████▉| 2971/3000 [00:01<00:00, 2702.99it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2773.59it/s]warmup should be done: 100%|██████████| 3000/3000 [00:01<00:00, 2767.19it/s]
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b32760>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b36790>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b369d0>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b32e50>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b35b20>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b32e80>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b32b50>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+
+WARNING:tensorflow:AutoGraph could not transform <bound method DCNHPS.call of <tensorflow.python.eager.function.TfMethodTarget object at 0x7f1191b35cd0>> and will run it as-is.
+Cause: mangled names are not yet supported
+To silence this warning, decorate the function with @tf.autograph.experimental.do_not_convert
+2022-12-12 01:14:30.225410: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c3e3bed20 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.225468: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.227532: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c363c31a0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.227557: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.227711: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c36bc5a00 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.227739: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.232863: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.233305: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.234906: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.331869: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c36bc54c0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.331920: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.339104: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.339378: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c3e3bef70 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.339414: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.347032: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.411258: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c36bc85b0 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.411308: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.413526: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c363c6f60 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.413564: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.413718: I tensorflow/compiler/xla/service/service.cc:170] XLA service 0x7f0c32324d70 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+2022-12-12 01:14:30.413757: I tensorflow/compiler/xla/service/service.cc:178]   StreamExecutor device (0): NVIDIA A100-SXM4-80GB, Compute Capability 8.0
+2022-12-12 01:14:30.416795: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.418741: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:30.419911: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:263] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2022-12-12 01:14:33.997580: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:33.997636: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:34.061752: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:34.140120: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:34.365717: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:34.369685: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:34.457660: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+2022-12-12 01:14:34.642438: I tensorflow/compiler/jit/xla_compilation_cache.cc:481] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+[HCTR][01:14:58.866][ERROR][RK0][tid #139692418766592]: replica 3 reaches 1000, calling init pre replica
+[HCTR][01:14:58.866][ERROR][RK0][tid #139692418766592]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:58.871][ERROR][RK0][tid #139692418766592]: coll ps creation done
+[HCTR][01:14:58.872][ERROR][RK0][tid #139692418766592]: replica 3 waits for coll ps creation barrier
+[HCTR][01:14:58.891][ERROR][RK0][tid #139690959156992]: replica 2 reaches 1000, calling init pre replica
+[HCTR][01:14:58.891][ERROR][RK0][tid #139690959156992]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:58.896][ERROR][RK0][tid #139690959156992]: coll ps creation done
+[HCTR][01:14:58.896][ERROR][RK0][tid #139690959156992]: replica 2 waits for coll ps creation barrier
+[HCTR][01:14:58.991][ERROR][RK0][tid #139690959156992]: replica 7 reaches 1000, calling init pre replica
+[HCTR][01:14:58.992][ERROR][RK0][tid #139690959156992]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:58.995][ERROR][RK0][tid #139690959156992]: coll ps creation done
+[HCTR][01:14:58.995][ERROR][RK0][tid #139690959156992]: replica 7 waits for coll ps creation barrier
+[HCTR][01:14:59.040][ERROR][RK0][tid #139690833331968]: replica 0 reaches 1000, calling init pre replica
+[HCTR][01:14:59.040][ERROR][RK0][tid #139690833331968]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:59.044][ERROR][RK0][tid #139690833331968]: coll ps creation done
+[HCTR][01:14:59.044][ERROR][RK0][tid #139690833331968]: replica 0 waits for coll ps creation barrier
+[HCTR][01:14:59.168][ERROR][RK0][main]: replica 5 reaches 1000, calling init pre replica
+[HCTR][01:14:59.168][ERROR][RK0][main]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:59.172][ERROR][RK0][main]: replica 4 reaches 1000, calling init pre replica
+[HCTR][01:14:59.172][ERROR][RK0][main]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:59.174][ERROR][RK0][main]: coll ps creation done
+[HCTR][01:14:59.174][ERROR][RK0][main]: replica 5 waits for coll ps creation barrier
+[HCTR][01:14:59.179][ERROR][RK0][main]: coll ps creation done
+[HCTR][01:14:59.179][ERROR][RK0][main]: replica 4 waits for coll ps creation barrier
+[HCTR][01:14:59.255][ERROR][RK0][tid #139690833331968]: replica 6 reaches 1000, calling init pre replica
+[HCTR][01:14:59.255][ERROR][RK0][tid #139690833331968]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:59.259][ERROR][RK0][tid #139690833331968]: coll ps creation done
+[HCTR][01:14:59.259][ERROR][RK0][tid #139690833331968]: replica 6 waits for coll ps creation barrier
+[HCTR][01:14:59.305][ERROR][RK0][main]: replica 1 reaches 1000, calling init pre replica
+[HCTR][01:14:59.305][ERROR][RK0][main]: coll ps creation, with 8 devices, using policy coll_cache_asymm_link
+[HCTR][01:14:59.309][ERROR][RK0][main]: coll ps creation done
+[HCTR][01:14:59.309][ERROR][RK0][main]: replica 1 waits for coll ps creation barrier
+[HCTR][01:14:59.309][ERROR][RK0][tid #139690833331968]: replica 0 preparing frequency
+[HCTR][01:14:59.840][ERROR][RK0][tid #139690833331968]: replica 0 preparing frequency done
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690833331968]: replica 0 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690959156992]: replica 7 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][main]: replica 5 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][tid #139692418766592]: replica 3 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690959156992]: replica 2 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][main]: replica 4 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690833331968]: replica 6 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][main]: replica 1 calling init per replica
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690833331968]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690959156992]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][main]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][tid #139692418766592]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690959156992]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][main]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690833331968]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690833331968]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690959156992]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][main]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][tid #139692418766592]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][main]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690959156992]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][main]: Calling build_v2
+[HCTR][01:14:59.943][ERROR][RK0][tid #139690833331968]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[HCTR][01:14:59.943][ERROR][RK0][main]: cudaDevAttrCanUseHostPointerForRegisteredMem is 1
+[[[[[2022-12-12 01:14:592022-12-12 01:14:592022-12-12 01:14:59..2022-12-12 01:14:59[2022-12-12 01:14:59.943552[[943555..943552: 2022-12-12 01:14:59: 943549943555: E.E2022-12-12 01:14:592022-12-12 01:14:59: : EE 943561 ..E  /hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc: /hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc943562943562 /hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc/hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc:E:: : /hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc::136 136EE:136136] /hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc]   136] ] using concurrent impl MPSPhase:using concurrent impl MPSPhase/hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc/hugectr_dev/third_party/collcachelib/coll_cache_lib/run_config.cc] using concurrent impl MPSPhaseusing concurrent impl MPSPhase
+136
+::using concurrent impl MPSPhase
+
+] 136136
+using concurrent impl MPSPhase] ] 
+using concurrent impl MPSPhaseusing concurrent impl MPSPhase
+
+[2022-12-12 01:14:59.944697: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.944755: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.944778: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.944795: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.945025: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.945076: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.945094: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.945104: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.945595: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.945644: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.945660: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213[] 2022-12-12 01:14:59remote time is 10.8824.
+945665: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:[1962022-12-12 01:14:59] .assigning 10 to cpu945674
+: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.945724: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.945756: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.945767: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.945787: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.945841: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.945860: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.945870: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.946172: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.946285: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.946301: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.946312: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.946454: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.946511: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.946532: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.946543: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:14:59.946582: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:196] assigning 10 to cpu
+[2022-12-12 01:14:59.946631: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:212] build symm link desc with 8X NVIDIA A100-SXM4-80GB out of 8
+[2022-12-12 01:14:59.946649: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:213] remote time is 10.8824
+[2022-12-12 01:14:59.946666: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/asymm_link_desc.cc:214] cpu time is 41.1111
+[2022-12-12 01:15:44.283474: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:118] solver created. now build & solve
+[2022-12-12 01:15:44.313091: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 381.47 MB
+[2022-12-12 01:15:44.313153: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 381.47 MB
+[2022-12-12 01:15:44.313924: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:74] mapping nid to rank...
+[2022-12-12 01:15:44.371094: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:91] counting slots...
+[2022-12-12 01:15:44.646144: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:105] Final num slot is 49
+[2022-12-12 01:15:44.646209: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:109] counting blocks...
+[2022-12-12 01:15:47.593031: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:118] Final num block is 1023
+[2022-12-12 01:15:47.593127: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:123] counting freq and density...
+[2022-12-12 01:15:48.341276: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:154] averaging freq and density...
+[2022-12-12 01:15:48.341348: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:155] 1023
+[2022-12-12 01:15:48.343325: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:123] solver built. now solve
+[2022-12-12 01:15:48.343364: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:354] constructing optimal solver, device=8, stream=1
+1023 blocks, 8 devices
+[2022-12-12 01:15:48.976097: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:527] Add Var...
+[2022-12-12 01:15:49.  8850: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:545] Capacity...
+[2022-12-12 01:15:49.  9733: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:548] Connect CPU...
+[2022-12-12 01:15:49. 28292: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:550] Connect Access To Storage...
+[2022-12-12 01:15:49.679025: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:554] Time...
+[2022-12-12 01:15:49.681167: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 0, total sm is 108
+[2022-12-12 01:15:49.684009: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 1, total sm is 108
+[2022-12-12 01:15:49.686766: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 2, total sm is 108
+[2022-12-12 01:15:49.693415: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 3, total sm is 108
+[2022-12-12 01:15:49.696184: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 4, total sm is 108
+[2022-12-12 01:15:49.698900: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 5, total sm is 108
+[2022-12-12 01:15:49.701626: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 6, total sm is 108
+[2022-12-12 01:15:49.704370: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:516] dst 7, total sm is 108
+[2022-12-12 01:15:56.380492: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:569] Coll Cache init block placement array
+[2022-12-12 01:15:56.386490: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:645] Coll Cache init block placement array done
+[2022-12-12 01:15:56.386795: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/coll_cache/optimal_solver_class.cc:647] Coll Cache model reset done
+[2022-12-12 01:15:56.434152: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:127] solver solved
+[2022-12-12 01:15:56.434233: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:195] 0 solved master
+[2022-12-12 01:15:56.434247: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:202] 0 solved
+[2022-12-12 01:15:56.434258: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:205] worker 0 thread 0 initing device 0
+[2022-12-12 01:15:56.436411: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.436452: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.437188: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.437547: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.445193: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:202] 1 solved
+[2022-12-12 01:15:56.445256: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:205] worker 0 thread 1 initing device 1
+[2022-12-12 01:15:56.446382: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.446418: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.447117: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.447493: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.448047: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:202] 5 solved
+[2022-12-12 01:15:56.448107: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:205] worker 0 thread 5 initing device 5
+[2022-12-12 01:15:56.448486: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:202] 6 solved
+[2022-12-12 01:15:56.448544: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:205] worker 0 thread 6 initing device 6
+[2022-12-12 01:15:56.449046: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.449073: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[[2022-12-12 01:15:56.449776: 2022-12-12 01:15:56E. 449776/hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc: :E202 ] /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc:7 solved202
+] 4 solved
+[2022-12-12 01:15:56.449853[: 2022-12-12 01:15:56E. 449856/hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc: :E205 ] /hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.ccworker 0 thread 7 initing device 7:
+205] worker 0 thread 4 initing device 4
+[2022-12-12 01:15:56.450139: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.450509: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.450626: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.450656: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.451245: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.451287: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[[2022-12-12 01:15:56.451298: E2022-12-12 01:15:56 ./hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc451293:: 202E]  [2 solved/hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc2022-12-12 01:15:56
+:.202451341] : 3 solved[E
+2022-12-12 01:15:56 ./hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu451353:: [1980E2022-12-12 01:15:56]  .eager alloc mem 381.47 MB/hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc451360
+:: 205E]  worker 0 thread 2 initing device 2/hugectr_dev/third_party/collcachelib/coll_cache_lib/facade.cc
+:205] worker 0 thread 3 initing device 3
+[2022-12-12 01:15:56.452067: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.452135: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.452160: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.452457: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.452463: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.452510: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.452670: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1815] Building Coll Cache with ... num gpu device is 8
+[2022-12-12 01:15:56.452706: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.453497: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.453512: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.454419: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.454796: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.455223: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.455254: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.455947: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 381.47 MB
+[2022-12-12 01:15:56.509870: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 1023.00 Bytes
+[2022-12-12 01:15:56.510958: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 1023
+[2022-12-12 01:15:56.510988: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 400000000
+[2022-12-12 01:15:56.511602: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.512944: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.514042: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.514067: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.19 MB
+[[[[[[2022-12-12 01:15:562022-12-12 01:15:562022-12-12 01:15:56[2022-12-12 01:15:562022-12-12 01:15:562022-12-12 01:15:56...2022-12-12 01:15:56...523822523822523822.523822523822523822: : : 523860: : : EEE: EEE   E   /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:::/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:::198019801980:198019801980] ] ] 1980] ] ] eager alloc mem 1023.00 Byteseager alloc mem 1023.00 Bytes
+eager alloc mem 1023.00 Bytes] eager alloc mem 1023.00 Byteseager alloc mem 1023.00 Byteseager alloc mem 1023.00 Bytes
+
+eager alloc mem 1023.00 Bytes
+
+
+
+[[2022-12-12 01:15:562022-12-12 01:15:56..524891524894: : EE [ /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc2022-12-12 01:15:56/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:.:638524903638] : ] eager release cuda mem 1023E[eager release cuda mem 1023
+ 2022-12-12 01:15:56
+/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc.:524914638: ] Eeager release cuda mem 1023 
+/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 1023
+[[2022-12-12 01:15:562022-12-12 01:15:56..524937524937: : [EE[2022-12-12 01:15:56  2022-12-12 01:15:56./hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc.524944::524947: 638[638: E] 2022-12-12 01:15:56] E . /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc524955/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cceager release cuda mem 400000000:eager release cuda mem 400000000: :
+638
+E638]  ] eager release cuda mem 400000000/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cceager release cuda mem 400000000
+:
+638] eager release cuda mem 1023
+[2022-12-12 01:15:56.525024: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 400000000
+[2022-12-12 01:15:56.525412: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 1023
+[2022-12-12 01:15:56.525443: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 400000000
+[2022-12-12 01:15:56.525774: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.525808: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 1023
+[2022-12-12 01:15:56.525842: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 400000000
+[2022-12-12 01:15:56.526037: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.526296: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.526559: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.526888: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.527774: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.528106: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 76.68 MB
+[2022-12-12 01:15:56.528607: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.528911: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.529098: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.529361: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.529439: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.529491: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.529513: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.26 MB
+[2022-12-12 01:15:56.529646: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.529858: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.529882: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.29 MB
+[2022-12-12 01:15:56.529996: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.530018: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.29 MB
+[2022-12-12 01:15:56.530236: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.530258: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.29 MB
+[2022-12-12 01:15:56.530359: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.530381: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.29 MB
+[2022-12-12 01:15:56.530580: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.530601: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.27 MB
+[2022-12-12 01:15:56.531730: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:56.532753: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:56.532776: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cpu/cpu_device.cc:43] WORKER[0] alloc host memory 76.28 MB
+[2022-12-12 01:15:56.539025: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.539357: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.539376: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.53 GB
+[2022-12-12 01:15:56.551785: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.552061: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.552105: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.552125: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[2022-12-12 01:15:56.552375: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.552395: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[2022-12-12 01:15:56.552430: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.552746: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.552773: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[2022-12-12 01:15:56.553130: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.553283: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.553432: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.553457: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[2022-12-12 01:15:56.553517: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.553596: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.553616: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[2022-12-12 01:15:56.553641: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 34.00 KB
+[2022-12-12 01:15:56.553833: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.553857: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[2022-12-12 01:15:56.553956: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 34815
+[2022-12-12 01:15:56.553976: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 9.54 GB
+[[[[[[[[2022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:57.2022-12-12 01:15:57......415993.415994415997415997416001416002415996: 415995: : : : : : E: EEEEEE E      /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu::::::1926:192619261926192619261926] 1926] ] ] ] ] ] Device 2 init p2p of link 3] Device 3 init p2p of link 4Device 7 init p2p of link 0Device 4 init p2p of link 5Device 1 init p2p of link 2Device 6 init p2p of link 7Device 5 init p2p of link 6
+
+Device 0 init p2p of link 1
+
+
+
+
+
+[2022-12-12 01:15:57.416321: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu[[[:2022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:571980...] 416326416326416326eager alloc mem 611.00 KB: : : 
+EEE   /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:::198019801980] ] ] eager alloc mem 611.00 KBeager alloc mem 611.00 KB
+eager alloc mem 611.00 KB
+
+[2022-12-12 01:15:57.416618: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.416697: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[[[2022-12-12 01:15:572022-12-12 01:15:572022-12-12 01:15:57...417090417092417094: : : EEE   /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc/hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:::638638638] ] ] eager release cuda mem 625663eager release cuda mem 625663eager release cuda mem 625663
+
+
+[2022-12-12 01:15:57.417204: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.417412: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.417499: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.417591: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.418434: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.419385: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.420169: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.421713: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 2 init p2p of link 4
+[2022-12-12 01:15:57.421808: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.422305: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 3 init p2p of link 5
+[2022-12-12 01:15:57.422400: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.422472: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 7 init p2p of link 1
+[2022-12-12 01:15:57.422567: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.422592: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.422801: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 4 init p2p of link 6
+[2022-12-12 01:15:57.422907: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.423097: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.423117: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 6 init p2p of link 0
+[2022-12-12 01:15:57.423228: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.423388: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.423396: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 0 init p2p of link 2
+[2022-12-12 01:15:57.423490: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.423645: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.423983: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.424088: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 5 init p2p of link 7
+[2022-12-12 01:15:57.424193: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.424297: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.424903: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.425683: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 1 init p2p of link 3
+[2022-12-12 01:15:57.425828: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.425953: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 2 init p2p of link 5
+[2022-12-12 01:15:57.426029: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.426573: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.426742: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.427253: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 3 init p2p of link 6
+[2022-12-12 01:15:57.427327: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.427906: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 7 init p2p of link 2
+[2022-12-12 01:15:57.427979: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.428116: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.428469: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 4 init p2p of link 7
+[2022-12-12 01:15:57.428540: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.428794: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.428820: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 6 init p2p of link 1
+[2022-12-12 01:15:57.428919: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.429287: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.429514: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 0 init p2p of link 3
+[2022-12-12 01:15:57.429582: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.429769: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.429846: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 5 init p2p of link 0
+[2022-12-12 01:15:57.429918: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.430364: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.430723: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.430830: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 1 init p2p of link 4
+[2022-12-12 01:15:57.430931: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.431368: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 2 init p2p of link 6
+[2022-12-12 01:15:57.431434: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.431659: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.431914: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 3 init p2p of link 7
+[2022-12-12 01:15:57.431989: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.432143: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.432680: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.433410: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 7 init p2p of link 3
+[2022-12-12 01:15:57.433480: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.433572: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 4 init p2p of link 0
+[2022-12-12 01:15:57.433641: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.434181: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.434383: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.434428: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 6 init p2p of link 2
+[2022-12-12 01:15:57.434516: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.434972: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 0 init p2p of link 4
+[2022-12-12 01:15:57.435060: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.435250: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 5 init p2p of link 1
+[2022-12-12 01:15:57.435277: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.435320: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.435763: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.436017: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.436224: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 1 init p2p of link 5
+[2022-12-12 01:15:57.436316: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.436624: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 2 init p2p of link 7
+[2022-12-12 01:15:57.436691: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.436886: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 3 init p2p of link 0
+[2022-12-12 01:15:57.436962: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.437019: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.437432: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.437725: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.438037: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 7 init p2p of link 4
+[2022-12-12 01:15:57.438105: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.438248: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 4 init p2p of link 1
+[2022-12-12 01:15:57.438312: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.438876: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.439039: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.439596: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 6 init p2p of link 3
+[2022-12-12 01:15:57.439670: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.440115: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 0 init p2p of link 5
+[2022-12-12 01:15:57.440182: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.440365: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.440420: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 5 init p2p of link 2
+[2022-12-12 01:15:57.440487: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.440888: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.441246: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.441683: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 1 init p2p of link 6
+[2022-12-12 01:15:57.441756: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.442013: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 2 init p2p of link 0
+[2022-12-12 01:15:57.442083: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.442213: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 3 init p2p of link 1
+[2022-12-12 01:15:57.442277: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.442458: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.442838: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.442971: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.443260: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 7 init p2p of link 5
+[2022-12-12 01:15:57.443324: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.443693: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 4 init p2p of link 2
+[2022-12-12 01:15:57.443760: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.444022: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.444468: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.444791: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 6 init p2p of link 4
+[2022-12-12 01:15:57.444879: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.445453: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 0 init p2p of link 6
+[2022-12-12 01:15:57.445517: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.445613: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.445754: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 5 init p2p of link 3
+[2022-12-12 01:15:57.445827: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.446256: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.446556: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.447097: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 1 init p2p of link 7
+[2022-12-12 01:15:57.447171: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.447216: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 2 init p2p of link 1
+[2022-12-12 01:15:57.447290: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.447492: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 3 init p2p of link 2
+[2022-12-12 01:15:57.447563: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.447875: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.448023: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.448278: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.448388: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 7 init p2p of link 6
+[2022-12-12 01:15:57.448452: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.448981: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 4 init p2p of link 3
+[2022-12-12 01:15:57.449046: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.449251: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.449804: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.449888: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 6 init p2p of link 5
+[2022-12-12 01:15:57.449960: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.450405: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 0 init p2p of link 7
+[2022-12-12 01:15:57.450469: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.450493: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 5 init p2p of link 4
+[2022-12-12 01:15:57.450558: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.450664: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.451232: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.451295: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.451945: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1926] Device 1 init p2p of link 0
+[2022-12-12 01:15:57.452014: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1980] eager alloc mem 611.00 KB
+[2022-12-12 01:15:57.452329: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[2022-12-12 01:15:57.452757: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 625663
+[2022-12-12 01:15:57.452805: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[[2022-12-12 01:15:572022-12-12 01:15:57..453502453505: : EE  /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc/hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu::6381955] ] eager release cuda mem 80400000
+Asymm Coll cache (policy: coll_cache_asymm_link) | local 19991926 / 100000000 nodes ( 19.99 %~20.00 %) | remote 77112510 / 100000000 nodes ( 77.11 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.00081 secs 
+[2022-12-12 01:15:57.454011: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19997769 / 100000000 nodes ( 20.00 %~20.00 %) | remote 77106667 / 100000000 nodes ( 77.11 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.00186 secs 
+[2022-12-12 01:15:57.454684: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[2022-12-12 01:15:57.454781: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19999919 / 100000000 nodes ( 20.00 %~20.00 %) | remote 77104517 / 100000000 nodes ( 77.10 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.00414 secs 
+[2022-12-12 01:15:57.455376: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[2022-12-12 01:15:57.456034: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[2022-12-12 01:15:57.457104: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[2022-12-12 01:15:57.457615: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19997777 / 100000000 nodes ( 20.00 %~20.00 %) | remote 77106659 / 100000000 nodes ( 77.11 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.00634 secs 
+[2022-12-12 01:15:57.458873: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19997616 / 100000000 nodes ( 20.00 %~20.00 %) | remote 77106820 / 100000000 nodes ( 77.11 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.00639 secs 
+[2022-12-12 01:15:57.459205: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19971566 / 100000000 nodes ( 19.97 %~20.00 %) | remote 77132870 / 100000000 nodes ( 77.13 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.53 GB | 1.02277 secs 
+[2022-12-12 01:15:57.459319: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19992594 / 100000000 nodes ( 19.99 %~20.00 %) | remote 77111842 / 100000000 nodes ( 77.11 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.01025 secs 
+[2022-12-12 01:15:57.460384: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/common.cc:638] eager release cuda mem 80400000
+[2022-12-12 01:15:57.461334: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 18.82 GB
+[2022-12-12 01:15:57.463879: E /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:1955] Asymm Coll cache (policy: coll_cache_asymm_link) | local 19999537 / 100000000 nodes ( 20.00 %~20.00 %) | remote 77104899 / 100000000 nodes ( 77.10 %) | cpu 2895564 / 100000000 nodes ( 2.90 %) | 9.54 GB | 1.01747 secs 
+[2022-12-12 01:15:59.280764: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 19.03 GB
+[2022-12-12 01:15:59.284066: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 19.03 GB
+[2022-12-12 01:15:59.284422: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 19.03 GB
+[2022-12-12 01:15:59.893834: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 19.24 GB
+[2022-12-12 01:15:59.898316: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 19.24 GB
+[2022-12-12 01:15:59.905507: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 19.24 GB
+[2022-12-12 01:16:00.916726: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 19.45 GB
+[2022-12-12 01:16:00.917723: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 19.45 GB
+[2022-12-12 01:16:00.918868: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 19.45 GB
+[2022-12-12 01:16:02.264527: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 19.66 GB
+[2022-12-12 01:16:02.265391: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 19.66 GB
+[2022-12-12 01:16:02.265816: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 19.66 GB
+[2022-12-12 01:16:03.550882: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 19.87 GB
+[2022-12-12 01:16:03.551026: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 19.87 GB
+[2022-12-12 01:16:03.551201: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 19.87 GB
+[2022-12-12 01:16:04.380817: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 20.08 GB
+[2022-12-12 01:16:04.381905: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 20.08 GB
+[2022-12-12 01:16:04.383152: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 20.08 GB
+[2022-12-12 01:16:06. 77723: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 20.30 GB
+[2022-12-12 01:16:06. 78384: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 20.30 GB
+[2022-12-12 01:16:06. 82599: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2243] before create stream, mem is 20.30 GB
+[2022-12-12 01:16:06. 82809: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2249] after create stream, mem is 20.30 GB
+[2022-12-12 01:16:06. 83402: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2213] before create ctx, mem is 20.30 GB
+[2022-12-12 01:16:07.717803: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2219] after create ctx, mem is 20.49 GB
+[2022-12-12 01:16:07.719967: W /hugectr_dev/third_party/collcachelib/coll_cache_lib/cache_context.cu:2226] after create stream, mem is 20.49 GB
+[HCTR][01:16:08.356][ERROR][RK0][main]: replica 5 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690833331968]: replica 0 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690959156992]: replica 2 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690959156992]: replica 7 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][main]: replica 4 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][tid #139692418766592]: replica 3 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690833331968]: replica 6 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][main]: replica 1 calling init per replica done, doing barrier
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690833331968]: replica 0 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][main]: replica 1 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][main]: replica 5 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][main]: replica 4 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690833331968]: replica 6 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690959156992]: replica 2 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690959156992]: replica 7 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139692418766592]: replica 3 calling init per replica done, doing barrier done
+[HCTR][01:16:08.356][ERROR][RK0][main]: init per replica done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690959156992]: init per replica done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139692418766592]: init per replica done
+[HCTR][01:16:08.356][ERROR][RK0][main]: init per replica done
+[HCTR][01:16:08.356][ERROR][RK0][main]: init per replica done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690959156992]: init per replica done
+[HCTR][01:16:08.356][ERROR][RK0][tid #139690833331968]: init per replica done
+[HCTR][01:16:08.359][ERROR][RK0][tid #139690833331968]: init per replica done
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 2 allocated 3276800 at 0x7eec08238400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 2 allocated 6553600 at 0x7eec08558400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 2 allocated 3276800 at 0x7eec08b98400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 2 allocated 6553600 at 0x7eec08eb8400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 7 allocated 3276800 at 0x7eeca8238400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 7 allocated 6553600 at 0x7eeca8558400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 7 allocated 3276800 at 0x7eeca8b98400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 7 allocated 6553600 at 0x7eeca8eb8400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 4 allocated 3276800 at 0x7eeb88238400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 4 allocated 6553600 at 0x7eeb88558400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 4 allocated 3276800 at 0x7eeb88b98400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690959156992]: 4 allocated 6553600 at 0x7eeb88eb8400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690883655424]: 1 allocated 3276800 at 0x7eece8238400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690883655424]: 1 allocated 6553600 at 0x7eece8558400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690883655424]: 1 allocated 3276800 at 0x7eece8b98400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139690883655424]: 1 allocated 6553600 at 0x7eece8eb8400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 3 allocated 3276800 at 0x7eece8238400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 3 allocated 6553600 at 0x7eece8558400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 3 allocated 3276800 at 0x7eece8b98400
+[HCTR][01:16:08.373][ERROR][RK0][main]: 3 allocated 6553600 at 0x7eece8eb8400
+[HCTR][01:16:08.373][ERROR][RK0][tid #139691294701312]: 5 allocated 3276800 at 0x7eeba8238400
+[HCTR][01:16:08.374][ERROR][RK0][tid #139691294701312]: 5 allocated 6553600 at 0x7eeba8558400
+[HCTR][01:16:08.374][ERROR][RK0][tid #139691294701312]: 5 allocated 3276800 at 0x7eeba8b98400
+[HCTR][01:16:08.374][ERROR][RK0][tid #139691294701312]: 5 allocated 6553600 at 0x7eeba8eb8400
+[HCTR][01:16:08.375][ERROR][RK0][tid #139690833331968]: 0 allocated 3276800 at 0x7eeca0320000
+[HCTR][01:16:08.375][ERROR][RK0][tid #139690833331968]: 0 allocated 6553600 at 0x7eeca0640000
+[HCTR][01:16:08.375][ERROR][RK0][tid #139690833331968]: 0 allocated 3276800 at 0x7eeca0c80000
+[HCTR][01:16:08.375][ERROR][RK0][tid #139690833331968]: 0 allocated 6553600 at 0x7eeca0fa0000
+[HCTR][01:16:08.375][ERROR][RK0][main]: 6 allocated 3276800 at 0x7eeb68238400
+[HCTR][01:16:08.375][ERROR][RK0][main]: 6 allocated 6553600 at 0x7eeb68558400
+[HCTR][01:16:08.375][ERROR][RK0][main]: 6 allocated 3276800 at 0x7eeb68b98400
+[HCTR][01:16:08.375][ERROR][RK0][main]: 6 allocated 6553600 at 0x7eeb68eb8400
