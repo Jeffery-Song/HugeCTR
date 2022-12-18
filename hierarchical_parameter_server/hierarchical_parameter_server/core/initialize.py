@@ -32,6 +32,8 @@ import sys
 
 def Shutdown():
     hps_lib.shutdown()
+def wait_one_child():
+    return hps_lib.wait_one_child()
 
 def Init(**kwargs):
     """

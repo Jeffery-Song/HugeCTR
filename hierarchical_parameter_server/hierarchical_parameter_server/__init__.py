@@ -19,6 +19,7 @@ print("[INFO] %s is imported" % __name__)
 from hierarchical_parameter_server.core._version import __version__
 from hierarchical_parameter_server.core.initialize import Shutdown
 from hierarchical_parameter_server.core.initialize import Init
+from hierarchical_parameter_server.core.initialize import wait_one_child
 from hierarchical_parameter_server.core.initialize import SetStepProfileValue
 from hierarchical_parameter_server.core.initialize import AddEpochProfileValue
 from hierarchical_parameter_server.core.lookup_layer import LookupLayer

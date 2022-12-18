@@ -221,10 +221,11 @@ barrier = multiprocessing.Barrier(args["gpu_num"])
 for i in range(args["gpu_num"]):
     proc_list[i] = multiprocessing.Process(target=proc_func, args=(i,))
     proc_list[i].start()
-ret_code = 0
+ret_code = hps.wait_one_child()
+if ret_code != 0:
+    for i in range(args["gpu_num"]):
+        proc_list[i].kill()
 for i in range(args["gpu_num"]):
     proc_list[i].join()
-    if proc_list[i].exitcode != 0:
-        ret_code = 1
 import sys
 sys.exit(ret_code)

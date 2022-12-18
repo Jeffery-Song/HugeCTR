@@ -337,7 +337,7 @@ class RunConfig:
     with open(self.get_conf_fname(), "w") as outfile:
       outfile.write(result)
 
-  def run(self, mock=False, durable_log=True, callback = None):
+  def run(self, mock=False, durable_log=True, callback = None, retry=False):
     os.system('mkdir -p {}'.format(self.confdir))
     self.generate_ps_config()
 
@@ -348,13 +348,16 @@ class RunConfig:
 
       if durable_log:
         os.system('mkdir -p {}'.format(self.logdir))
-      status = os.system(self.form_cmd(durable_log))
-      if os.WEXITSTATUS(status) != 0:
-        print("FAILED!")
-        return 1
-
-      if callback != None:
-        callback(self)
+      while True:
+        status = os.system(self.form_cmd(durable_log))
+        if os.WEXITSTATUS(status) != 0:
+          if retry:
+            print("FAILED and Retry!")
+            continue
+          print("FAILED!")
+        if callback != None:
+          callback(self)
+        break
     return 0
 
 def run_in_list(conf_list : list, mock=False, durable_log=True, callback = None):
@@ -460,7 +463,7 @@ class ConfigList:
       raise Exception("Please construct fron runconfig or list of it")
     return ret
 
-  def run(self, mock=False, durable_log=True, callback = None):
+  def run(self, mock=False, durable_log=True, callback = None, retry=False):
     for conf in self.conf_list:
       conf : RunConfig
-      conf.run(mock, durable_log, callback)
+      conf.run(mock, durable_log, callback, retry)
