@@ -203,6 +203,13 @@ class BenchInstance:
         value = m2.group(2)
         self.vals[key] = float(value.split(',')[0])
 
+    solve_time_list = grep_from(fname, "^Explored [0-9]+ nodes.*", [0,0])
+    for line in solve_time_list:
+      m = re.match(r'Explored [0-9]+ nodes \([0-9]+ simplex iterations\) in ([0-9\.]+) seconds.*\n', line)
+      if m:
+        value = m.group(1)
+        self.vals["coll_cache:solve_time"] = float(value)
+
     fname = cfg.get_log_fname() + '.err.log'
     coll_rst_list = grep_from(fname, r".*remote ([0-9]+) / ([0-9]+) nodes.*", [0, 0])
     if len(coll_rst_list) == 0:
