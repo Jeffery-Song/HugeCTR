@@ -10,7 +10,7 @@ from runner import cfg_list_collector
 selected_col = ['short_app']
 selected_col += ['policy_impl', 'cache_percentage', 'global_batch_size']
 # selected_col += ['unsupervised']
-selected_col += ['dataset_short', 'dataset_short']
+selected_col += ['dataset_short', 'coll_cache:solve_time']
 
 selected_col += ['Step(average) L1 sample']
 selected_col += ['Step(average) L1 recv']
