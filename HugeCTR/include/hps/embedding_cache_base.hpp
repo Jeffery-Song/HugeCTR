@@ -43,6 +43,8 @@ class EmbeddingCacheBase {
                     size_t end_index, cudaStream_t stream) = 0;
   virtual void refresh(size_t table_id, const void* d_keys, const float* d_vectors, size_t length,
                        cudaStream_t stream) = 0;
+  virtual void get_keys(void* keys, size_t num_keys) = 0;
+  virtual size_t get_slot_num() = 0;
   virtual void finalize() = 0;
 
   virtual EmbeddingCacheWorkspace create_workspace() = 0;

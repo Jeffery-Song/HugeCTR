@@ -36,10 +36,11 @@ void Facade::operator delete(void*) {
 void Facade::init(const int32_t global_replica_id, tensorflow::OpKernelContext* ctx,
                   const char* ps_config_file, int32_t global_batch_size,
                   int32_t num_replicas_in_sync) {
-  std::call_once(lookup_manager_init_once_flag_, [this, ps_config_file, global_batch_size, num_replicas_in_sync]() {
+  std::call_once(lookup_manager_init_once_flag_, [this, ps_config_file, global_batch_size, num_replicas_in_sync, global_replica_id]() {
     ps_config = new parameter_server_config{ps_config_file};
     lookup_manager_->init(*ps_config, global_batch_size, num_replicas_in_sync);
     if (!ps_config->use_coll_cache) {
+      coll_cache_lib::common::RunConfig::worker_id = global_replica_id;
       coll_cache_lib::common::RunConfig::num_device = num_replicas_in_sync;
       coll_cache_lib::common::RunConfig::num_global_step_per_epoch =
           ps_config->iteration_per_epoch * coll_cache_lib::common::RunConfig::num_device;
@@ -81,5 +82,9 @@ void Facade::report_avg() {
                                       coll_cache_lib::common::RunConfig::num_global_step_per_epoch - 1);
     std::cout.flush();
   }
+}
+
+void Facade::report_cache_intersect() {
+  this->profiler_->LogStep(0, coll_cache_lib::common::kLogL3CacheIntersectRatio, this->lookup_manager_->report_cache_intersect());
 }
 }  // namespace HierarchicalParameterServer
