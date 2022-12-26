@@ -189,7 +189,9 @@ class RunConfig:
     self.coll_cache_concurrent_link   = ""
     self.log_level              = "warn"
     self.profile_level          = 3
-    self.custom_env = ""
+    self.custom_env             = ""
+    self.empty_feat             = 25
+    self.scalability_test       = False
 
   def get_mock_sparse_name(self):
     if self.mock_embedding:
@@ -208,6 +210,8 @@ class RunConfig:
       std_out_fname += '_nogroup_' + self.coll_cache_no_group
     if self.coll_cache_concurrent_link != "":
       std_out_fname += '_concurrent_impl_' + self.coll_cache_concurrent_link
+    if self.scalability_test == True:
+      std_out_fname += f'_gpu_num_{self.gpu_num}'
     return std_out_fname
 
   def get_conf_fname(self):
@@ -231,6 +235,8 @@ class RunConfig:
       msg += f' nogroup={self.coll_cache_no_group}'
     if self.coll_cache_concurrent_link != "":
       msg += f' concurrent_link={self.coll_cache_concurrent_link}'
+    if self.scalability_test == True:
+      msg += f' gpu_num={self.gpu_num}'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
@@ -276,8 +282,8 @@ class RunConfig:
 
     cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
     cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
-    
     cmd_line += f' --coll_cache_policy {str(self.coll_cache_policy)}'
+    cmd_line += f' --empty-feat {self.empty_feat}'
 
     if durable_log:
       std_out_log = self.get_log_fname() + '.log'
