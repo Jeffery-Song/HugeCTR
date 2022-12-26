@@ -74,6 +74,9 @@ class gpu_cache {
   void Dump(key_type* d_keys, size_t* d_dump_counter, const size_t start_set_index,
             const size_t end_set_index, cudaStream_t stream);
 
+  // for porfiling HPS
+  void GetKeys(void* keys, size_t num_keys);
+
  public:
   using slabset = slab_set<set_associativity, key_type, warp_size>;
 #ifdef LIBCUDACXX_VERSION

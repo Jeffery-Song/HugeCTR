@@ -764,6 +764,92 @@ void HierParameterServer<TypeHashKey>::insert_embedding_cache(
   embedding_cache->insert(table_id, workspace_handler, stream);
 }
 
+template <typename TypeHashKey>
+double HierParameterServer<TypeHashKey>::report_cache_intersect() {
+  HCTR_LOG_S(INFO, WORLD) << "HierParameterServer<TypeHashKey>::report_cache_intersect from " 
+                          << "Device " << RunConfig::worker_id << ".\n";
+  HCTR_CHECK_HINT(model_cache_map_.size() == 1, "There should be only one model while reporting cache intersect.");
+  auto &cache_map = model_cache_map_.begin()->second;
+  HCTR_CHECK_HINT(cache_map.size() == 1, "There should be only one device in one process.");
+  auto &embed_cache = cache_map[RunConfig::worker_id];
+  size_t slot_num = embed_cache->get_slot_num();
+  std::vector<size_t> shape = {RunConfig::num_device, slot_num};
+  HCTR_CHECK_HINT((sizeof(TypeHashKey) == 4) || (sizeof(TypeHashKey) == 8), "Key should be either 4 bytes or 8 bytes.");
+  DataType dtype = (sizeof(TypeHashKey) == 4)? DataType::kI32: DataType::kI64;
+  size_t mem_size = RunConfig::num_device * slot_num * sizeof(TypeHashKey);
+  TensorPtr keys_shm_base_ptr;
+  double final_ratio = 0;
+  int cnt = 0;
+
+  // main process: alloc new shared memory
+  if (RunConfig::worker_id == 0) {
+    keys_shm_base_ptr = Tensor::CreateShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
+    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id
+                            << " create shared memory \"" << HPSCacheKeyShmName.c_str()
+                            << "\" with nbytes " << mem_size << ".\n";
+  }
+  CollCacheParameterServer::barrier();
+  if (RunConfig::worker_id != 0) {
+    keys_shm_base_ptr = Tensor::OpenShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
+    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id
+                            << " open shared memory \"" << HPSCacheKeyShmName.c_str()
+                            << "\" with nbytes " << mem_size << ".\n";
+  }
+
+  // copy embedding keys from each GPU to CPU memory
+  TypeHashKey *keys_shm_global_base = (TypeHashKey *)keys_shm_base_ptr->MutableData();
+  TypeHashKey *keys_shm_local_base = keys_shm_global_base + slot_num * RunConfig::worker_id;
+  void *keys_ptr_local = (void *)keys_shm_local_base;
+  embed_cache->get_keys(keys_ptr_local, slot_num);
+  CollCacheParameterServer::barrier();
+
+  // util func to calculate cache intersection of two sorted arrays
+  auto get_intersect_num = [](TypeHashKey *a, TypeHashKey *b, size_t total_cnt) -> size_t {
+    size_t intersect_cnt = 0;
+    for (uint64_t a_ptr = 0, b_ptr = 0; a_ptr < total_cnt && b_ptr < total_cnt;) {
+      if (a[a_ptr] == std::numeric_limits<TypeHashKey>::max() || b[b_ptr] == std::numeric_limits<TypeHashKey>::max()) break;  
+      if (a[a_ptr] == b[b_ptr]) {a_ptr++; b_ptr++; intersect_cnt++;}
+      else if (a[a_ptr] > b[b_ptr]) {b_ptr++;}
+      else {a_ptr++;}
+    }
+    return intersect_cnt;
+  };
+  
+  // calculate the intersect ratial of their keys one by one
+  if (RunConfig::worker_id == 0) {
+    HCTR_LOG_S(INFO, WORLD) << "[HierParameterServer::report_cache_intersect] gpu_key_nums on each device: \n";
+    for (uint64_t i = 0; i < RunConfig::num_device; i++) {
+      TypeHashKey *cur_keys_ptr = keys_shm_global_base + slot_num * i;
+
+      // print debug info
+      uint64_t non_empty_key_cnt = 0;
+      for (uint64_t j = 0; j < slot_num; j++) 
+        if (cur_keys_ptr[j] != std::numeric_limits<TypeHashKey>::max()) non_empty_key_cnt++;
+      HCTR_LOG_S(INFO, WORLD) << "device " << i <<  " (" << non_empty_key_cnt << "|" << slot_num << "): ";
+      for (uint64_t j = 0; j < 5; j++) std::cout << cur_keys_ptr[j] << " ";
+      std::cout << "\n";
+
+      // calculate the intersect ratial of their keys
+      for (uint64_t j = i + 1; j < RunConfig::num_device; j++) {
+        TypeHashKey *cur_keys_ptr_j = keys_shm_global_base + slot_num * j;
+        size_t intersect_num = get_intersect_num(cur_keys_ptr, cur_keys_ptr_j, slot_num);
+        double intersect_ratio = (float)intersect_num / non_empty_key_cnt;
+        HCTR_LOG_S(INFO, WORLD) << "intersect ratio of device [" << i << ", " << j <<  "]: " 
+                                << intersect_ratio << "%\n";
+        final_ratio += intersect_ratio;
+        cnt++;
+      }
+    }
+  }
+
+  return (final_ratio/cnt);
+
+  // free memory
+  // for (uint64_t i = 0; i < device_cnt; i++) free(gpu_keys[i]);
+  // free(gpu_keys);
+  // free(gpu_key_nums);
+}
+
 template class HierParameterServer<long long>;
 template class HierParameterServer<unsigned int>;
 

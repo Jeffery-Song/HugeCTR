@@ -63,6 +63,7 @@ class LookupManager final {
       coll_parameter_server_->add_epoch_profile_value(global_replica_id, step, type, value);
     }
   }
+  inline double report_cache_intersect() {return parameter_server_->report_cache_intersect();}
  private:
   void init_per_replica(const int32_t global_replica_id);
 

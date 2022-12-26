@@ -361,6 +361,20 @@ void EmbeddingCache<TypeHashKey>::dump(const size_t table_id, void* const d_keys
 }
 
 template <typename TypeHashKey>
+size_t EmbeddingCache<TypeHashKey>::get_slot_num() {
+  HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1, "There should be only one item in EmbeddingCache.gpu_emb_caches_.");
+  HCTR_CHECK_HINT(cache_config_.num_set_in_cache_.size() == 1, "There should be only one item in EmbeddingCache.cache_config_.num_set_in_cache_.");
+  return (cache_config_.num_set_in_cache_[0] * SET_ASSOCIATIVITY * SLAB_SIZE);
+}
+
+template <typename TypeHashKey>
+void EmbeddingCache<TypeHashKey>::get_keys(void* keys, size_t num_keys) {
+  HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1, "There should be only one table in EmbeddingCache.");
+  HCTR_CHECK_HINT(get_slot_num() >= num_keys, "Parameter num_keys should be smaller than slot_num in gpu cache.");
+  gpu_emb_caches_[0]->GetKeys(keys, num_keys);
+}
+
+template <typename TypeHashKey>
 void EmbeddingCache<TypeHashKey>::refresh(const size_t table_id, const void* const d_keys,
                                           const float* const d_vectors, const size_t length,
                                           cudaStream_t stream) {

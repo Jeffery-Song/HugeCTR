@@ -33,12 +33,18 @@
 #include <vector>
 
 #include "coll_cache_lib/atomic_barrier.h"
+#include "coll_cache_lib/run_config.h"
+#include "coll_cache_lib/common.h"
 #include "hps/modelloader.hpp"
 
 namespace HugeCTR {
 
 template <typename TypeHashKey>
 class HierParameterServer : public HierParameterServerBase {
+  using DataType = coll_cache_lib::common::DataType;
+  using Tensor = coll_cache_lib::common::Tensor;
+  using TensorPtr = coll_cache_lib::common::TensorPtr;
+  using RunConfig = coll_cache_lib::common::RunConfig;
  public:
   virtual ~HierParameterServer();
   HierParameterServer(const parameter_server_config& ps_config,
@@ -69,8 +75,10 @@ class HierParameterServer : public HierParameterServerBase {
   virtual void parse_hps_configuraion(const std::string& hps_json_config_file);
   virtual const parameter_server_config& ref_ps_config();
   virtual std::map<std::string, InferenceParams> get_hps_model_configuration_map();
+  virtual double report_cache_intersect();
 
  private:
+  const std::string HPSCacheKeyShmName = std::string("hps_cache_key_") + std::string(std::getenv("USER"));
   // Parameter server configuration
   parameter_server_config ps_config_;
   // Database layers for multi-tier cache/lookup.
