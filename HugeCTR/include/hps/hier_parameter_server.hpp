@@ -76,9 +76,11 @@ class HierParameterServer : public HierParameterServerBase {
   virtual const parameter_server_config& ref_ps_config();
   virtual std::map<std::string, InferenceParams> get_hps_model_configuration_map();
   virtual double report_cache_intersect();
+  virtual double report_access_overlap();
 
  private:
   const std::string HPSCacheKeyShmName = std::string("hps_cache_key_") + std::string(std::getenv("USER"));
+  const std::string HPSCacheAccessCountShmName = std::string("hps_cache_access_cnt_") + std::string(std::getenv("USER"));
   // Parameter server configuration
   parameter_server_config ps_config_;
   // Database layers for multi-tier cache/lookup.

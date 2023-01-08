@@ -394,4 +394,19 @@ void decompress_emb_vec_async(const float* d_unique_src_ptr, const uint64_t* d_u
                               const size_t emb_vec_size, const size_t BLOCK_SIZE,
                               cudaStream_t stream);
 
+template <typename key_type>
+class cache_access_statistic_util {
+  public:
+  static void transfer_missing_vec_async(const uint64_t* d_missing_index_, const size_t missing_len,
+                                          uint32_t* d_unique_missing_keys, const size_t BLOCK_SIZE,
+                                          cudaStream_t stream);
+  static void count_hit_keys_async(const key_type* d_keys, const size_t key_len,
+                                    const uint32_t* d_unique_missing_keys, const uint64_t* d_unique_index_ptr,
+                                    uint32_t* d_missing_key_counters, uint32_t* d_hit_key_counters,
+                                    const size_t BLOCK_SIZE, cudaStream_t stream);
+  static void vec_overlap_async(const uint32_t *d_src1, const uint32_t *d_src2, uint64_t *d_dst, size_t n, 
+                          const size_t BLOCK_SIZE, cudaStream_t stream);
+  static void vec_reduce_async(uint64_t *d_dst, size_t n, const size_t BLOCK_SIZE, cudaStream_t stream);
+};
+
 }  // namespace HugeCTR
