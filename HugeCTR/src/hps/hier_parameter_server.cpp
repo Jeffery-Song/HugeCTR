@@ -25,6 +25,7 @@
 #include <hps/redis_backend.hpp>
 #include <hps/rocksdb_backend.hpp>
 #include <regex>
+#include <vector>
 
 #include "base/debug/logger.hpp"
 #include "coll_cache_lib/atomic_barrier.h"
@@ -851,7 +852,7 @@ double HierParameterServer<TypeHashKey>::report_cache_intersect() {
 }
 
 template <typename TypeHashKey>
-double HierParameterServer<TypeHashKey>::report_access_overlap() {
+std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
   HCTR_LOG_S(INFO, WORLD) << "HierParameterServer<TypeHashKey>::report_access_overlap from " 
                           << "Device " << RunConfig::worker_id << ".\n";
   HCTR_CHECK_HINT(model_cache_map_.size() == 1, "There should be only one model while reporting access overlap.");
@@ -862,7 +863,7 @@ double HierParameterServer<TypeHashKey>::report_access_overlap() {
   std::vector<size_t> shape = {RunConfig::num_device, total_key_num * 2};
   DataType dtype = DataType::kI32;
   TensorPtr access_shm_base_ptr;
-  double final_ratio = 0;
+  std::vector<double> final_ratios(3, 0);
   int cnt = 0;
 
   // main process: alloc new shared memory
@@ -921,6 +922,9 @@ double HierParameterServer<TypeHashKey>::report_access_overlap() {
       cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_result, total_key_num, 64, stream);
       HCTR_LIB_THROW(cudaStreamSynchronize(stream));
       HCTR_LIB_THROW(cudaMemcpy(&miss_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
+      HCTR_CHECK_HINT(hit_cnt + miss_cnt == embed_cache->total_lookups, 
+                      "cache hit cnt and miss cnt should add up to exactly total lookup cnts");
+      final_ratios[0] += ((float)hit_cnt / embed_cache->total_lookups);
 
       // calculate the intersect ratial of their keys
       for (uint64_t j = i + 1; j < RunConfig::num_device; j++) {
@@ -942,9 +946,10 @@ double HierParameterServer<TypeHashKey>::report_access_overlap() {
         HCTR_LIB_THROW(cudaMemcpy(&miss_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
         double hit_overlap_ratio = (float)hit_overlap_cnt / hit_cnt;
         double miss_overlap_ratio = (float)miss_overlap_cnt / miss_cnt;
-        HCTR_LOG_S(INFO, WORLD) << "overlap(hit|miss) ratio of device [" << i << ", " << j <<  "]: " 
+        HCTR_LOG_S(INFO, WORLD) << "Overlap(hit|miss) ratio of device [" << i << ", " << j <<  "]: " 
                                 << hit_overlap_ratio << "|" << miss_overlap_ratio << "%\n";
-        final_ratio += hit_overlap_ratio;
+        final_ratios[1] += hit_overlap_ratio;
+        final_ratios[2] += miss_overlap_ratio;
         cnt++;
       }
     }
@@ -954,10 +959,12 @@ double HierParameterServer<TypeHashKey>::report_access_overlap() {
     HCTR_LIB_THROW(cudaFree(d_cur_access_miss_local_ptr));
     HCTR_LIB_THROW(cudaFree(d_cur_access_hit_local_ptr));
     HCTR_LIB_THROW(cudaFree(d_result));
-    return (final_ratio / cnt);
   }
 
-  return 0;
+  final_ratios[0] /= RunConfig::num_device;
+  final_ratios[1] /= cnt;
+  final_ratios[2] /= cnt;
+  return final_ratios;
 }
 
 template class HierParameterServer<long long>;

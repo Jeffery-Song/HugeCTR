@@ -76,7 +76,7 @@ class HierParameterServer : public HierParameterServerBase {
   virtual const parameter_server_config& ref_ps_config();
   virtual std::map<std::string, InferenceParams> get_hps_model_configuration_map();
   virtual double report_cache_intersect();
-  virtual double report_access_overlap();
+  virtual std::vector<double> report_access_overlap();
 
  private:
   const std::string HPSCacheKeyShmName = std::string("hps_cache_key_") + std::string(std::getenv("USER"));

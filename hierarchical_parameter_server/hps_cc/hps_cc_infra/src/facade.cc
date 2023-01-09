@@ -16,6 +16,7 @@
 
 #include "facade.h"
 #include <cstdint>
+#include <vector>
 
 #include "coll_cache_lib/timer.h"
 #include "hps/inference_utils.hpp"
@@ -84,7 +85,9 @@ void Facade::report_avg() {
   }
 }
 
-void Facade::report_cache_intersect() {
-  this->profiler_->LogStep(0, coll_cache_lib::common::kLogL3CacheIntersectRatio, this->lookup_manager_->report_cache_intersect());
+void Facade::report_cache() {
+  std::vector<double> cache_ratios = this->lookup_manager_->report_access_overlap();
+  cache_ratios.emplace(cache_ratios.begin(), this->lookup_manager_->report_cache_intersect());
+  this->profiler_->LogHPSAdd(cache_ratios);
 }
 }  // namespace HierarchicalParameterServer

@@ -32,7 +32,7 @@ class Shutdown : public OpKernel {
   explicit Shutdown(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
     try {
-      HierarchicalParameterServer::Facade::instance()->report_cache_intersect();
+      HierarchicalParameterServer::Facade::instance()->report_cache();
       if (std::string(std::getenv("HPS_WORKER_ID")) == "0") {
         HierarchicalParameterServer::Facade::instance()->report_avg();
       }
