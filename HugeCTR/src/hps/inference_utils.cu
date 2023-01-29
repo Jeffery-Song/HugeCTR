@@ -170,10 +170,10 @@ void cache_access_statistic_util<key_type>::vec_overlap_async(const uint32_t *d_
 }
 
 template <typename key_type>
-void cache_access_statistic_util<key_type>::vec_reduce_async(uint64_t *d_dst, size_t n, 
+void cache_access_statistic_util<key_type>::vec_reduce_async(uint64_t *d_src, uint64_t *d_dst, size_t n, 
                                                             const size_t BLOCK_SIZE, cudaStream_t stream) {
   if (n == 0) return;
-  uint64_t *dst = d_dst, *src = d_dst;
+  uint64_t *dst = d_dst, *src = d_src;
   for (size_t len = n; len > 1; len = (len + WARP_SIZE - 1) / WARP_SIZE)
     dst += (len + WARP_SIZE - 1) / WARP_SIZE;
   for (size_t len = n; len > 1; len = (len + WARP_SIZE - 1) / WARP_SIZE) {

@@ -406,7 +406,7 @@ class cache_access_statistic_util {
                                     const size_t BLOCK_SIZE, cudaStream_t stream);
   static void vec_overlap_async(const uint32_t *d_src1, const uint32_t *d_src2, uint64_t *d_dst, size_t n, 
                           const size_t BLOCK_SIZE, cudaStream_t stream);
-  static void vec_reduce_async(uint64_t *d_dst, size_t n, const size_t BLOCK_SIZE, cudaStream_t stream);
+  static void vec_reduce_async(uint64_t *d_src, uint64_t *d_dst, size_t n, const size_t BLOCK_SIZE, cudaStream_t stream);
 };
 
 }  // namespace HugeCTR
