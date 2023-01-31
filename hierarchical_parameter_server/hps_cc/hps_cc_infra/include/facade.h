@@ -48,7 +48,7 @@ class Facade final {
                const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor,
                tensorflow::OpKernelContext* ctx);
   void report_avg();
-  void report_cache_intersect();
+  void report_cache();
   parameter_server_config* ps_config;
   std::shared_ptr<coll_cache_lib::common::Profiler> profiler_;
   std::vector<size_t> current_steps_for_each_replica_;

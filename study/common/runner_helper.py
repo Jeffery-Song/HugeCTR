@@ -74,6 +74,7 @@ class Dataset(Enum):
   simple_power1_slot100     = None,                      "SP_1_S100",  100000000, 100
   simple_uniform            = None,                      None,         100000000, 25
   criteo_tb                 = "criteo_tb",               "CR",         882774592, 26
+  criteo_kaggle             = "criteo_kaggle",           "CK",         33762604, 26
 
 class RandomDataset:
   def __init__(self, path, short_name, vocabulary, slot_num):
@@ -295,6 +296,7 @@ class RunConfig:
 
   # some members are lazy initialized
   def handle_mock_params(self):
+    if self.system == System.hps: self.coll_cache_enable_iter = 0
     self.iter_num = self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter
     self.max_vocabulary_size = self.dataset.vocabulary
     self.slot_num = self.dataset.slot_num
@@ -374,7 +376,7 @@ def run_in_list(conf_list : list, mock=False, durable_log=True, callback = None)
 class ConfigList:
   def __init__(self):
     self.conf_list = [
-      RunConfig(System.hps, Model.dlrm, Dataset.criteo_like_uniform)]
+      RunConfig(System.collcache, Model.dlrm, Dataset.criteo_like_uniform)]
 
   def select(self, key, val_indicator):
     '''

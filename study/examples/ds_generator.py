@@ -2,6 +2,7 @@ from numba import njit
 import numpy as np
 import tensorflow as tf
 import os
+import dask.array as da
 
 @njit(parallel=True)
 def generate_dense_keys_zipf(num_samples, num_slots, vocabulary_range_per_slot, key_dtype, alpha):
@@ -41,19 +42,31 @@ def generate_random_samples(num_samples, vocabulary_range_per_slot, dense_dim, k
     dense_features, labels = generate_cont_feats(num_samples, dense_dim)
     return cat_keys, dense_features, labels
 
-def criteo_tb(fname, replica_batch_size, iter_num, num_replica, key_type):
-    print("load criteo from ", fname + ".sparse")
+def criteo_tb(fnames, replica_batch_size, iter_num, num_replica, key_type):
+    sparse_keys_mmaps = []
+    dense_features_mmaps = []
+    labels_mmaps = []
+    num_samples = []
+    total_num_samples = 0
 
-    file_num_samples = os.stat(fname+".label").st_size
-    assert(file_num_samples % 4 == 0)
-    file_num_samples = file_num_samples // 4
+    for fname in fnames:
+        print("load criteo from ", fname + ".sparse")
+        file_num_samples = os.stat(fname+".label").st_size
+        assert(file_num_samples % 4 == 0)
+        file_num_samples = file_num_samples // 4
+        num_samples.append(file_num_samples)
+        total_num_samples += file_num_samples
 
-    sparse_keys = np.memmap(fname+".sparse", dtype='int32', mode='r', shape=(file_num_samples, 26))
-    dense_features = np.memmap(fname+".dense", dtype='float32', mode='r', shape=(file_num_samples, 13))
-    labels = np.memmap(fname+".label", dtype='int32', mode='r', shape=(file_num_samples, 1))
-    print(sparse_keys.shape)
+        sparse_keys_mmaps.append(np.memmap(fname+".sparse", dtype='int32', mode='r', shape=(file_num_samples, 26)))
+        dense_features_mmaps.append(np.memmap(fname+".dense", dtype='float32', mode='r', shape=(file_num_samples, 13)))
+        labels_mmaps.append(np.memmap(fname+".label", dtype='int32', mode='r', shape=(file_num_samples, 1)))
 
-    assert(sparse_keys.shape[0] >= iter_num * replica_batch_size * num_replica)
+    print(total_num_samples)
+    assert(total_num_samples >= iter_num * replica_batch_size * num_replica)
+
+    sparse_keys = da.concatenate(sparse_keys_mmaps, axis=0)
+    dense_features = da.concatenate(dense_features_mmaps, axis=0)
+    labels = da.concatenate(labels_mmaps, axis=0)
 
     sparse_keys = sparse_keys[:iter_num * replica_batch_size * num_replica, :]
     dense_features = dense_features[:iter_num * replica_batch_size * num_replica, :]

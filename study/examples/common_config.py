@@ -71,7 +71,7 @@ def add_common_arguments(argparser, run_config):
     argparser.add_argument('--ps_config_file', type=str,
                             default=run_config['ps_config_file'])
     argparser.add_argument('--empty-feat', type=str,
-                            dest='_empty_feat', default='0')
+                            dest='_empty_feat', default='')
 
 def process_common_config(run_config):
     run_config["dataset_path"] += '/saved_dataset'

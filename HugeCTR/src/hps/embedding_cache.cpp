@@ -125,6 +125,7 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
 
   // Query the size of all embedding tables and calculate the size of each embedding cache
   if (cache_config_.use_gpu_embedding_cache_) {
+    HCTR_CHECK(cache_config_.num_emb_table_ == 1);
     cache_config_.num_set_in_cache_.reserve(cache_config_.num_emb_table_);
     for (size_t i = 0; i < cache_config_.num_emb_table_; i++) {
       size_t row_num = 0;
@@ -144,6 +145,14 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
       cache_config_.num_set_in_cache_.emplace_back(
           (num_feature_in_cache + SLAB_SIZE * SET_ASSOCIATIVITY - 1) /
           (SLAB_SIZE * SET_ASSOCIATIVITY));
+
+      // Allocate GPU memory for local hit counters
+      emb_key_num = row_num;
+      total_lookups = 0;
+      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters), row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters), row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_hit_key_counters), 0, row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_miss_key_counters), 0, row_num * sizeof(uint32_t)));
     }
   }
 
@@ -178,6 +187,8 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
 
 template <typename TypeHashKey>
 EmbeddingCache<TypeHashKey>::~EmbeddingCache() {
+  HCTR_LIB_THROW(cudaFree(local_hit_key_counters));
+  HCTR_LIB_THROW(cudaFree(local_miss_key_counters));
   if (cache_config_.use_gpu_embedding_cache_) {
     // Swap device.
     CudaDeviceContext dev_restorer;
@@ -237,6 +248,22 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
     HCTR_LIB_THROW(cudaMemcpyAsync(workspace_handler.h_missing_length_ + table_id,
                                    workspace_handler.d_missing_length_ + table_id, sizeof(size_t),
                                    cudaMemcpyDeviceToHost, stream));
+
+    // record missing/hit keys
+    uint32_t *d_unique_missing_keys;
+    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_unique_missing_keys), sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
+    HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(d_unique_missing_keys), 0, sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
+    cache_access_statistic_util<TypeHashKey>::transfer_missing_vec_async(workspace_handler.d_missing_index_[table_id], 
+                                                                        workspace_handler.h_missing_length_[table_id], 
+                                                                        d_unique_missing_keys, BLOCK_SIZE_, stream);
+    cache_access_statistic_util<TypeHashKey>::count_hit_keys_async(reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]), 
+                                                                  num_keys, d_unique_missing_keys, workspace_handler.d_unique_output_index_[table_id], 
+                                                                  local_miss_key_counters, local_hit_key_counters,
+                                                                  BLOCK_SIZE_, stream);
+    HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+    HCTR_LIB_THROW(cudaFree(d_unique_missing_keys));
+    total_lookups += num_keys;
+
     // Set async flag
     HCTR_LIB_THROW(cudaStreamSynchronize(stream));
     if (workspace_handler.h_unique_length_[table_id] == 0) {

@@ -67,6 +67,7 @@ class HierParameterServerBase {
   virtual std::map<std::string, InferenceParams> get_hps_model_configuration_map() = 0;
   virtual const parameter_server_config& ref_ps_config() = 0;
   virtual double report_cache_intersect() = 0;
+  virtual std::vector<double> report_access_overlap() = 0;
 };
 
 }  // namespace HugeCTR

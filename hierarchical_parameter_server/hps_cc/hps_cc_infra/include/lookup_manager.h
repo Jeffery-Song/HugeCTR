@@ -64,6 +64,7 @@ class LookupManager final {
     }
   }
   inline double report_cache_intersect() {return parameter_server_->report_cache_intersect();}
+  inline std::vector<double> report_access_overlap() {return parameter_server_->report_access_overlap();}
  private:
   void init_per_replica(const int32_t global_replica_id);
 
