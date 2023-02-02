@@ -59,11 +59,10 @@ size_t DirectMapBackend<TKey>::contains(const std::string& table_name, const siz
   return num_keys;
 }
 
-
 namespace {
 
 std::string GetEnv(std::string key) {
-  const char *env_var_val = getenv(key.c_str());
+  const char* env_var_val = getenv(key.c_str());
   if (env_var_val != nullptr) {
     return std::string(env_var_val);
   } else {
@@ -71,7 +70,7 @@ std::string GetEnv(std::string key) {
   }
 }
 
-}
+}  // namespace
 
 template <typename TKey>
 bool DirectMapBackend<TKey>::insert(const std::string& table_name, const size_t num_pairs,
@@ -126,8 +125,7 @@ size_t DirectMapBackend<TKey>::fetch(const std::string& table_name, const size_t
             if (this->option_empty_feat != 0) {
               src_off = src_off % (1 << this->option_empty_feat);
             }
-            on_hit((ulong)(k - keys), this->val_ptr + src_off * val_len_nbytes,
-                   val_len_nbytes);
+            on_hit((ulong)(k - keys), this->val_ptr + src_off * val_len_nbytes, val_len_nbytes);
             if (++batch_size >= this->max_get_batch_size_) {
               break;
             }

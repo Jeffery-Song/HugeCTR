@@ -16,10 +16,10 @@
 
 #include <cmath>
 #include <filesystem>
-#include <hps/inference_utils.hpp>
 #include <hps/direct_map_backend.hpp>
 #include <hps/hash_map_backend.hpp>
 #include <hps/hier_parameter_server.hpp>
+#include <hps/inference_utils.hpp>
 #include <hps/kafka_message.hpp>
 #include <hps/modelloader.hpp>
 #include <hps/redis_backend.hpp>
@@ -768,82 +768,95 @@ void HierParameterServer<TypeHashKey>::insert_embedding_cache(
 
 template <typename TypeHashKey>
 double HierParameterServer<TypeHashKey>::report_cache_intersect() {
-  HCTR_LOG_S(DEBUG, WORLD) << "HierParameterServer<TypeHashKey>::report_cache_intersect from " 
-                          << "Device " << RunConfig::worker_id << ".\n";
-  HCTR_CHECK_HINT(model_cache_map_.size() == 1, "There should be only one model while reporting cache intersect.");
-  auto &cache_map = model_cache_map_.begin()->second;
+  HCTR_LOG_S(DEBUG, WORLD) << "HierParameterServer<TypeHashKey>::report_cache_intersect from "
+                           << "Device " << RunConfig::worker_id << ".\n";
+  HCTR_CHECK_HINT(model_cache_map_.size() == 1,
+                  "There should be only one model while reporting cache intersect.");
+  auto& cache_map = model_cache_map_.begin()->second;
   HCTR_CHECK_HINT(cache_map.size() == 1, "There should be only one device in one process.");
-  auto &embed_cache = cache_map[RunConfig::worker_id];
+  auto& embed_cache = cache_map[RunConfig::worker_id];
   size_t slot_num = embed_cache->get_slot_num();
   std::vector<size_t> shape = {RunConfig::num_device, slot_num};
-  HCTR_CHECK_HINT((sizeof(TypeHashKey) == 4) || (sizeof(TypeHashKey) == 8), "Key should be either 4 bytes or 8 bytes.");
-  DataType dtype = (sizeof(TypeHashKey) == 4)? DataType::kI32: DataType::kI64;
+  HCTR_CHECK_HINT((sizeof(TypeHashKey) == 4) || (sizeof(TypeHashKey) == 8),
+                  "Key should be either 4 bytes or 8 bytes.");
+  DataType dtype = (sizeof(TypeHashKey) == 4) ? DataType::kI32 : DataType::kI64;
   TensorPtr keys_shm_base_ptr;
   double final_ratio = 0;
   int cnt = 0;
 
   // main process: alloc new shared memory
   if (RunConfig::worker_id == 0) {
-    keys_shm_base_ptr = Tensor::CreateShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
-    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id
-                            << " create shared memory \"" << HPSCacheKeyShmName.c_str()
-                            << "\" with nbytes " << keys_shm_base_ptr->NumBytes() << ".\n";
+    keys_shm_base_ptr =
+        Tensor::CreateShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
+    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " create shared memory \""
+                            << HPSCacheKeyShmName.c_str() << "\" with nbytes "
+                            << keys_shm_base_ptr->NumBytes() << ".\n";
   }
   CollCacheParameterServer::barrier();
   if (RunConfig::worker_id != 0) {
-    keys_shm_base_ptr = Tensor::OpenShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
-    HCTR_LOG_S(DEBUG, WORLD) << "Device " << RunConfig::worker_id
-                            << " open shared memory \"" << HPSCacheKeyShmName.c_str()
-                            << "\" with nbytes " << keys_shm_base_ptr->NumBytes() << ".\n";
+    keys_shm_base_ptr =
+        Tensor::OpenShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
+    HCTR_LOG_S(DEBUG, WORLD) << "Device " << RunConfig::worker_id << " open shared memory \""
+                             << HPSCacheKeyShmName.c_str() << "\" with nbytes "
+                             << keys_shm_base_ptr->NumBytes() << ".\n";
   }
 
   // copy embedding keys from each GPU to CPU memory
-  TypeHashKey *keys_shm_global_base = (TypeHashKey *)keys_shm_base_ptr->MutableData();
-  TypeHashKey *keys_shm_local_base = keys_shm_global_base + slot_num * RunConfig::worker_id;
-  void *keys_ptr_local = (void *)keys_shm_local_base;
+  TypeHashKey* keys_shm_global_base = (TypeHashKey*)keys_shm_base_ptr->MutableData();
+  TypeHashKey* keys_shm_local_base = keys_shm_global_base + slot_num * RunConfig::worker_id;
+  void* keys_ptr_local = (void*)keys_shm_local_base;
   embed_cache->get_keys(keys_ptr_local, slot_num);
   CollCacheParameterServer::barrier();
 
   // util func to calculate cache intersection of two sorted arrays
-  auto get_intersect_num = [](TypeHashKey *a, TypeHashKey *b, size_t total_cnt) -> size_t {
+  auto get_intersect_num = [](TypeHashKey* a, TypeHashKey* b, size_t total_cnt) -> size_t {
     size_t intersect_cnt = 0;
     for (uint64_t a_ptr = 0, b_ptr = 0; a_ptr < total_cnt && b_ptr < total_cnt;) {
-      if (a[a_ptr] == std::numeric_limits<TypeHashKey>::max() || b[b_ptr] == std::numeric_limits<TypeHashKey>::max()) break;  
-      if (a[a_ptr] == b[b_ptr]) {a_ptr++; b_ptr++; intersect_cnt++;}
-      else if (a[a_ptr] > b[b_ptr]) {b_ptr++;}
-      else {a_ptr++;}
+      if (a[a_ptr] == std::numeric_limits<TypeHashKey>::max() ||
+          b[b_ptr] == std::numeric_limits<TypeHashKey>::max())
+        break;
+      if (a[a_ptr] == b[b_ptr]) {
+        a_ptr++;
+        b_ptr++;
+        intersect_cnt++;
+      } else if (a[a_ptr] > b[b_ptr]) {
+        b_ptr++;
+      } else {
+        a_ptr++;
+      }
     }
     return intersect_cnt;
   };
-  
+
   // calculate the intersect ratial of their keys one by one
   if (RunConfig::worker_id == 0) {
-    HCTR_LOG_S(DEBUG, WORLD) << "[HierParameterServer::report_cache_intersect] gpu_key_nums on each device: \n";
+    HCTR_LOG_S(DEBUG, WORLD)
+        << "[HierParameterServer::report_cache_intersect] gpu_key_nums on each device: \n";
     for (uint64_t i = 0; i < RunConfig::num_device; i++) {
-      TypeHashKey *cur_keys_ptr = keys_shm_global_base + slot_num * i;
+      TypeHashKey* cur_keys_ptr = keys_shm_global_base + slot_num * i;
 
       // print debug info
       uint64_t non_empty_key_cnt = 0;
-      for (uint64_t j = 0; j < slot_num; j++) 
+      for (uint64_t j = 0; j < slot_num; j++)
         if (cur_keys_ptr[j] != std::numeric_limits<TypeHashKey>::max()) non_empty_key_cnt++;
-      // HCTR_LOG_S(INFO, WORLD) << "device " << i <<  " (" << non_empty_key_cnt << "|" << slot_num << "): ";
-      // for (uint64_t j = 0; j < 5; j++) std::cout << cur_keys_ptr[j] << " ";
-      // std::cout << "\n";
+      // HCTR_LOG_S(INFO, WORLD) << "device " << i <<  " (" << non_empty_key_cnt << "|" << slot_num
+      // << "): "; for (uint64_t j = 0; j < 5; j++) std::cout << cur_keys_ptr[j] << " "; std::cout
+      // << "\n";
 
       // calculate the intersect ratial of their keys
       for (uint64_t j = i + 1; j < RunConfig::num_device; j++) {
-        TypeHashKey *cur_keys_ptr_j = keys_shm_global_base + slot_num * j;
+        TypeHashKey* cur_keys_ptr_j = keys_shm_global_base + slot_num * j;
         size_t intersect_num = get_intersect_num(cur_keys_ptr, cur_keys_ptr_j, slot_num);
         double intersect_ratio = (float)intersect_num / non_empty_key_cnt;
-        HCTR_LOG_S(DEBUG, WORLD) << "intersect ratio of device [" << i << ", " << j <<  "]: " 
-                                << intersect_ratio << "%\n";
+        HCTR_LOG_S(DEBUG, WORLD) << "intersect ratio of device [" << i << ", " << j
+                                 << "]: " << intersect_ratio << "%\n";
         final_ratio += intersect_ratio;
         cnt++;
       }
     }
   }
 
-  return (final_ratio/cnt);
+  return (final_ratio / cnt);
 
   // free memory
   // for (uint64_t i = 0; i < device_cnt; i++) free(gpu_keys[i]);
@@ -853,12 +866,13 @@ double HierParameterServer<TypeHashKey>::report_cache_intersect() {
 
 template <typename TypeHashKey>
 std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
-  HCTR_LOG_S(INFO, WORLD) << "HierParameterServer<TypeHashKey>::report_access_overlap from " 
+  HCTR_LOG_S(INFO, WORLD) << "HierParameterServer<TypeHashKey>::report_access_overlap from "
                           << "Device " << RunConfig::worker_id << ".\n";
-  HCTR_CHECK_HINT(model_cache_map_.size() == 1, "There should be only one model while reporting access overlap.");
-  auto &cache_map = model_cache_map_.begin()->second;
+  HCTR_CHECK_HINT(model_cache_map_.size() == 1,
+                  "There should be only one model while reporting access overlap.");
+  auto& cache_map = model_cache_map_.begin()->second;
   HCTR_CHECK_HINT(cache_map.size() == 1, "There should be only one device in one process.");
-  auto &embed_cache = cache_map[RunConfig::worker_id];
+  auto& embed_cache = cache_map[RunConfig::worker_id];
   size_t total_key_num = embed_cache->emb_key_num;
   std::vector<size_t> shape = {RunConfig::num_device, total_key_num * 2};
   DataType dtype = DataType::kI32;
@@ -868,30 +882,35 @@ std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
 
   // main process: alloc new shared memory
   if (RunConfig::worker_id == 0) {
-    access_shm_base_ptr = Tensor::CreateShm(HPSCacheAccessCountShmName.c_str(), dtype, shape, HPSCacheAccessCountShmName.c_str());
-    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id
-                            << " create shared memory \"" << HPSCacheAccessCountShmName.c_str()
-                            << "\" with nbytes " << access_shm_base_ptr->NumBytes() << ".\n";
+    access_shm_base_ptr = Tensor::CreateShm(HPSCacheAccessCountShmName.c_str(), dtype, shape,
+                                            HPSCacheAccessCountShmName.c_str());
+    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " create shared memory \""
+                            << HPSCacheAccessCountShmName.c_str() << "\" with nbytes "
+                            << access_shm_base_ptr->NumBytes() << ".\n";
   }
   CollCacheParameterServer::barrier();
   if (RunConfig::worker_id != 0) {
-    access_shm_base_ptr = Tensor::OpenShm(HPSCacheAccessCountShmName.c_str(), dtype, shape, HPSCacheAccessCountShmName.c_str());
-    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id
-                            << " open shared memory \"" << HPSCacheAccessCountShmName.c_str()
-                            << "\" with nbytes " << access_shm_base_ptr->NumBytes() << ".\n";
+    access_shm_base_ptr = Tensor::OpenShm(HPSCacheAccessCountShmName.c_str(), dtype, shape,
+                                          HPSCacheAccessCountShmName.c_str());
+    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " open shared memory \""
+                            << HPSCacheAccessCountShmName.c_str() << "\" with nbytes "
+                            << access_shm_base_ptr->NumBytes() << ".\n";
   }
 
   // copy embedding keys from each GPU to CPU memory
-  uint32_t *access_shm_global_base = (uint32_t *)access_shm_base_ptr->MutableData();
-  uint32_t *access_shm_local_base = access_shm_global_base + total_key_num * 2 * RunConfig::worker_id;
-  uint32_t *access_hit_local_ptr = access_shm_local_base;
-  uint32_t *access_miss_local_ptr = access_shm_local_base + total_key_num;
-  CUDA_CHECK(cudaMemcpy(reinterpret_cast<void*>(access_hit_local_ptr), reinterpret_cast<void*>(embed_cache->local_hit_key_counters), 
+  uint32_t* access_shm_global_base = (uint32_t*)access_shm_base_ptr->MutableData();
+  uint32_t* access_shm_local_base =
+      access_shm_global_base + total_key_num * 2 * RunConfig::worker_id;
+  uint32_t* access_hit_local_ptr = access_shm_local_base;
+  uint32_t* access_miss_local_ptr = access_shm_local_base + total_key_num;
+  CUDA_CHECK(cudaMemcpy(reinterpret_cast<void*>(access_hit_local_ptr),
+                        reinterpret_cast<void*>(embed_cache->local_hit_key_counters),
                         sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaMemcpy(reinterpret_cast<void*>(access_miss_local_ptr), reinterpret_cast<void*>(embed_cache->local_miss_key_counters), 
+  CUDA_CHECK(cudaMemcpy(reinterpret_cast<void*>(access_miss_local_ptr),
+                        reinterpret_cast<void*>(embed_cache->local_miss_key_counters),
                         sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
   CollCacheParameterServer::barrier();
-  
+
   // calculate the intersect ratial of their keys one by one
   if (RunConfig::worker_id == 0) {
     uint32_t *d_access_hit_local_ptr, *d_access_miss_local_ptr;
@@ -899,57 +918,80 @@ std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
     uint64_t *d_result, *d_middle_result;
     uint64_t hit_cnt, miss_cnt, hit_overlap_cnt, miss_overlap_cnt;
     cudaStream_t stream = embed_cache->get_refresh_streams()[0];
-    HCTR_LOG_S(INFO, WORLD) << "[HierParameterServer::report_cache_intersect] gpu_key_nums on each device: \n";
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_access_hit_local_ptr), sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_access_miss_local_ptr), sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_cur_access_hit_local_ptr), sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_cur_access_miss_local_ptr), sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_result), sizeof(uint64_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_middle_result), sizeof(uint64_t) * total_key_num));
+    HCTR_LOG_S(INFO, WORLD)
+        << "[HierParameterServer::report_cache_intersect] gpu_key_nums on each device: \n";
+    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_access_hit_local_ptr),
+                              sizeof(uint32_t) * total_key_num));
+    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_access_miss_local_ptr),
+                              sizeof(uint32_t) * total_key_num));
+    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_cur_access_hit_local_ptr),
+                              sizeof(uint32_t) * total_key_num));
+    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_cur_access_miss_local_ptr),
+                              sizeof(uint32_t) * total_key_num));
+    HCTR_LIB_THROW(
+        cudaMalloc(reinterpret_cast<void**>(&d_result), sizeof(uint64_t) * total_key_num));
+    HCTR_LIB_THROW(
+        cudaMalloc(reinterpret_cast<void**>(&d_middle_result), sizeof(uint64_t) * total_key_num));
 
     for (uint64_t i = 0; i < RunConfig::num_device; i++) {
-      HCTR_LIB_THROW(cudaMemcpy(reinterpret_cast<void*>(d_access_hit_local_ptr), 
-                                reinterpret_cast<void*>(access_shm_global_base + total_key_num * 2 * i), 
-                                sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-      HCTR_LIB_THROW(cudaMemcpy(reinterpret_cast<void*>(d_access_miss_local_ptr), 
-                                reinterpret_cast<void*>(access_shm_global_base + total_key_num * (2 * i + 1)), 
-                                sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-      cache_access_statistic_util<TypeHashKey>::vec_overlap_async(d_access_hit_local_ptr, d_access_hit_local_ptr, 
-                                                                  d_middle_result, total_key_num, 64, stream);
-      cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64, stream);
+      HCTR_LIB_THROW(
+          cudaMemcpy(reinterpret_cast<void*>(d_access_hit_local_ptr),
+                     reinterpret_cast<void*>(access_shm_global_base + total_key_num * 2 * i),
+                     sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
+      HCTR_LIB_THROW(
+          cudaMemcpy(reinterpret_cast<void*>(d_access_miss_local_ptr),
+                     reinterpret_cast<void*>(access_shm_global_base + total_key_num * (2 * i + 1)),
+                     sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
+      cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
+          d_access_hit_local_ptr, d_access_hit_local_ptr, d_middle_result, total_key_num, 64,
+          stream);
+      cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
+          stream);
       HCTR_LIB_THROW(cudaStreamSynchronize(stream));
       HCTR_LIB_THROW(cudaMemcpy(&hit_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
-      cache_access_statistic_util<TypeHashKey>::vec_overlap_async(d_access_miss_local_ptr, d_access_miss_local_ptr, 
-                                                                  d_middle_result, total_key_num, 64, stream);
-      cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64, stream);
+      cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
+          d_access_miss_local_ptr, d_access_miss_local_ptr, d_middle_result, total_key_num, 64,
+          stream);
+      cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
+          stream);
       HCTR_LIB_THROW(cudaStreamSynchronize(stream));
       HCTR_LIB_THROW(cudaMemcpy(&miss_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
-      HCTR_CHECK_HINT(hit_cnt + miss_cnt == embed_cache->total_lookups, 
-                      "cache hit cnt(%lu) and miss cnt(%lu) should add up to exactly total lookup cnts(%lu)", hit_cnt, miss_cnt, embed_cache->total_lookups);
+      HCTR_CHECK_HINT(
+          hit_cnt + miss_cnt == embed_cache->total_lookups,
+          "cache hit cnt(%lu) and miss cnt(%lu) should add up to exactly total lookup cnts(%lu)",
+          hit_cnt, miss_cnt, embed_cache->total_lookups);
       final_ratios[0] += ((float)hit_cnt / embed_cache->total_lookups);
 
       // calculate the intersect ratial of their keys
       for (uint64_t j = i + 1; j < RunConfig::num_device; j++) {
-        HCTR_LIB_THROW(cudaMemcpy(reinterpret_cast<void*>(d_cur_access_hit_local_ptr), 
-                                  reinterpret_cast<void*>(access_shm_global_base + total_key_num * 2 * j), 
-                                  sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-        HCTR_LIB_THROW(cudaMemcpy(reinterpret_cast<void*>(d_cur_access_miss_local_ptr), 
-                                  reinterpret_cast<void*>(access_shm_global_base + total_key_num * (2 * j + 1)), 
-                                  sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-        cache_access_statistic_util<TypeHashKey>::vec_overlap_async(d_access_hit_local_ptr, d_cur_access_hit_local_ptr, 
-                                                                    d_middle_result, total_key_num, 64, stream);
-        cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64, stream);
+        HCTR_LIB_THROW(
+            cudaMemcpy(reinterpret_cast<void*>(d_cur_access_hit_local_ptr),
+                       reinterpret_cast<void*>(access_shm_global_base + total_key_num * 2 * j),
+                       sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
+        HCTR_LIB_THROW(cudaMemcpy(
+            reinterpret_cast<void*>(d_cur_access_miss_local_ptr),
+            reinterpret_cast<void*>(access_shm_global_base + total_key_num * (2 * j + 1)),
+            sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
+        cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
+            d_access_hit_local_ptr, d_cur_access_hit_local_ptr, d_middle_result, total_key_num, 64,
+            stream);
+        cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
+            stream);
         HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-        HCTR_LIB_THROW(cudaMemcpy(&hit_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
-        cache_access_statistic_util<TypeHashKey>::vec_overlap_async(d_access_miss_local_ptr, d_cur_access_miss_local_ptr, 
-                                                                    d_middle_result, total_key_num, 64, stream);
-        cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64, stream);
+        HCTR_LIB_THROW(
+            cudaMemcpy(&hit_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
+        cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
+            d_access_miss_local_ptr, d_cur_access_miss_local_ptr, d_middle_result, total_key_num,
+            64, stream);
+        cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
+            stream);
         HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-        HCTR_LIB_THROW(cudaMemcpy(&miss_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
+        HCTR_LIB_THROW(
+            cudaMemcpy(&miss_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
         double hit_overlap_ratio = (float)hit_overlap_cnt / hit_cnt;
         double miss_overlap_ratio = (float)miss_overlap_cnt / miss_cnt;
-        HCTR_LOG_S(INFO, WORLD) << "Overlap(hit|miss) ratio of device [" << i << ", " << j <<  "]: " 
-                                << hit_overlap_ratio << "|" << miss_overlap_ratio << "%\n";
+        HCTR_LOG_S(INFO, WORLD) << "Overlap(hit|miss) ratio of device [" << i << ", " << j
+                                << "]: " << hit_overlap_ratio << "|" << miss_overlap_ratio << "%\n";
         final_ratios[1] += hit_overlap_ratio;
         final_ratios[2] += miss_overlap_ratio;
         cnt++;

@@ -15,6 +15,7 @@
  */
 
 #include "facade.h"
+
 #include <cstdint>
 #include <vector>
 
@@ -37,7 +38,8 @@ void Facade::operator delete(void*) {
 void Facade::init(const int32_t global_replica_id, tensorflow::OpKernelContext* ctx,
                   const char* ps_config_file, int32_t global_batch_size,
                   int32_t num_replicas_in_sync) {
-  std::call_once(lookup_manager_init_once_flag_, [this, ps_config_file, global_batch_size, num_replicas_in_sync, global_replica_id]() {
+  std::call_once(lookup_manager_init_once_flag_, [this, ps_config_file, global_batch_size,
+                                                  num_replicas_in_sync, global_replica_id]() {
     ps_config = new parameter_server_config{ps_config_file};
     lookup_manager_->init(*ps_config, global_batch_size, num_replicas_in_sync);
     if (!ps_config->use_coll_cache) {
@@ -72,15 +74,18 @@ void Facade::forward(const char* model_name, int32_t table_id, int32_t global_re
   coll_cache_lib::common::Timer t;
   lookup_manager_->forward(std::string(model_name), table_id, global_replica_id, num_keys,
                            emb_vec_size, values_ptr, emb_vector_ptr);
-  if (!ps_config->use_coll_cache) this->set_step_profile_value(global_replica_id, coll_cache_lib::common::kLogL2CacheCopyTime, t.Passed());
+  if (!ps_config->use_coll_cache)
+    this->set_step_profile_value(global_replica_id, coll_cache_lib::common::kLogL2CacheCopyTime,
+                                 t.Passed());
 }
 
-void Facade::report_avg() { 
+void Facade::report_avg() {
   if (ps_config->use_coll_cache)
     this->lookup_manager_->report_avg();
   else {
-    this->profiler_->ReportStepAverage(coll_cache_lib::common::RunConfig::num_epoch - 1, 
-                                      coll_cache_lib::common::RunConfig::num_global_step_per_epoch - 1);
+    this->profiler_->ReportStepAverage(
+        coll_cache_lib::common::RunConfig::num_epoch - 1,
+        coll_cache_lib::common::RunConfig::num_global_step_per_epoch - 1);
     std::cout.flush();
   }
 }

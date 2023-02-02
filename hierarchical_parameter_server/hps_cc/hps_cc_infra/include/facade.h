@@ -16,11 +16,12 @@
 
 #pragma once
 #include <cstdint>
+
+#include "coll_cache_lib/profiler.h"
+#include "coll_cache_lib/run_config.h"
 #include "hps/inference_utils.hpp"
 #include "lookup_manager.h"
 #include "tensorflow/core/framework/op_kernel.h"
-#include "coll_cache_lib/profiler.h"
-#include "coll_cache_lib/run_config.h"
 
 namespace HierarchicalParameterServer {
 
@@ -54,18 +55,21 @@ class Facade final {
   std::vector<size_t> current_steps_for_each_replica_;
 
   // for profiler
-  inline void set_step_profile_value(const int global_replica_id, const int64_t type, double value) {
+  inline void set_step_profile_value(const int global_replica_id, const int64_t type,
+                                     double value) {
     if (ps_config->use_coll_cache)
       this->lookup_manager_->set_step_profile_value(global_replica_id, type, value);
     else {
       auto iter_key = current_steps_for_each_replica_[global_replica_id];
-      if (type == coll_cache_lib::common::kLogL1TrainTime) current_steps_for_each_replica_[global_replica_id]++;
+      if (type == coll_cache_lib::common::kLogL1TrainTime)
+        current_steps_for_each_replica_[global_replica_id]++;
       auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + global_replica_id;
       this->profiler_->LogStep(key, static_cast<coll_cache_lib::common::LogStepItem>(type), value);
     }
   }
 
-  inline void add_epoch_profile_value(const int global_replica_id, const int64_t type, const double value) {
+  inline void add_epoch_profile_value(const int global_replica_id, const int64_t type,
+                                      const double value) {
     this->lookup_manager_->add_epoch_profile_value(global_replica_id, type, value);
   }
 };

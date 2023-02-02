@@ -149,10 +149,14 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
       // Allocate GPU memory for local hit counters
       emb_key_num = row_num;
       total_lookups = 0;
-      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters), row_num * sizeof(uint32_t)));
-      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters), row_num * sizeof(uint32_t)));
-      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_hit_key_counters), 0, row_num * sizeof(uint32_t)));
-      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_miss_key_counters), 0, row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters),
+                                row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters),
+                                row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_hit_key_counters), 0,
+                                row_num * sizeof(uint32_t)));
+      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_miss_key_counters), 0,
+                                row_num * sizeof(uint32_t)));
     }
   }
 
@@ -250,16 +254,18 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
                                    cudaMemcpyDeviceToHost, stream));
 
     // record missing/hit keys
-    uint32_t *d_unique_missing_keys;
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_unique_missing_keys), sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
-    HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(d_unique_missing_keys), 0, sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
-    cache_access_statistic_util<TypeHashKey>::transfer_missing_vec_async(workspace_handler.d_missing_index_[table_id], 
-                                                                        workspace_handler.h_missing_length_[table_id], 
-                                                                        d_unique_missing_keys, BLOCK_SIZE_, stream);
-    cache_access_statistic_util<TypeHashKey>::count_hit_keys_async(reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]), 
-                                                                  num_keys, d_unique_missing_keys, workspace_handler.d_unique_output_index_[table_id], 
-                                                                  local_miss_key_counters, local_hit_key_counters,
-                                                                  BLOCK_SIZE_, stream);
+    uint32_t* d_unique_missing_keys;
+    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_unique_missing_keys),
+                              sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
+    HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(d_unique_missing_keys), 0,
+                              sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
+    cache_access_statistic_util<TypeHashKey>::transfer_missing_vec_async(
+        workspace_handler.d_missing_index_[table_id], workspace_handler.h_missing_length_[table_id],
+        d_unique_missing_keys, BLOCK_SIZE_, stream);
+    cache_access_statistic_util<TypeHashKey>::count_hit_keys_async(
+        reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]), num_keys,
+        d_unique_missing_keys, workspace_handler.d_unique_output_index_[table_id],
+        local_miss_key_counters, local_hit_key_counters, BLOCK_SIZE_, stream);
     HCTR_LIB_THROW(cudaStreamSynchronize(stream));
     HCTR_LIB_THROW(cudaFree(d_unique_missing_keys));
     total_lookups += num_keys;
@@ -389,15 +395,19 @@ void EmbeddingCache<TypeHashKey>::dump(const size_t table_id, void* const d_keys
 
 template <typename TypeHashKey>
 size_t EmbeddingCache<TypeHashKey>::get_slot_num() {
-  HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1, "There should be only one item in EmbeddingCache.gpu_emb_caches_.");
-  HCTR_CHECK_HINT(cache_config_.num_set_in_cache_.size() == 1, "There should be only one item in EmbeddingCache.cache_config_.num_set_in_cache_.");
+  HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1,
+                  "There should be only one item in EmbeddingCache.gpu_emb_caches_.");
+  HCTR_CHECK_HINT(
+      cache_config_.num_set_in_cache_.size() == 1,
+      "There should be only one item in EmbeddingCache.cache_config_.num_set_in_cache_.");
   return (cache_config_.num_set_in_cache_[0] * SET_ASSOCIATIVITY * SLAB_SIZE);
 }
 
 template <typename TypeHashKey>
 void EmbeddingCache<TypeHashKey>::get_keys(void* keys, size_t num_keys) {
   HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1, "There should be only one table in EmbeddingCache.");
-  HCTR_CHECK_HINT(get_slot_num() >= num_keys, "Parameter num_keys should be smaller than slot_num in gpu cache.");
+  HCTR_CHECK_HINT(get_slot_num() >= num_keys,
+                  "Parameter num_keys should be smaller than slot_num in gpu cache.");
   gpu_emb_caches_[0]->GetKeys(keys, num_keys);
 }
 

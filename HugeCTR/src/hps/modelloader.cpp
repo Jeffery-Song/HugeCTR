@@ -39,7 +39,7 @@ RawModelLoader<TKey, TValue>::RawModelLoader() : IModelLoader() {
 namespace {
 
 std::string GetEnv(std::string key) {
-  const char *env_var_val = getenv(key.c_str());
+  const char* env_var_val = getenv(key.c_str());
   if (env_var_val != nullptr) {
     return std::string(env_var_val);
   } else {
@@ -47,7 +47,7 @@ std::string GetEnv(std::string key) {
   }
 }
 
-}
+}  // namespace
 
 template <typename TKey, typename TValue>
 void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std::string& path) {

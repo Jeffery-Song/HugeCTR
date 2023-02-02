@@ -27,8 +27,8 @@ class EmbeddingCacheBase {
  public:
   // The hit counter of each embedding key
   size_t emb_key_num, total_lookups;
-  uint32_t *local_hit_key_counters;
-  uint32_t *local_miss_key_counters;
+  uint32_t* local_hit_key_counters;
+  uint32_t* local_miss_key_counters;
 
   virtual ~EmbeddingCacheBase() = 0;
   EmbeddingCacheBase() = default;
