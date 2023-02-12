@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cub/cub.cuh>
 #include <hps/inference_utils.hpp>
+
+#include "coll_cache_lib/common.h"
 #define WARP_SIZE 32
 #define FULL_MASK 0xffffffff
 
@@ -65,46 +68,28 @@ __global__ void decompress_emb_vec(const float* d_src_emb_vec, const uint64_t* d
   }
 }
 
-// Kernels to transfer the missing key index to unique missing key vec
-__global__ void transfer_missing_vec(const uint64_t* d_missing_index_, const size_t missing_len,
-                                     uint32_t* d_unique_missing_keys) {
+__global__ void unfold_index(uint64_t* d_src, uint32_t* d_dst, size_t num_src, size_t num_dst) {
   const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < missing_len) d_unique_missing_keys[d_missing_index_[idx]] = 1;
+  if (idx < num_src) d_dst[d_src[idx]] = 1;
 }
 
-// Kernels to count hit/missing keys
-template <typename key_type>
-__global__ void count_hit_keys(const key_type* d_keys, const size_t key_len,
-                               const uint32_t* d_unique_missing_keys,
-                               const uint64_t* d_unique_index_ptr, uint32_t* d_missing_key_counters,
-                               uint32_t* d_hit_key_counters) {
+__global__ void map_marking(uint64_t* d_src_index, uint32_t* d_src_mark, uint32_t* d_dst,
+                            size_t num_mark, size_t num_dst) {
   const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
-  if (idx < key_len) {
-    key_type key = d_keys[idx];
-    if (d_unique_missing_keys[d_unique_index_ptr[idx]] == 0) {  // hit
-      atomicAdd(&d_hit_key_counters[key], 1);
-    } else {  // miss
-      atomicAdd(&d_missing_key_counters[key], 1);
-    }
-  }
+  if (idx < num_dst) d_dst[idx] = d_src_mark[d_src_index[idx]] ? 1 : 0;
 }
 
-// Kernels to get vec overlap
-void __global__ vec_overlap(const uint32_t* d_src1, const uint32_t* d_src2, uint64_t* d_dst,
-                            size_t n) {
+template <typename T>
+__global__ void add_up(const T* d_keys_in, const uint32_t* d_values_in, uint32_t* d_dst,
+                       size_t num_items) {
+  const size_t idx = blockIdx.x * blockDim.x + threadIdx.x;
+  if (idx < num_items) d_dst[d_keys_in[idx]] += d_values_in[idx];
+}
+
+__global__ void min_vec(const uint32_t* d_src1, const uint32_t* d_src2, uint32_t* d_dst,
+                        size_t num_items) {
   const size_t global_id = threadIdx.x + blockDim.x * blockIdx.x;
-  if (global_id < n) d_dst[global_id] = min(d_src1[global_id], d_src2[global_id]);
-}
-
-// Kernels to reduce key overlap
-template <size_t reduce_size>
-void __global__ vec_reduce(const uint64_t* d_src, uint64_t* d_dst, size_t n) {
-  const size_t global_id = threadIdx.x + blockDim.x * blockIdx.x,
-               reduce_id = global_id % reduce_size;
-  unsigned val = global_id < n ? d_src[global_id] : 0;
-  for (size_t offset = reduce_size >> 1; offset > 0; offset >>= 1)
-    val += __shfl_xor_sync(FULL_MASK, val, offset, reduce_size);
-  if (reduce_id == 0) d_dst[global_id / reduce_size] = val;
+  if (global_id < num_items) d_dst[global_id] = min(d_src1[global_id], d_src2[global_id]);
 }
 
 void merge_emb_vec_async(float* d_vals_merge_dst_ptr, const float* d_vals_retrieved_ptr,
@@ -142,53 +127,114 @@ void decompress_emb_vec_async(const float* d_unique_src_ptr, const uint64_t* d_u
       d_unique_src_ptr, d_unique_index_ptr, d_decompress_dst_ptr, decompress_len, emb_vec_size);
 }
 
-template <typename key_type>
-void cache_access_statistic_util<key_type>::transfer_missing_vec_async(
-    const uint64_t* d_missing_index_, const size_t missing_len, uint32_t* d_unique_missing_keys,
-    const size_t BLOCK_SIZE, cudaStream_t stream) {
-  if (missing_len == 0) return;
-  transfer_missing_vec<<<((missing_len - 1) / BLOCK_SIZE) + 1, BLOCK_SIZE, 0, stream>>>(
-      d_missing_index_, missing_len, d_unique_missing_keys);
-}
+using namespace coll_cache_lib::common;
 
-template <typename key_type>
-void cache_access_statistic_util<key_type>::count_hit_keys_async(
-    const key_type* d_keys, const size_t key_len, const uint32_t* d_unique_missing_keys,
-    const uint64_t* d_unique_index_ptr, uint32_t* d_missing_key_counters,
-    uint32_t* d_hit_key_counters, const size_t BLOCK_SIZE, cudaStream_t stream) {
-  if (key_len == 0) return;
-  count_hit_keys<<<((key_len - 1) / BLOCK_SIZE) + 1, BLOCK_SIZE, 0, stream>>>(
-      d_keys, key_len, d_unique_missing_keys, d_unique_index_ptr, d_missing_key_counters,
-      d_hit_key_counters);
-}
-
-template <typename key_type>
-void cache_access_statistic_util<key_type>::vec_overlap_async(const uint32_t* d_src1,
-                                                              const uint32_t* d_src2,
-                                                              uint64_t* d_dst, size_t n,
-                                                              const size_t BLOCK_SIZE,
-                                                              cudaStream_t stream) {
-  if (n == 0) return;
-  vec_overlap<<<((n - 1) / BLOCK_SIZE) + 1, BLOCK_SIZE, 0, stream>>>(d_src1, d_src2, d_dst, n);
-}
-
-template <typename key_type>
-void cache_access_statistic_util<key_type>::vec_reduce_async(uint64_t* d_src, uint64_t* d_dst,
-                                                             size_t n, const size_t BLOCK_SIZE,
-                                                             cudaStream_t stream) {
-  if (n == 0) return;
-  uint64_t *dst = d_dst, *src = d_src;
-  for (size_t len = n; len > 1; len = (len + WARP_SIZE - 1) / WARP_SIZE)
-    dst += (len + WARP_SIZE - 1) / WARP_SIZE;
-  for (size_t len = n; len > 1; len = (len + WARP_SIZE - 1) / WARP_SIZE) {
-    dst -= (len + WARP_SIZE - 1) / WARP_SIZE;
-    vec_reduce<WARP_SIZE><<<((len - 1) / BLOCK_SIZE + 1), BLOCK_SIZE>>>(src, dst, len);
-    src = dst;
+struct CubSum {
+  template <typename T>
+  CUB_RUNTIME_FUNCTION __forceinline__ T operator()(const T& a, const T& b) const {
+    return (a + b);
   }
-  cudaDeviceSynchronize();
+};
+
+struct FlipConverter {
+  __host__ __device__ __forceinline__ uint32_t operator()(const uint32_t& a) const { return !a; }
+};
+
+template <typename T>
+void MathUtil<T>::CubCountByKey(const T* d_keys, uint32_t* d_values, T* d_unique_keys_out,
+                                uint32_t* d_aggregates_out, const size_t num_items,
+                                uint64_t* d_num_runs_out, cudaStream_t stream, bool flip) {
+  // Declare, allocate, and initialize device-accessible pointers for input and output
+  CubSum reduction_op;
+  FlipConverter flip_op;
+  cub::TransformInputIterator<uint32_t, FlipConverter, uint32_t*> itr_flip(d_values, flip_op);
+
+  // Determine temporary device storage requirements
+  void* d_temp_storage = NULL;
+  size_t temp_storage_bytes = 0;
+
+  auto do_reduce = [&] {
+    if (flip) {
+      cub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys, d_unique_keys_out,
+                                     itr_flip, d_aggregates_out, d_num_runs_out, reduction_op,
+                                     num_items);
+    } else {
+      cub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys, d_unique_keys_out,
+                                     d_values, d_aggregates_out, d_num_runs_out, reduction_op,
+                                     num_items);
+    }
+  };
+
+  do_reduce();
+  // Allocate temporary storage
+  cudaMalloc(&d_temp_storage, temp_storage_bytes);
+  // Run reduce-by-key
+  do_reduce();
+  cudaFree(d_temp_storage);
 }
 
-template class cache_access_statistic_util<unsigned int>;
-template class cache_access_statistic_util<long long>;
+template <typename T>
+void MathUtil<T>::CubReduceSum(const T* d_in, uint64_t* d_out, size_t num_items,
+                               cudaStream_t stream) {
+  // Determine temporary device storage requirements
+  void* d_temp_storage = NULL;
+  size_t temp_storage_bytes = 0;
+  cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, stream);
+  // Allocate temporary storage
+  cudaMalloc(&d_temp_storage, temp_storage_bytes);
+  // Run sum-reduction
+  cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, stream);
+  cudaFree(d_temp_storage);
+}
+
+template <typename T>
+void MathUtil<T>::CubSortPairs(const T* d_keys_in, const uint32_t* d_values_in, T* d_keys_out,
+                               uint32_t* d_values_out, size_t num_items, cudaStream_t stream) {
+  // Determine temporary device storage requirements
+  void* d_temp_storage = NULL;
+  size_t temp_storage_bytes = 0;
+  cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out,
+                                  d_values_in, d_values_out, num_items);
+  // Allocate temporary storage
+  cudaMalloc(&d_temp_storage, temp_storage_bytes);
+  // Run sorting operation
+  cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out,
+                                  d_values_in, d_values_out, num_items);
+}
+
+template <typename T>
+void MathUtil<T>::UnfoldIndexVec(uint64_t* d_src, uint32_t* d_dst, size_t num_src, size_t num_dst,
+                                 cudaStream_t stream) {
+  if (num_src == 0) return;
+  unfold_index<<<RoundUpDiv(num_src, Constant::kCudaBlockSize), Constant::kCudaBlockSize, 0,
+                 stream>>>(d_src, d_dst, num_src, num_dst);
+}
+
+template <typename T>
+void MathUtil<T>::Mark(uint64_t* d_src_index, uint32_t* d_src_mark, uint32_t* d_dst,
+                       size_t num_mark, size_t num_dst, cudaStream_t stream) {
+  if (num_dst == 0) return;
+  map_marking<<<RoundUpDiv(num_dst, Constant::kCudaBlockSize), Constant::kCudaBlockSize, 0,
+                stream>>>(d_src_index, d_src_mark, d_dst, num_mark, num_dst);
+}
+
+template <typename T>
+void MathUtil<T>::AddUp(const T* d_keys_in, const uint32_t* d_values_in, uint32_t* d_dst,
+                        size_t num_items, cudaStream_t stream) {
+  if (num_items == 0) return;
+  add_up<<<RoundUpDiv(num_items, Constant::kCudaBlockSize), Constant::kCudaBlockSize, 0, stream>>>(
+      d_keys_in, d_values_in, d_dst, num_items);
+}
+
+template <typename T>
+void MathUtil<T>::Min(const uint32_t* d_src1, const uint32_t* d_src2, uint32_t* d_dst,
+                      size_t num_items, cudaStream_t stream) {
+  if (num_items == 0) return;
+  min_vec<<<RoundUpDiv(num_items, Constant::kCudaBlockSize), Constant::kCudaBlockSize, 0, stream>>>(
+      d_src1, d_src2, d_dst, num_items);
+}
+
+template class MathUtil<unsigned int>;
+template class MathUtil<long long>;
 
 }  // namespace HugeCTR

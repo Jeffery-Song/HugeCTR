@@ -30,10 +30,13 @@
 #include "base/debug/logger.hpp"
 #include "coll_cache_lib/atomic_barrier.h"
 #include "coll_cache_lib/common.h"
+#include "coll_cache_lib/device.h"
 #include "coll_cache_lib/facade.h"
 #include "coll_cache_lib/run_config.h"
 
 namespace HugeCTR {
+
+using namespace coll_cache_lib::common;
 
 std::string HierParameterServerBase::make_tag_name(const std::string& model_name,
                                                    const std::string& embedding_table_name,
@@ -854,14 +857,13 @@ double HierParameterServer<TypeHashKey>::report_cache_intersect() {
         cnt++;
       }
     }
+
+    CollCacheParameterServer::barrier();
+    return (final_ratio / cnt);
   }
 
-  return (final_ratio / cnt);
-
-  // free memory
-  // for (uint64_t i = 0; i < device_cnt; i++) free(gpu_keys[i]);
-  // free(gpu_keys);
-  // free(gpu_key_nums);
+  CollCacheParameterServer::barrier();
+  return 0;
 }
 
 template <typename TypeHashKey>
@@ -898,117 +900,101 @@ std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
   }
 
   // copy embedding keys from each GPU to CPU memory
-  uint32_t* access_shm_global_base = (uint32_t*)access_shm_base_ptr->MutableData();
-  uint32_t* access_shm_local_base =
-      access_shm_global_base + total_key_num * 2 * RunConfig::worker_id;
-  uint32_t* access_hit_local_ptr = access_shm_local_base;
-  uint32_t* access_miss_local_ptr = access_shm_local_base + total_key_num;
-  CUDA_CHECK(cudaMemcpy(reinterpret_cast<void*>(access_hit_local_ptr),
+  uint32_t* access_shm_global_base = access_shm_base_ptr->Ptr<uint32_t>();
+  auto get_shm_ptr = [&](size_t device_id, bool hit) -> void* {
+    return reinterpret_cast<void*>(access_shm_global_base +
+                                   total_key_num * (2 * device_id + (!hit)));
+  };
+  CUDA_CHECK(cudaMemcpy(get_shm_ptr(RunConfig::worker_id, true),
                         reinterpret_cast<void*>(embed_cache->local_hit_key_counters),
                         sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaMemcpy(reinterpret_cast<void*>(access_miss_local_ptr),
+  CUDA_CHECK(cudaMemcpy(get_shm_ptr(RunConfig::worker_id, false),
                         reinterpret_cast<void*>(embed_cache->local_miss_key_counters),
                         sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
   CollCacheParameterServer::barrier();
 
   // calculate the intersect ratial of their keys one by one
   if (RunConfig::worker_id == 0) {
-    uint32_t *d_access_hit_local_ptr, *d_access_miss_local_ptr;
-    uint32_t *d_cur_access_hit_local_ptr, *d_cur_access_miss_local_ptr;
-    uint64_t *d_result, *d_middle_result;
     uint64_t hit_cnt, miss_cnt, hit_overlap_cnt, miss_overlap_cnt;
     cudaStream_t stream = embed_cache->get_refresh_streams()[0];
-    HCTR_LOG_S(INFO, WORLD)
-        << "[HierParameterServer::report_cache_intersect] gpu_key_nums on each device: \n";
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_access_hit_local_ptr),
-                              sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_access_miss_local_ptr),
-                              sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_cur_access_hit_local_ptr),
-                              sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_cur_access_miss_local_ptr),
-                              sizeof(uint32_t) * total_key_num));
-    HCTR_LIB_THROW(
-        cudaMalloc(reinterpret_cast<void**>(&d_result), sizeof(uint64_t) * total_key_num));
-    HCTR_LIB_THROW(
-        cudaMalloc(reinterpret_cast<void**>(&d_middle_result), sizeof(uint64_t) * total_key_num));
+    Context ctx = GPU();
+    TensorPtr d_access_hit_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
+    TensorPtr d_access_miss_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
+    TensorPtr d_cur_access_hit_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
+    TensorPtr d_cur_access_miss_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
+    TensorPtr d_middle_result = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
+    TensorPtr d_result = Tensor::Empty(DataType::kI64, {1}, ctx, "");
+    auto get_result = [&]() -> uint64_t {
+      uint64_t h_result;
+      HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+      Device::Get(ctx)->CopyDataFromTo(d_result->Ptr<uint64_t>(), 0, &h_result, 0, sizeof(uint64_t),
+                                       ctx, CPU());
+      return h_result;
+    };
 
+    HCTR_LOG_S(INFO, WORLD) << "[HierParameterServer::report_cache_intersect] Access overlap: \n";
     for (uint64_t i = 0; i < RunConfig::num_device; i++) {
-      HCTR_LIB_THROW(
-          cudaMemcpy(reinterpret_cast<void*>(d_access_hit_local_ptr),
-                     reinterpret_cast<void*>(access_shm_global_base + total_key_num * 2 * i),
-                     sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-      HCTR_LIB_THROW(
-          cudaMemcpy(reinterpret_cast<void*>(d_access_miss_local_ptr),
-                     reinterpret_cast<void*>(access_shm_global_base + total_key_num * (2 * i + 1)),
-                     sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-      cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
-          d_access_hit_local_ptr, d_access_hit_local_ptr, d_middle_result, total_key_num, 64,
-          stream);
-      cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
-          stream);
-      HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-      HCTR_LIB_THROW(cudaMemcpy(&hit_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
-      cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
-          d_access_miss_local_ptr, d_access_miss_local_ptr, d_middle_result, total_key_num, 64,
-          stream);
-      cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
-          stream);
-      HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-      HCTR_LIB_THROW(cudaMemcpy(&miss_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
+      Device::Get(ctx)->CopyDataFromTo(get_shm_ptr(i, true), 0,
+                                       d_access_hit_local_ptr->MutableData(), 0,
+                                       sizeof(uint32_t) * total_key_num, CPU(), ctx, stream);
+      Device::Get(ctx)->CopyDataFromTo(get_shm_ptr(i, false), 0,
+                                       d_access_miss_local_ptr->MutableData(), 0,
+                                       sizeof(uint32_t) * total_key_num, CPU(), ctx, stream);
+      MathUtil<uint32_t>::CubReduceSum(d_access_hit_local_ptr->Ptr<uint32_t>(),
+                                       d_result->Ptr<uint64_t>(), total_key_num, stream);
+      hit_cnt = get_result();
+      MathUtil<uint32_t>::CubReduceSum(d_access_miss_local_ptr->Ptr<uint32_t>(),
+                                       d_result->Ptr<uint64_t>(), total_key_num, stream);
+      miss_cnt = get_result();
+
+      // check miss count and hit count
       HCTR_CHECK_HINT(
           hit_cnt + miss_cnt == embed_cache->total_lookups,
           "cache hit cnt(%lu) and miss cnt(%lu) should add up to exactly total lookup cnts(%lu)",
           hit_cnt, miss_cnt, embed_cache->total_lookups);
-      final_ratios[0] += ((float)hit_cnt / embed_cache->total_lookups);
+      final_ratios[0] += ((float)hit_cnt / embed_cache->total_lookups);  // hit ratio
 
       // calculate the intersect ratial of their keys
       for (uint64_t j = i + 1; j < RunConfig::num_device; j++) {
-        HCTR_LIB_THROW(
-            cudaMemcpy(reinterpret_cast<void*>(d_cur_access_hit_local_ptr),
-                       reinterpret_cast<void*>(access_shm_global_base + total_key_num * 2 * j),
-                       sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-        HCTR_LIB_THROW(cudaMemcpy(
-            reinterpret_cast<void*>(d_cur_access_miss_local_ptr),
-            reinterpret_cast<void*>(access_shm_global_base + total_key_num * (2 * j + 1)),
-            sizeof(uint32_t) * total_key_num, cudaMemcpyHostToDevice));
-        cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
-            d_access_hit_local_ptr, d_cur_access_hit_local_ptr, d_middle_result, total_key_num, 64,
-            stream);
-        cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
-            stream);
-        HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-        HCTR_LIB_THROW(
-            cudaMemcpy(&hit_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
-        cache_access_statistic_util<TypeHashKey>::vec_overlap_async(
-            d_access_miss_local_ptr, d_cur_access_miss_local_ptr, d_middle_result, total_key_num,
-            64, stream);
-        cache_access_statistic_util<TypeHashKey>::vec_reduce_async(d_middle_result, d_result, total_key_num, 64,
-            stream);
-        HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-        HCTR_LIB_THROW(
-            cudaMemcpy(&miss_overlap_cnt, d_result, sizeof(uint64_t), cudaMemcpyDeviceToHost));
+        Device::Get(ctx)->CopyDataFromTo(get_shm_ptr(j, true), 0,
+                                         d_cur_access_hit_local_ptr->MutableData(), 0,
+                                         sizeof(uint32_t) * total_key_num, CPU(), ctx, stream);
+        Device::Get(ctx)->CopyDataFromTo(get_shm_ptr(j, false), 0,
+                                         d_cur_access_miss_local_ptr->MutableData(), 0,
+                                         sizeof(uint32_t) * total_key_num, CPU(), ctx, stream);
+
+        MathUtil<TypeHashKey>::Min(d_access_hit_local_ptr->Ptr<uint32_t>(),
+                                   d_cur_access_hit_local_ptr->Ptr<uint32_t>(),
+                                   d_middle_result->Ptr<uint32_t>(), total_key_num, stream);
+        MathUtil<uint32_t>::CubReduceSum(d_middle_result->Ptr<uint32_t>(),
+                                         d_result->Ptr<uint64_t>(), total_key_num, stream);
+        hit_overlap_cnt = get_result();
+
+        MathUtil<TypeHashKey>::Min(d_access_miss_local_ptr->Ptr<uint32_t>(),
+                                   d_cur_access_miss_local_ptr->Ptr<uint32_t>(),
+                                   d_middle_result->Ptr<uint32_t>(), total_key_num, stream);
+        MathUtil<uint32_t>::CubReduceSum(d_middle_result->Ptr<uint32_t>(),
+                                         d_result->Ptr<uint64_t>(), total_key_num, stream);
+        miss_overlap_cnt = get_result();
+
         double hit_overlap_ratio = (float)hit_overlap_cnt / hit_cnt;
         double miss_overlap_ratio = (float)miss_overlap_cnt / miss_cnt;
-        HCTR_LOG_S(INFO, WORLD) << "Overlap(hit|miss) ratio of device [" << i << ", " << j
-                                << "]: " << hit_overlap_ratio << "|" << miss_overlap_ratio << "%\n";
+        HCTR_LOG_S(INFO, WORLD) << "Device [" << i << ", " << j << "]:"
+                                << " hit_cnt " << hit_cnt << " miss_cnt " << miss_cnt
+                                << " hit_overlap_cnt " << hit_overlap_cnt << " miss_overlap_cnt "
+                                << miss_overlap_cnt << " ,Overlap(hit|miss) ratio "
+                                << hit_overlap_ratio << "|" << miss_overlap_ratio << "%\n";
         final_ratios[1] += hit_overlap_ratio;
         final_ratios[2] += miss_overlap_ratio;
         cnt++;
       }
     }
 
-    HCTR_LIB_THROW(cudaFree(d_access_miss_local_ptr));
-    HCTR_LIB_THROW(cudaFree(d_access_hit_local_ptr));
-    HCTR_LIB_THROW(cudaFree(d_cur_access_miss_local_ptr));
-    HCTR_LIB_THROW(cudaFree(d_cur_access_hit_local_ptr));
-    HCTR_LIB_THROW(cudaFree(d_result));
-    HCTR_LIB_THROW(cudaFree(d_middle_result));
+    final_ratios[0] /= RunConfig::num_device;
+    final_ratios[1] /= cnt;
+    final_ratios[2] /= cnt;
   }
 
-  final_ratios[0] /= RunConfig::num_device;
-  final_ratios[1] /= cnt;
-  final_ratios[2] /= cnt;
   return final_ratios;
 }
 

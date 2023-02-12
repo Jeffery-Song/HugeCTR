@@ -22,6 +22,9 @@
 #include <thread>
 #include <utils.hpp>
 
+#include "coll_cache_lib/common.h"
+#include "coll_cache_lib/device.h"
+#include "hps/inference_utils.hpp"
 namespace HugeCTR {
 
 template <typename TypeHashKey>
@@ -254,21 +257,79 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
                                    cudaMemcpyDeviceToHost, stream));
 
     // record missing/hit keys
-    uint32_t* d_unique_missing_keys;
-    HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&d_unique_missing_keys),
-                              sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
-    HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(d_unique_missing_keys), 0,
-                              sizeof(uint32_t) * workspace_handler.h_unique_length_[table_id]));
-    cache_access_statistic_util<TypeHashKey>::transfer_missing_vec_async(
-        workspace_handler.d_missing_index_[table_id], workspace_handler.h_missing_length_[table_id],
-        d_unique_missing_keys, BLOCK_SIZE_, stream);
-    cache_access_statistic_util<TypeHashKey>::count_hit_keys_async(
-        reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]), num_keys,
-        d_unique_missing_keys, workspace_handler.d_unique_output_index_[table_id],
-        local_miss_key_counters, local_hit_key_counters, BLOCK_SIZE_, stream);
-    HCTR_LIB_THROW(cudaStreamSynchronize(stream));
-    HCTR_LIB_THROW(cudaFree(d_unique_missing_keys));
-    total_lookups += num_keys;
+    {
+      using namespace coll_cache_lib::common;
+      DataType key_type = sizeof(TypeHashKey) == 4 ? DataType::kI32 : DataType::kI64;
+      Context ctx = GPU(cache_config_.cuda_dev_id_);
+      HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+
+      // missing_unique_key_index (len = unique_missing_num) to key_missing_state (len = num_keys)
+      size_t& unique_num = workspace_handler.h_unique_length_[table_id];
+      size_t& unique_missing_num = workspace_handler.h_missing_length_[table_id];
+      TensorPtr d_keys_state = Tensor::Empty(DataType::kI32, {num_keys}, ctx, "");
+      TensorPtr d_unique_keys_state = Tensor::Empty(DataType::kI32, {unique_num}, ctx, "");
+      HCTR_LIB_THROW(cudaMemset(d_keys_state->MutableData(), 0, sizeof(uint32_t) * num_keys));
+      HCTR_LIB_THROW(
+          cudaMemset(d_unique_keys_state->MutableData(), 0, sizeof(uint32_t) * unique_num));
+      MathUtil<TypeHashKey>::UnfoldIndexVec(workspace_handler.d_missing_index_[table_id],
+                                            d_unique_keys_state->Ptr<uint32_t>(),
+                                            unique_missing_num, unique_num, stream);
+      MathUtil<TypeHashKey>::Mark(workspace_handler.d_unique_output_index_[table_id],
+                                  d_unique_keys_state->Ptr<uint32_t>(),
+                                  d_keys_state->Ptr<uint32_t>(), num_keys, unique_num, stream);
+
+      // // sort key value(missing state) pairs
+      TensorPtr d_sorted_keys = Tensor::Empty(key_type, {num_keys}, ctx, "");
+      TensorPtr d_sorted_values = Tensor::Empty(DataType::kI32, {num_keys}, ctx, "");
+      MathUtil<TypeHashKey>::CubSortPairs(
+          reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]),
+          d_keys_state->Ptr<uint32_t>(), d_sorted_keys->Ptr<TypeHashKey>(),
+          d_sorted_values->Ptr<uint32_t>(), num_keys, stream);
+
+      uint64_t miss_cnt, hit_cnt;
+      TensorPtr d_unique_keys_out = Tensor::Empty(key_type, {unique_num}, ctx, "");
+      TensorPtr d_aggregates_out = Tensor::Empty(DataType::kI32, {unique_num}, ctx, "");
+      TensorPtr d_num_run_out = Tensor::Empty(DataType::kI64, {1}, ctx, "");
+      auto get_num_run_out = [&] {
+        uint64_t h_num_run_out;
+        HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+        Device::Get(ctx)->CopyDataFromTo(d_num_run_out->Ptr<uint64_t>(), 0, &h_num_run_out, 0,
+                                         sizeof(uint64_t), ctx, CPU());
+        return h_num_run_out;
+      };
+      // Count missing keys
+      MathUtil<TypeHashKey>::CubCountByKey(
+          d_sorted_keys->Ptr<TypeHashKey>(), d_sorted_values->Ptr<uint32_t>(),
+          d_unique_keys_out->Ptr<TypeHashKey>(), d_aggregates_out->Ptr<uint32_t>(), num_keys,
+          d_num_run_out->Ptr<uint64_t>(), stream);
+      HCTR_CHECK_HINT(get_num_run_out() == unique_num, "Unique key: %lu, should be %lu.\n",
+                      unique_num, get_num_run_out());
+      MathUtil<TypeHashKey>::AddUp(d_unique_keys_out->Ptr<TypeHashKey>(),
+                                   d_aggregates_out->Ptr<uint32_t>(), local_miss_key_counters,
+                                   unique_num, stream);
+      MathUtil<uint32_t>::CubReduceSum(d_aggregates_out->Ptr<uint32_t>(),
+                                       d_num_run_out->Ptr<uint64_t>(), unique_num, stream);
+      miss_cnt = get_num_run_out();
+      // Count hit keys
+      MathUtil<TypeHashKey>::CubCountByKey(
+          d_sorted_keys->Ptr<TypeHashKey>(), d_sorted_values->Ptr<uint32_t>(),
+          d_unique_keys_out->Ptr<TypeHashKey>(), d_aggregates_out->Ptr<uint32_t>(), num_keys,
+          d_num_run_out->Ptr<uint64_t>(), stream, true);
+      HCTR_CHECK_HINT(get_num_run_out() == unique_num, "Unique key: %lu, should be %lu.\n",
+                      unique_num, get_num_run_out());
+      MathUtil<TypeHashKey>::AddUp(d_unique_keys_out->Ptr<TypeHashKey>(),
+                                   d_aggregates_out->Ptr<uint32_t>(), local_hit_key_counters,
+                                   unique_num, stream);
+      MathUtil<uint32_t>::CubReduceSum(d_aggregates_out->Ptr<uint32_t>(),
+                                       d_num_run_out->Ptr<uint64_t>(), unique_num, stream);
+      hit_cnt = get_num_run_out();
+
+      // check miss cnt and hit cnt
+      HCTR_CHECK_HINT(miss_cnt + hit_cnt == num_keys,
+                      "miss|hit(%lu|%lu) should be add up to num_keys %lu.\n", miss_cnt, hit_cnt,
+                      num_keys);
+      total_lookups += num_keys;
+    }
 
     // Set async flag
     HCTR_LIB_THROW(cudaStreamSynchronize(stream));

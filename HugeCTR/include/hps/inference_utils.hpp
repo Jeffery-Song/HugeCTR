@@ -394,21 +394,26 @@ void decompress_emb_vec_async(const float* d_unique_src_ptr, const uint64_t* d_u
                               const size_t emb_vec_size, const size_t BLOCK_SIZE,
                               cudaStream_t stream);
 
-template <typename key_type>
-class cache_access_statistic_util {
+template <typename T>
+class MathUtil {
  public:
-  static void transfer_missing_vec_async(const uint64_t* d_missing_index_, const size_t missing_len,
-                                         uint32_t* d_unique_missing_keys, const size_t BLOCK_SIZE,
-                                         cudaStream_t stream);
-  static void count_hit_keys_async(const key_type* d_keys, const size_t key_len,
-                                   const uint32_t* d_unique_missing_keys,
-                                   const uint64_t* d_unique_index_ptr,
-                                   uint32_t* d_missing_key_counters, uint32_t* d_hit_key_counters,
-                                   const size_t BLOCK_SIZE, cudaStream_t stream);
-  static void vec_overlap_async(const uint32_t* d_src1, const uint32_t* d_src2, uint64_t* d_dst,
-                                size_t n, const size_t BLOCK_SIZE, cudaStream_t stream);
-  static void vec_reduce_async(uint64_t* d_src, uint64_t* d_dst, size_t n, const size_t BLOCK_SIZE,
-                               cudaStream_t stream);
+  // functions based on CUB
+  static void CubCountByKey(const T* d_keys, uint32_t* d_values, T* d_unique_keys_out,
+                            uint32_t* d_aggregates_out, const size_t num_items,
+                            uint64_t* d_num_runs_out, cudaStream_t stream, bool flip = false);
+  static void CubReduceSum(const T* d_src, uint64_t* d_dst, size_t num_items, cudaStream_t stream);
+  static void CubSortPairs(const T* d_keys_in, const uint32_t* d_values_in, T* d_keys_out,
+                           uint32_t* d_values_out, size_t num_items, cudaStream_t stream);
+
+  // functions using customized kernel functions
+  static void UnfoldIndexVec(uint64_t* d_src, uint32_t* d_dst, size_t num_src, size_t num_dst,
+                             cudaStream_t stream);
+  static void Mark(uint64_t* d_src_index, uint32_t* d_src_mark, uint32_t* d_dst, size_t num_mark,
+                   size_t num_dst, cudaStream_t stream);
+  static void AddUp(const T* d_keys_in, const uint32_t* d_values_in, uint32_t* d_dst,
+                    size_t num_items, cudaStream_t stream);
+  static void Min(const uint32_t* d_src1, const uint32_t* d_src2, uint32_t* d_dst, size_t num_items,
+                  cudaStream_t stream);
 };
 
 }  // namespace HugeCTR
