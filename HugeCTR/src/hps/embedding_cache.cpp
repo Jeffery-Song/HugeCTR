@@ -104,6 +104,7 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
   cache_config_.model_name_ = inference_params.model_name;
   cache_config_.cuda_dev_id_ = inference_params.device_id;
   cache_config_.use_gpu_embedding_cache_ = inference_params.use_gpu_embedding_cache;
+  cache_config_.hps_cache_statistic = inference_params.hps_cache_statistic;
 
   if (ps_config.embedding_vec_size_.find(inference_params.model_name) ==
           ps_config.embedding_vec_size_.end() ||
@@ -257,7 +258,7 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
                                    cudaMemcpyDeviceToHost, stream));
 
     // record missing/hit keys
-    {
+    if (cache_config_.hps_cache_statistic) {
       using namespace coll_cache_lib::common;
       DataType key_type = sizeof(TypeHashKey) == 4 ? DataType::kI32 : DataType::kI64;
       Context ctx = GPU(cache_config_.cuda_dev_id_);

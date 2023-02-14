@@ -201,6 +201,7 @@ enum class PSUpdateSource_t { None, Kafka };
 struct InferenceParams {
   bool use_coll_cache = false;
   bool use_multi_worker = false;
+  bool hps_cache_statistic = false;
   size_t coll_cache_enable_iter;
   std::string model_name;
   size_t max_batchsize;
@@ -267,6 +268,7 @@ struct InferenceParams {
 struct parameter_server_config {
   bool use_coll_cache = false;
   bool use_multi_worker = false;
+  bool hps_cache_statistic = false;
   size_t coll_cache_enable_iter = std::numeric_limits<size_t>::max();
   size_t iteration_per_epoch = 0;
   size_t epoch = 0;
@@ -333,6 +335,7 @@ struct embedding_cache_config {
   std::vector<size_t>
       max_query_len_per_emb_table_;  // The max # of embeddingcolumns each inference instance(batch)
                                      // will query from a embedding table
+  bool hps_cache_statistic = false;
 };
 
 struct EmbeddingCacheWorkspace {

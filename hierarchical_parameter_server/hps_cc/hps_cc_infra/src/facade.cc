@@ -91,8 +91,10 @@ void Facade::report_avg() {
 }
 
 void Facade::report_cache() {
-  std::vector<double> cache_ratios = this->lookup_manager_->report_access_overlap();
-  cache_ratios.emplace(cache_ratios.begin(), this->lookup_manager_->report_cache_intersect());
-  this->profiler_->LogHPSAdd(cache_ratios);
+  if (ps_config->hps_cache_statistic) {
+    std::vector<double> cache_ratios = this->lookup_manager_->report_access_overlap();
+    cache_ratios.emplace(cache_ratios.begin(), this->lookup_manager_->report_cache_intersect());
+    this->profiler_->LogHPSAdd(cache_ratios);
+  }
 }
 }  // namespace HierarchicalParameterServer

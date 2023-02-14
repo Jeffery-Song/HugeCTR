@@ -12,6 +12,7 @@ cur_common_base = (ConfigList()
   .override('multi_gpu', [True])
   .override('empty_feat', [25])
   .override('scalability_test', [True])
+  .override('hps_cache_statistic', [True])
   )
 
 cfg_list_collector = ConfigList.Empty()

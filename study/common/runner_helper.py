@@ -193,6 +193,7 @@ class RunConfig:
     self.custom_env             = ""
     self.empty_feat             = 25
     self.scalability_test       = False
+    self.hps_cache_statistic    = False
 
   def get_mock_sparse_name(self):
     if self.mock_embedding:
@@ -340,6 +341,7 @@ class RunConfig:
     conf['iteration_per_epoch'] = self.iteration_per_epoch
     conf['epoch'] = self.epoch
     conf['coll_cache_policy'] = self.coll_cache_policy.value
+    conf['hps_cache_statistic'] = self.hps_cache_statistic
 
     result = json.dumps(conf, indent=4)
     with open(self.get_conf_fname(), "w") as outfile:
