@@ -153,6 +153,7 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
       // Allocate GPU memory for local hit counters
       emb_key_num = row_num;
       total_lookups = 0;
+      HCTR_LIB_THROW(cudaSetDevice(cache_config_.cuda_dev_id_));
       HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters),
                                 row_num * sizeof(uint32_t)));
       HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters),

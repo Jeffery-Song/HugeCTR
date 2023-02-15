@@ -776,7 +776,10 @@ double HierParameterServer<TypeHashKey>::report_cache_intersect() {
   HCTR_CHECK_HINT(model_cache_map_.size() == 1,
                   "There should be only one model while reporting cache intersect.");
   auto& cache_map = model_cache_map_.begin()->second;
-  HCTR_CHECK_HINT(cache_map.size() == 1, "There should be only one device in one process.");
+  HCTR_CHECK_HINT(cache_map.size() == 1 || cache_map.size() == RunConfig::num_device,
+                  "There should be only one device in one process, \
+                  or all device in single process.");
+  bool single_process = (cache_map.size() != 1);
   auto& embed_cache = cache_map[RunConfig::worker_id];
   size_t slot_num = embed_cache->get_slot_num();
   std::vector<size_t> shape = {RunConfig::num_device, slot_num};
@@ -788,28 +791,43 @@ double HierParameterServer<TypeHashKey>::report_cache_intersect() {
   int cnt = 0;
 
   // main process: alloc new shared memory
-  if (RunConfig::worker_id == 0) {
+  if (!single_process) {
+    if (RunConfig::worker_id == 0) {
+      keys_shm_base_ptr =
+          Tensor::CreateShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
+      HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " create shared memory \""
+                              << HPSCacheKeyShmName.c_str() << "\" with nbytes "
+                              << keys_shm_base_ptr->NumBytes() << ".\n";
+    }
+    CollCacheParameterServer::barrier();
+    if (RunConfig::worker_id != 0) {
+      keys_shm_base_ptr =
+          Tensor::OpenShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
+      HCTR_LOG_S(DEBUG, WORLD) << "Device " << RunConfig::worker_id << " open shared memory \""
+                               << HPSCacheKeyShmName.c_str() << "\" with nbytes "
+                               << keys_shm_base_ptr->NumBytes() << ".\n";
+    }
+  } else {
     keys_shm_base_ptr =
         Tensor::CreateShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
-    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " create shared memory \""
-                            << HPSCacheKeyShmName.c_str() << "\" with nbytes "
-                            << keys_shm_base_ptr->NumBytes() << ".\n";
-  }
-  CollCacheParameterServer::barrier();
-  if (RunConfig::worker_id != 0) {
-    keys_shm_base_ptr =
-        Tensor::OpenShm(HPSCacheKeyShmName.c_str(), dtype, shape, HPSCacheKeyShmName.c_str());
-    HCTR_LOG_S(DEBUG, WORLD) << "Device " << RunConfig::worker_id << " open shared memory \""
-                             << HPSCacheKeyShmName.c_str() << "\" with nbytes "
-                             << keys_shm_base_ptr->NumBytes() << ".\n";
+    HCTR_LOG_S(INFO, WORLD) << "Single process create shared memory \"" << keys_shm_base_ptr->Name()
+                            << "\" with nbytes " << keys_shm_base_ptr->NumBytes() << ".\n";
   }
 
   // copy embedding keys from each GPU to CPU memory
   TypeHashKey* keys_shm_global_base = (TypeHashKey*)keys_shm_base_ptr->MutableData();
-  TypeHashKey* keys_shm_local_base = keys_shm_global_base + slot_num * RunConfig::worker_id;
-  void* keys_ptr_local = (void*)keys_shm_local_base;
-  embed_cache->get_keys(keys_ptr_local, slot_num);
-  CollCacheParameterServer::barrier();
+  if (!single_process) {
+    TypeHashKey* keys_shm_local_base = keys_shm_global_base + slot_num * RunConfig::worker_id;
+    void* keys_ptr_local = (void*)keys_shm_local_base;
+    embed_cache->get_keys(keys_ptr_local, slot_num);
+    CollCacheParameterServer::barrier();
+  } else {
+    for (size_t i = 0; i < RunConfig::num_device; i++) {
+      int device_id = cache_map[i]->get_device_id();
+      cudaSetDevice(device_id);
+      embed_cache->get_keys(keys_shm_global_base + slot_num * i, slot_num);
+    }
+  }
 
   // util func to calculate cache intersection of two sorted arrays
   auto get_intersect_num = [](TypeHashKey* a, TypeHashKey* b, size_t total_cnt) -> size_t {
@@ -858,11 +876,9 @@ double HierParameterServer<TypeHashKey>::report_cache_intersect() {
       }
     }
 
-    CollCacheParameterServer::barrier();
     return (final_ratio / cnt);
   }
 
-  CollCacheParameterServer::barrier();
   return 0;
 }
 
@@ -873,28 +889,42 @@ std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
   HCTR_CHECK_HINT(model_cache_map_.size() == 1,
                   "There should be only one model while reporting access overlap.");
   auto& cache_map = model_cache_map_.begin()->second;
-  HCTR_CHECK_HINT(cache_map.size() == 1, "There should be only one device in one process.");
+  HCTR_CHECK_HINT(cache_map.size() == 1 || cache_map.size() == RunConfig::num_device,
+                  "There should be only one device in one process, \
+                  or all device in single process.");
+  bool single_process = (cache_map.size() != 1);
   auto& embed_cache = cache_map[RunConfig::worker_id];
   size_t total_key_num = embed_cache->emb_key_num;
+  size_t total_lookups = embed_cache->total_lookups;
+  cudaStream_t stream = embed_cache->get_refresh_streams()[0];
   std::vector<size_t> shape = {RunConfig::num_device, total_key_num * 2};
   DataType dtype = DataType::kI32;
   TensorPtr access_shm_base_ptr;
   std::vector<double> final_ratios(3, 0);
   int cnt = 0;
+  Context ctx = GPU();
 
   // main process: alloc new shared memory
-  if (RunConfig::worker_id == 0) {
+  if (!single_process) {
+    if (RunConfig::worker_id == 0) {
+      access_shm_base_ptr = Tensor::CreateShm(HPSCacheAccessCountShmName.c_str(), dtype, shape,
+                                              HPSCacheAccessCountShmName.c_str());
+      HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " create shared memory \""
+                              << HPSCacheAccessCountShmName.c_str() << "\" with nbytes "
+                              << access_shm_base_ptr->NumBytes() << ".\n";
+    }
+    CollCacheParameterServer::barrier();
+    if (RunConfig::worker_id != 0) {
+      access_shm_base_ptr = Tensor::OpenShm(HPSCacheAccessCountShmName.c_str(), dtype, shape,
+                                            HPSCacheAccessCountShmName.c_str());
+      HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " open shared memory \""
+                              << HPSCacheAccessCountShmName.c_str() << "\" with nbytes "
+                              << access_shm_base_ptr->NumBytes() << ".\n";
+    }
+  } else {
     access_shm_base_ptr = Tensor::CreateShm(HPSCacheAccessCountShmName.c_str(), dtype, shape,
                                             HPSCacheAccessCountShmName.c_str());
-    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " create shared memory \""
-                            << HPSCacheAccessCountShmName.c_str() << "\" with nbytes "
-                            << access_shm_base_ptr->NumBytes() << ".\n";
-  }
-  CollCacheParameterServer::barrier();
-  if (RunConfig::worker_id != 0) {
-    access_shm_base_ptr = Tensor::OpenShm(HPSCacheAccessCountShmName.c_str(), dtype, shape,
-                                          HPSCacheAccessCountShmName.c_str());
-    HCTR_LOG_S(INFO, WORLD) << "Device " << RunConfig::worker_id << " open shared memory \""
+    HCTR_LOG_S(INFO, WORLD) << "Single process create shared memory \""
                             << HPSCacheAccessCountShmName.c_str() << "\" with nbytes "
                             << access_shm_base_ptr->NumBytes() << ".\n";
   }
@@ -905,19 +935,32 @@ std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
     return reinterpret_cast<void*>(access_shm_global_base +
                                    total_key_num * (2 * device_id + (!hit)));
   };
-  CUDA_CHECK(cudaMemcpy(get_shm_ptr(RunConfig::worker_id, true),
-                        reinterpret_cast<void*>(embed_cache->local_hit_key_counters),
-                        sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
-  CUDA_CHECK(cudaMemcpy(get_shm_ptr(RunConfig::worker_id, false),
-                        reinterpret_cast<void*>(embed_cache->local_miss_key_counters),
-                        sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
-  CollCacheParameterServer::barrier();
+  if (!single_process) {
+    HCTR_LIB_THROW(cudaMemcpy(get_shm_ptr(RunConfig::worker_id, true),
+                              reinterpret_cast<void*>(embed_cache->local_hit_key_counters),
+                              sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
+    HCTR_LIB_THROW(cudaMemcpy(get_shm_ptr(RunConfig::worker_id, false),
+                              reinterpret_cast<void*>(embed_cache->local_miss_key_counters),
+                              sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
+    CollCacheParameterServer::barrier();
+  } else {
+    for (size_t i = 0; i < RunConfig::num_device; i++) {
+      int device_id = cache_map[i]->get_device_id();
+      cudaSetDevice(device_id);
+      HCTR_LIB_THROW(
+          cudaMemcpy(get_shm_ptr(device_id, true),
+                     reinterpret_cast<void*>(cache_map[device_id]->local_hit_key_counters),
+                     sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
+      HCTR_LIB_THROW(
+          cudaMemcpy(get_shm_ptr(device_id, false),
+                     reinterpret_cast<void*>(cache_map[device_id]->local_miss_key_counters),
+                     sizeof(uint32_t) * total_key_num, cudaMemcpyDeviceToHost));
+    }
+  }
 
   // calculate the intersect ratial of their keys one by one
   if (RunConfig::worker_id == 0) {
     uint64_t hit_cnt, miss_cnt, hit_overlap_cnt, miss_overlap_cnt;
-    cudaStream_t stream = embed_cache->get_refresh_streams()[0];
-    Context ctx = GPU();
     TensorPtr d_access_hit_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
     TensorPtr d_access_miss_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
     TensorPtr d_cur_access_hit_local_ptr = Tensor::Empty(DataType::kI32, {total_key_num}, ctx, "");
@@ -949,10 +992,10 @@ std::vector<double> HierParameterServer<TypeHashKey>::report_access_overlap() {
 
       // check miss count and hit count
       HCTR_CHECK_HINT(
-          hit_cnt + miss_cnt == embed_cache->total_lookups,
+          hit_cnt + miss_cnt == total_lookups,
           "cache hit cnt(%lu) and miss cnt(%lu) should add up to exactly total lookup cnts(%lu)",
-          hit_cnt, miss_cnt, embed_cache->total_lookups);
-      final_ratios[0] += ((float)hit_cnt / embed_cache->total_lookups);  // hit ratio
+          hit_cnt, miss_cnt, total_lookups);
+      final_ratios[0] += ((float)hit_cnt / total_lookups);  // hit ratio
 
       // calculate the intersect ratial of their keys
       for (uint64_t j = i + 1; j < RunConfig::num_device; j++) {
