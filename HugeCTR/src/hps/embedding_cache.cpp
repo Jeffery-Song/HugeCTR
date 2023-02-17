@@ -151,17 +151,19 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
           (SLAB_SIZE * SET_ASSOCIATIVITY));
 
       // Allocate GPU memory for local hit counters
-      emb_key_num = row_num;
-      total_lookups = 0;
-      HCTR_LIB_THROW(cudaSetDevice(cache_config_.cuda_dev_id_));
-      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters),
-                                row_num * sizeof(uint32_t)));
-      HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters),
-                                row_num * sizeof(uint32_t)));
-      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_hit_key_counters), 0,
-                                row_num * sizeof(uint32_t)));
-      HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_miss_key_counters), 0,
-                                row_num * sizeof(uint32_t)));
+      if (cache_config_.hps_cache_statistic) {
+        emb_key_num = row_num;
+        total_lookups = 0;
+        HCTR_LIB_THROW(cudaSetDevice(cache_config_.cuda_dev_id_));
+        HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters),
+                                  row_num * sizeof(uint32_t)));
+        HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters),
+                                  row_num * sizeof(uint32_t)));
+        HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_hit_key_counters), 0,
+                                  row_num * sizeof(uint32_t)));
+        HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_miss_key_counters), 0,
+                                  row_num * sizeof(uint32_t)));
+      }
     }
   }
 
@@ -196,8 +198,10 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
 
 template <typename TypeHashKey>
 EmbeddingCache<TypeHashKey>::~EmbeddingCache() {
-  HCTR_LIB_THROW(cudaFree(local_hit_key_counters));
-  HCTR_LIB_THROW(cudaFree(local_miss_key_counters));
+  if (cache_config_.hps_cache_statistic) {
+    HCTR_LIB_THROW(cudaFree(local_hit_key_counters));
+    HCTR_LIB_THROW(cudaFree(local_miss_key_counters));
+  }
   if (cache_config_.use_gpu_embedding_cache_) {
     // Swap device.
     CudaDeviceContext dev_restorer;
