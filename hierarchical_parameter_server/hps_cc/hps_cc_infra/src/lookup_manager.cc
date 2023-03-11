@@ -68,6 +68,7 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
   parameter_server_ = HierParameterServerBase::create(ps_config, ps_config.inference_params_array);
   current_steps_for_each_replica_.resize(num_replicas_in_sync, 0);
 
+  this->coll_freq_recorder_list.resize(num_replicas_in_sync);
   // Initialie the resources for each model
   for (auto& inference_params : ps_config.inference_params_array) {
     // Create the lookup sessions on all the deployed devices
@@ -78,6 +79,7 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
                                                                     inference_params.device_id);
       auto lookup_session = LookupSessionBase::create(inference_params, embedding_cache);
       lookup_sessions.emplace(device_id, lookup_session);
+      coll_freq_recorder_list[device_id] = lookup_session->freq_recorder_;
     }
     lookup_session_map_.emplace(inference_params.model_name, lookup_sessions);
 
@@ -96,6 +98,12 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
     h_values_map_.emplace(inference_params.model_name, h_values);
   }
   this->tf_ctx_list.resize(num_replicas_in_sync);
+  this->coll_refresh_thread.resize(num_replicas_in_sync);
+  this->coll_refresh_ongoing = new std::atomic<bool>[num_replicas_in_sync];
+  for (decltype(num_replicas_in_sync) i = 0; i < num_replicas_in_sync; i++) {
+    this->coll_refresh_ongoing[i].store(false);
+  }
+  this->refresh_iter = ps_config.coll_cache_refresh_iter;
 }
 
 void LookupManager::forward(const std::string& model_name, int32_t table_id,
@@ -111,6 +119,21 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
                                    model_name, table_id, stream,
                                    this->current_steps_for_each_replica_[global_replica_id]);
+    if (this->current_steps_for_each_replica_[global_replica_id] == this->refresh_iter) {
+      if (coll_refresh_ongoing[global_replica_id].load() == false) {
+        coll_refresh_ongoing[global_replica_id].store(true);
+        if (coll_refresh_thread[global_replica_id].joinable()) {
+          coll_refresh_thread[global_replica_id].join();
+        }
+        coll_refresh_thread[global_replica_id] = std::thread([this, global_replica_id, stream](){
+          refresh(global_replica_id, stream, true);
+          coll_refresh_ongoing[global_replica_id].store(false);
+        });
+        coll_refresh_thread[global_replica_id].join();
+      } else {
+        HCTR_LOG_S(ERROR, WORLD) << "skip refresh due to refresh already ongoing";
+      }
+    }
     this->current_steps_for_each_replica_[global_replica_id]++;
     return;
   }
@@ -241,6 +264,31 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
                            << " calling init per replica done, doing barrier done\n";
 }
+
+void LookupManager::refresh(const int32_t global_replica_id, cudaStream_t stream, bool foreground) {
+  std::vector<uint32_t> rank_vec, freq_vec;
+  uint32_t *rank_ptr = nullptr, *freq_ptr = nullptr;
+
+  if (global_replica_id == 0) {
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
+    // HCTR_CHECK_HINT(lookup_session_map_.begin()->second.count(0) > 0,
+    //                 "replica 0's must have device 0's lookup session\n");
+    auto freq_recorder = this->coll_freq_recorder_list[0];
+    freq_recorder->Combine();
+    HCTR_LOG_S(ERROR, WORLD) << "combined\n";
+    rank_vec.resize(freq_recorder->NumNodes());
+    freq_vec.resize(freq_recorder->NumNodes());
+    freq_recorder->Sort();
+    HCTR_LOG_S(ERROR, WORLD) << "sorted\n";
+    freq_recorder->GetFreq(freq_vec.data());
+    freq_recorder->GetRankNode(rank_vec.data());
+    rank_ptr = rank_vec.data();
+    freq_ptr = freq_vec.data();
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
+  }
+  coll_parameter_server_->refresh(global_replica_id, rank_ptr, freq_ptr, stream, foreground);
+}
+
 void LookupManager::report_avg() {
   if (coll_parameter_server_) {
     coll_parameter_server_->report_avg();
