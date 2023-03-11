@@ -184,6 +184,7 @@ class RunConfig:
     self.alpha                  = 0.2
     self.max_vocabulary_size    = None
     self.coll_cache_enable_iter = 1000
+    self.coll_cache_refresh_iter = 2147483648
     self.iteration_per_epoch    = 1000
     # env variables
     self.coll_cache_no_group    = ""
@@ -284,6 +285,8 @@ class RunConfig:
 
     cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
     cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
+    cmd_line += f' --coll_cache_refresh_iter {self.coll_cache_refresh_iter}'
+    
     cmd_line += f' --coll_cache_policy {str(self.coll_cache_policy)}'
     cmd_line += f' --empty-feat {self.empty_feat}'
 
@@ -338,6 +341,7 @@ class RunConfig:
     if self.system == System.hps: conf['use_coll_cache'] = False
     else: conf['use_coll_cache'] = True
     conf['coll_cache_enable_iter'] = self.coll_cache_enable_iter
+    conf['coll_cache_refresh_iter'] = self.coll_cache_refresh_iter
     conf['iteration_per_epoch'] = self.iteration_per_epoch
     conf['epoch'] = self.epoch
     conf['coll_cache_policy'] = self.coll_cache_policy.value
