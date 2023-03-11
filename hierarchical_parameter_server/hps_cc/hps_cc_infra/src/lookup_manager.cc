@@ -206,6 +206,9 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   std::function<coll_cache_lib::MemHandle(size_t)> gpu_mem_allocator =
       [&ctx = tf_ctx_list[global_replica_id],
        global_replica_id](size_t nbytes) -> coll_cache_lib::MemHandle {
+    if (nbytes == 0) {
+      HCTR_LOG_S(ERROR, WORLD) << "allocating 0 cuda memory?\n";
+    }
     auto handle = std::make_shared<HPSMemHandle>();
     TF_CHECK_OK(ctx->allocate_temp(tensorflow::DataType::DT_UINT8,
                                    tensorflow::TensorShape({(long)nbytes}),

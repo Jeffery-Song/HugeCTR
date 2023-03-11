@@ -203,6 +203,7 @@ struct InferenceParams {
   bool use_multi_worker = false;
   bool hps_cache_statistic = false;
   size_t coll_cache_enable_iter;
+  size_t coll_cache_refresh_iter;
   std::string model_name;
   size_t max_batchsize;
   float hit_rate_threshold;
@@ -270,6 +271,7 @@ struct parameter_server_config {
   bool use_multi_worker = false;
   bool hps_cache_statistic = false;
   size_t coll_cache_enable_iter = std::numeric_limits<size_t>::max();
+  size_t coll_cache_refresh_iter = std::numeric_limits<size_t>::max();
   size_t iteration_per_epoch = 0;
   size_t epoch = 0;
   int coll_cache_policy = 13;
