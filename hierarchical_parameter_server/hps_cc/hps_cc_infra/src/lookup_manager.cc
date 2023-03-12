@@ -19,6 +19,8 @@
 #include "base/debug/logger.hpp"
 #include "coll_cache_lib/atomic_barrier.h"
 #include "coll_cache_lib/facade.h"
+#include "coll_cache_lib/timer.h"
+#include "coll_cache_lib/profiler.h"
 #include "hps/hier_parameter_server.hpp"
 #include "hps/inference_utils.hpp"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -116,6 +118,24 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                                    ->stream()
                                                    ->implementation()
                                                    ->GpuStreamMemberHack());
+    coll_cache_lib::common::Timer t1;
+    {
+      size_t num_keys_to_record = num_keys * 0.05;
+      size_t per_key_size = coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key ? 8 : 4;
+      void* h_values = h_values_map_.find(model_name)->second.find(global_replica_id)->second[table_id].get();
+      cudaMemcpy(h_values, values_ptr, num_keys_to_record * per_key_size, cudaMemcpyDeviceToHost);
+
+      if (coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key) {
+        coll_freq_recorder_list[global_replica_id]->Record(reinterpret_cast<const coll_cache_lib::common::Id64Type*>(h_values),
+                              num_keys_to_record);
+      } else {
+        coll_freq_recorder_list[global_replica_id]->Record(reinterpret_cast<const coll_cache_lib::common::IdType*>(h_values),
+                              num_keys_to_record);
+      }
+    }
+    double record = t1.Passed();
+    // HCTR_LOG_S(ERROR, WORLD) << "cp taks time " << t_cp << ",record taks time " << record << "\n";
+
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
                                    model_name, table_id, stream,
                                    this->current_steps_for_each_replica_[global_replica_id]);
@@ -134,6 +154,7 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
         HCTR_LOG_S(ERROR, WORLD) << "skip refresh due to refresh already ongoing";
       }
     }
+    set_step_profile_value(global_replica_id, coll_cache_lib::common::kLogL1ConvertTime, record);
     this->current_steps_for_each_replica_[global_replica_id]++;
     return;
   }
@@ -222,7 +243,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   if (ps_config.use_multi_worker || global_replica_id == 0) {
     lookup_session_map_.clear();
     parameter_server_ = nullptr;
-    h_values_map_.clear();
+    // h_values_map_.clear();
   }
   coll_parameter_server_->barrier();
 

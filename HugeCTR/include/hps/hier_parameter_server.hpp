@@ -152,6 +152,8 @@ class CollCacheParameterServer {
     auto stream = static_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
     this->coll_cache_ptr_->refresh(global_replica_id, ranking_nodes_list_ptr, ranking_nodes_freq_list_ptr, stream, foreground);
   }
+  inline parameter_server_config& ref_ps_config () {return ps_config_; }
+
   void report_avg();
   static void barrier();
   // virtual void refresh_embedding_cache(const std::string& model_name, int device_id);
