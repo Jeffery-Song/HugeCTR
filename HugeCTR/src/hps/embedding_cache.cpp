@@ -264,6 +264,16 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
 
     // record missing/hit keys
     if (cache_config_.hps_cache_statistic) {
+      auto _eager_gpu_mem_allocator = [dev_id = cache_config_.cuda_dev_id_](size_t nbytes)-> coll_cache_lib::MemHandle{
+        std::shared_ptr<coll_cache_lib::EagerGPUMemoryHandler> ret = std::make_shared<coll_cache_lib::EagerGPUMemoryHandler>();
+        ret->dev_id_ = dev_id;
+        ret->nbytes_ = nbytes;
+        if (nbytes > 1<<21) {
+          nbytes = coll_cache_lib::RoundUp(nbytes, (size_t)(1<<21));
+        }
+        HCTR_LIB_THROW(cudaMalloc(&ret->ptr_, nbytes));
+        return ret;
+      };
       using namespace coll_cache_lib::common;
       DataType key_type = sizeof(TypeHashKey) == 4 ? DataType::kI32 : DataType::kI64;
       Context ctx = GPU(cache_config_.cuda_dev_id_);
@@ -272,8 +282,8 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
       // missing_unique_key_index (len = unique_missing_num) to key_missing_state (len = num_keys)
       size_t& unique_num = workspace_handler.h_unique_length_[table_id];
       size_t& unique_missing_num = workspace_handler.h_missing_length_[table_id];
-      TensorPtr d_keys_state = Tensor::Empty(DataType::kI32, {num_keys}, ctx, "");
-      TensorPtr d_unique_keys_state = Tensor::Empty(DataType::kI32, {unique_num}, ctx, "");
+      TensorPtr d_keys_state = Tensor::EmptyExternal(DataType::kI32, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_unique_keys_state = Tensor::EmptyExternal(DataType::kI32, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
       HCTR_LIB_THROW(cudaMemset(d_keys_state->MutableData(), 0, sizeof(uint32_t) * num_keys));
       HCTR_LIB_THROW(
           cudaMemset(d_unique_keys_state->MutableData(), 0, sizeof(uint32_t) * unique_num));
@@ -285,17 +295,17 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
                                   d_keys_state->Ptr<uint32_t>(), num_keys, unique_num, stream);
 
       // // sort key value(missing state) pairs
-      TensorPtr d_sorted_keys = Tensor::Empty(key_type, {num_keys}, ctx, "");
-      TensorPtr d_sorted_values = Tensor::Empty(DataType::kI32, {num_keys}, ctx, "");
+      TensorPtr d_sorted_keys = Tensor::EmptyExternal(key_type, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_sorted_values = Tensor::EmptyExternal(DataType::kI32, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
       MathUtil<TypeHashKey>::CubSortPairs(
           reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]),
           d_keys_state->Ptr<uint32_t>(), d_sorted_keys->Ptr<TypeHashKey>(),
           d_sorted_values->Ptr<uint32_t>(), num_keys, stream);
 
       uint64_t miss_cnt, hit_cnt;
-      TensorPtr d_unique_keys_out = Tensor::Empty(key_type, {unique_num}, ctx, "");
-      TensorPtr d_aggregates_out = Tensor::Empty(DataType::kI32, {unique_num}, ctx, "");
-      TensorPtr d_num_run_out = Tensor::Empty(DataType::kI64, {1}, ctx, "");
+      TensorPtr d_unique_keys_out = Tensor::EmptyExternal(key_type, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_aggregates_out = Tensor::EmptyExternal(DataType::kI32, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_num_run_out = Tensor::EmptyExternal(DataType::kI64, {1}, _eager_gpu_mem_allocator, ctx, "");
       auto get_num_run_out = [&] {
         uint64_t h_num_run_out;
         HCTR_LIB_THROW(cudaStreamSynchronize(stream));
