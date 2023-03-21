@@ -22,6 +22,9 @@
 #include <thread>
 #include <utils.hpp>
 
+#include "coll_cache_lib/common.h"
+#include "coll_cache_lib/device.h"
+#include "hps/inference_utils.hpp"
 namespace HugeCTR {
 
 template <typename TypeHashKey>
@@ -101,6 +104,7 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
   cache_config_.model_name_ = inference_params.model_name;
   cache_config_.cuda_dev_id_ = inference_params.device_id;
   cache_config_.use_gpu_embedding_cache_ = inference_params.use_gpu_embedding_cache;
+  cache_config_.hps_cache_statistic = inference_params.hps_cache_statistic;
 
   if (ps_config.embedding_vec_size_.find(inference_params.model_name) ==
           ps_config.embedding_vec_size_.end() ||
@@ -125,6 +129,7 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
 
   // Query the size of all embedding tables and calculate the size of each embedding cache
   if (cache_config_.use_gpu_embedding_cache_) {
+    HCTR_CHECK(cache_config_.num_emb_table_ == 1);
     cache_config_.num_set_in_cache_.reserve(cache_config_.num_emb_table_);
     for (size_t i = 0; i < cache_config_.num_emb_table_; i++) {
       size_t row_num = 0;
@@ -144,6 +149,21 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
       cache_config_.num_set_in_cache_.emplace_back(
           (num_feature_in_cache + SLAB_SIZE * SET_ASSOCIATIVITY - 1) /
           (SLAB_SIZE * SET_ASSOCIATIVITY));
+
+      // Allocate GPU memory for local hit counters
+      if (cache_config_.hps_cache_statistic) {
+        emb_key_num = row_num;
+        total_lookups = 0;
+        HCTR_LIB_THROW(cudaSetDevice(cache_config_.cuda_dev_id_));
+        HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_hit_key_counters),
+                                  row_num * sizeof(uint32_t)));
+        HCTR_LIB_THROW(cudaMalloc(reinterpret_cast<void**>(&local_miss_key_counters),
+                                  row_num * sizeof(uint32_t)));
+        HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_hit_key_counters), 0,
+                                  row_num * sizeof(uint32_t)));
+        HCTR_LIB_THROW(cudaMemset(reinterpret_cast<void*>(local_miss_key_counters), 0,
+                                  row_num * sizeof(uint32_t)));
+      }
     }
   }
 
@@ -178,6 +198,10 @@ EmbeddingCache<TypeHashKey>::EmbeddingCache(const InferenceParams& inference_par
 
 template <typename TypeHashKey>
 EmbeddingCache<TypeHashKey>::~EmbeddingCache() {
+  if (cache_config_.hps_cache_statistic) {
+    HCTR_LIB_THROW(cudaFree(local_hit_key_counters));
+    HCTR_LIB_THROW(cudaFree(local_miss_key_counters));
+  }
   if (cache_config_.use_gpu_embedding_cache_) {
     // Swap device.
     CudaDeviceContext dev_restorer;
@@ -237,6 +261,93 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
     HCTR_LIB_THROW(cudaMemcpyAsync(workspace_handler.h_missing_length_ + table_id,
                                    workspace_handler.d_missing_length_ + table_id, sizeof(size_t),
                                    cudaMemcpyDeviceToHost, stream));
+
+    // record missing/hit keys
+    if (cache_config_.hps_cache_statistic) {
+      auto _eager_gpu_mem_allocator = [dev_id = cache_config_.cuda_dev_id_](size_t nbytes)-> coll_cache_lib::MemHandle{
+        std::shared_ptr<coll_cache_lib::EagerGPUMemoryHandler> ret = std::make_shared<coll_cache_lib::EagerGPUMemoryHandler>();
+        ret->dev_id_ = dev_id;
+        ret->nbytes_ = nbytes;
+        if (nbytes > 1<<21) {
+          nbytes = coll_cache_lib::RoundUp(nbytes, (size_t)(1<<21));
+        }
+        HCTR_LIB_THROW(cudaMalloc(&ret->ptr_, nbytes));
+        return ret;
+      };
+      using namespace coll_cache_lib::common;
+      DataType key_type = sizeof(TypeHashKey) == 4 ? DataType::kI32 : DataType::kI64;
+      Context ctx = GPU(cache_config_.cuda_dev_id_);
+      HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+
+      // missing_unique_key_index (len = unique_missing_num) to key_missing_state (len = num_keys)
+      size_t& unique_num = workspace_handler.h_unique_length_[table_id];
+      size_t& unique_missing_num = workspace_handler.h_missing_length_[table_id];
+      TensorPtr d_keys_state = Tensor::EmptyExternal(DataType::kI32, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_unique_keys_state = Tensor::EmptyExternal(DataType::kI32, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
+      HCTR_LIB_THROW(cudaMemsetAsync(d_keys_state->MutableData(), 0, sizeof(uint32_t) * num_keys, stream));
+      HCTR_LIB_THROW(
+          cudaMemsetAsync(d_unique_keys_state->MutableData(), 0, sizeof(uint32_t) * unique_num, stream));
+      MathUtil<TypeHashKey>::UnfoldIndexVec(workspace_handler.d_missing_index_[table_id],
+                                            d_unique_keys_state->Ptr<uint32_t>(),
+                                            unique_missing_num, unique_num, stream);
+      MathUtil<TypeHashKey>::Mark(workspace_handler.d_unique_output_index_[table_id],
+                                  d_unique_keys_state->Ptr<uint32_t>(),
+                                  d_keys_state->Ptr<uint32_t>(), num_keys, unique_num, stream);
+
+      // // sort key value(missing state) pairs
+      TensorPtr d_sorted_keys = Tensor::EmptyExternal(key_type, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_sorted_values = Tensor::EmptyExternal(DataType::kI32, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
+      MathUtil<TypeHashKey>::CubSortPairs(
+          reinterpret_cast<TypeHashKey*>(workspace_handler.d_embeddingcolumns_[table_id]),
+          d_keys_state->Ptr<uint32_t>(), d_sorted_keys->Ptr<TypeHashKey>(),
+          d_sorted_values->Ptr<uint32_t>(), num_keys, stream);
+
+      uint64_t miss_cnt, hit_cnt;
+      TensorPtr d_unique_keys_out = Tensor::EmptyExternal(key_type, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_aggregates_out = Tensor::EmptyExternal(DataType::kI32, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
+      TensorPtr d_num_run_out = Tensor::EmptyExternal(DataType::kI64, {1}, _eager_gpu_mem_allocator, ctx, "");
+      auto get_num_run_out = [&] {
+        uint64_t h_num_run_out;
+        HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+        Device::Get(ctx)->CopyDataFromTo(d_num_run_out->Ptr<uint64_t>(), 0, &h_num_run_out, 0,
+                                         sizeof(uint64_t), ctx, CPU(), stream);
+        HCTR_LIB_THROW(cudaStreamSynchronize(stream));
+        return h_num_run_out;
+      };
+      // Count missing keys
+      MathUtil<TypeHashKey>::CubCountByKey(
+          d_sorted_keys->Ptr<TypeHashKey>(), d_sorted_values->Ptr<uint32_t>(),
+          d_unique_keys_out->Ptr<TypeHashKey>(), d_aggregates_out->Ptr<uint32_t>(), num_keys,
+          d_num_run_out->Ptr<uint64_t>(), stream);
+      HCTR_CHECK_HINT(get_num_run_out() == unique_num, "Unique key: %lu, should be %lu.\n",
+                      unique_num, get_num_run_out());
+      MathUtil<TypeHashKey>::AddUp(d_unique_keys_out->Ptr<TypeHashKey>(),
+                                   d_aggregates_out->Ptr<uint32_t>(), local_miss_key_counters,
+                                   unique_num, stream);
+      MathUtil<uint32_t>::CubReduceSum(d_aggregates_out->Ptr<uint32_t>(),
+                                       d_num_run_out->Ptr<uint64_t>(), unique_num, stream);
+      miss_cnt = get_num_run_out();
+      // Count hit keys
+      MathUtil<TypeHashKey>::CubCountByKey(
+          d_sorted_keys->Ptr<TypeHashKey>(), d_sorted_values->Ptr<uint32_t>(),
+          d_unique_keys_out->Ptr<TypeHashKey>(), d_aggregates_out->Ptr<uint32_t>(), num_keys,
+          d_num_run_out->Ptr<uint64_t>(), stream, true);
+      HCTR_CHECK_HINT(get_num_run_out() == unique_num, "Unique key: %lu, should be %lu.\n",
+                      unique_num, get_num_run_out());
+      MathUtil<TypeHashKey>::AddUp(d_unique_keys_out->Ptr<TypeHashKey>(),
+                                   d_aggregates_out->Ptr<uint32_t>(), local_hit_key_counters,
+                                   unique_num, stream);
+      MathUtil<uint32_t>::CubReduceSum(d_aggregates_out->Ptr<uint32_t>(),
+                                       d_num_run_out->Ptr<uint64_t>(), unique_num, stream);
+      hit_cnt = get_num_run_out();
+
+      // check miss cnt and hit cnt
+      HCTR_CHECK_HINT(miss_cnt + hit_cnt == num_keys,
+                      "miss|hit(%lu|%lu) should be add up to num_keys %lu.\n", miss_cnt, hit_cnt,
+                      num_keys);
+      total_lookups += num_keys;
+    }
+
     // Set async flag
     HCTR_LIB_THROW(cudaStreamSynchronize(stream));
     if (workspace_handler.h_unique_length_[table_id] == 0) {
@@ -358,6 +469,24 @@ void EmbeddingCache<TypeHashKey>::dump(const size_t table_id, void* const d_keys
     gpu_emb_caches_[table_id]->Dump(static_cast<TypeHashKey*>(d_keys), d_length, start_index,
                                     end_index, stream);
   }
+}
+
+template <typename TypeHashKey>
+size_t EmbeddingCache<TypeHashKey>::get_slot_num() {
+  HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1,
+                  "There should be only one item in EmbeddingCache.gpu_emb_caches_.");
+  HCTR_CHECK_HINT(
+      cache_config_.num_set_in_cache_.size() == 1,
+      "There should be only one item in EmbeddingCache.cache_config_.num_set_in_cache_.");
+  return (cache_config_.num_set_in_cache_[0] * SET_ASSOCIATIVITY * SLAB_SIZE);
+}
+
+template <typename TypeHashKey>
+void EmbeddingCache<TypeHashKey>::get_keys(void* keys, size_t num_keys) {
+  HCTR_CHECK_HINT(gpu_emb_caches_.size() == 1, "There should be only one table in EmbeddingCache.");
+  HCTR_CHECK_HINT(get_slot_num() >= num_keys,
+                  "Parameter num_keys should be smaller than slot_num in gpu cache.");
+  gpu_emb_caches_[0]->GetKeys(keys, num_keys);
 }
 
 template <typename TypeHashKey>

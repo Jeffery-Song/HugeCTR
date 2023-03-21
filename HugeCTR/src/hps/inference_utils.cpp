@@ -237,6 +237,8 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
   nlohmann::json hps_config(read_json_file(hps_json_config_file));
   this->use_multi_worker = get_value_from_json_soft<bool>(hps_config, "use_multi_worker", false);
   this->use_coll_cache = get_value_from_json_soft<bool>(hps_config, "use_coll_cache", false);
+  this->hps_cache_statistic =
+      get_value_from_json_soft<bool>(hps_config, "hps_cache_statistic", false);
   if (hps_config.find("coll_cache_enable_iter") != hps_config.end()) {
     this->coll_cache_enable_iter =
         get_value_from_json<size_t>(hps_config, "coll_cache_enable_iter");
@@ -402,6 +404,7 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
                            device_id, use_gpu_embedding_cache, cache_size_percentage, true);
     params.use_coll_cache = this->use_coll_cache;
     params.use_multi_worker = this->use_multi_worker;
+    params.hps_cache_statistic = this->hps_cache_statistic;
     params.coll_cache_enable_iter = this->coll_cache_enable_iter;
     params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int

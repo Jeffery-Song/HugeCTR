@@ -51,18 +51,25 @@ class LookupManager final {
                const void* values_ptr, void* emb_vector_ptr);
   void report_avg();
   // for profiler
-  inline void set_step_profile_value(const int global_replica_id, const uint64_t type, const double value) {
+  inline void set_step_profile_value(const int global_replica_id, const uint64_t type,
+                                     const double value) {
     if (coll_parameter_server_) {
       auto step = this->current_steps_for_each_replica_[global_replica_id] - 1;
       coll_parameter_server_->set_step_profile_value(global_replica_id, step, type, value);
     }
   }
-  inline void add_epoch_profile_value(const int global_replica_id, const uint64_t type, const double value) {
+  inline void add_epoch_profile_value(const int global_replica_id, const uint64_t type,
+                                      const double value) {
     if (coll_parameter_server_) {
       auto step = this->current_steps_for_each_replica_[global_replica_id] - 1;
       coll_parameter_server_->add_epoch_profile_value(global_replica_id, step, type, value);
     }
   }
+  inline double report_cache_intersect() { return parameter_server_->report_cache_intersect(); }
+  inline std::vector<double> report_access_overlap() {
+    return parameter_server_->report_access_overlap();
+  }
+
  private:
   void init_per_replica(const int32_t global_replica_id);
 

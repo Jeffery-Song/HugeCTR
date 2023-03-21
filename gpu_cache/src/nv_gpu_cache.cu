@@ -1638,6 +1638,17 @@ void gpu_cache<key_type, ref_counter_type, empty_key, set_associativity, warp_si
 }
 #endif
 
+template <typename key_type, typename ref_counter_type, key_type empty_key, int set_associativity,
+          int warp_size, typename set_hasher, typename slab_hasher>
+void gpu_cache<key_type, ref_counter_type, empty_key, set_associativity, warp_size, set_hasher,
+               slab_hasher>::GetKeys(void* keys, size_t num_key) {
+  // copy keys from GPU to CPU memory
+  key_type* h_all_keys = (key_type*)keys;
+  CUDA_CHECK(cudaMemcpy(keys, keys_, sizeof(key_type) * num_key, cudaMemcpyDeviceToHost));
+  // CUDA_CHECK(cudaMemcpy(keys, keys_, sizeof(slabset) * capacity_in_set_, cudaMemcpyDeviceToHost));
+  std::sort(h_all_keys, h_all_keys + num_key);
+}
+
 template class gpu_cache<unsigned int, uint64_t, std::numeric_limits<unsigned int>::max(),
                          SET_ASSOCIATIVITY, SLAB_SIZE>;
 template class gpu_cache<long long, uint64_t, std::numeric_limits<long long>::max(),

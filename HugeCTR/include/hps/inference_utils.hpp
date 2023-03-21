@@ -201,6 +201,7 @@ enum class PSUpdateSource_t { None, Kafka };
 struct InferenceParams {
   bool use_coll_cache = false;
   bool use_multi_worker = false;
+  bool hps_cache_statistic = false;
   size_t coll_cache_enable_iter;
   std::string model_name;
   size_t max_batchsize;
@@ -267,6 +268,7 @@ struct InferenceParams {
 struct parameter_server_config {
   bool use_coll_cache = false;
   bool use_multi_worker = false;
+  bool hps_cache_statistic = false;
   size_t coll_cache_enable_iter = std::numeric_limits<size_t>::max();
   size_t iteration_per_epoch = 0;
   size_t epoch = 0;
@@ -333,6 +335,7 @@ struct embedding_cache_config {
   std::vector<size_t>
       max_query_len_per_emb_table_;  // The max # of embeddingcolumns each inference instance(batch)
                                      // will query from a embedding table
+  bool hps_cache_statistic = false;
 };
 
 struct EmbeddingCacheWorkspace {
@@ -393,5 +396,27 @@ void decompress_emb_vec_async(const float* d_unique_src_ptr, const uint64_t* d_u
                               float* d_decompress_dst_ptr, const size_t decompress_len,
                               const size_t emb_vec_size, const size_t BLOCK_SIZE,
                               cudaStream_t stream);
+
+template <typename T>
+class MathUtil {
+ public:
+  // functions based on CUB
+  static void CubCountByKey(const T* d_keys, uint32_t* d_values, T* d_unique_keys_out,
+                            uint32_t* d_aggregates_out, const size_t num_items,
+                            uint64_t* d_num_runs_out, cudaStream_t stream, bool flip = false);
+  static void CubReduceSum(const T* d_src, uint64_t* d_dst, size_t num_items, cudaStream_t stream);
+  static void CubSortPairs(const T* d_keys_in, const uint32_t* d_values_in, T* d_keys_out,
+                           uint32_t* d_values_out, size_t num_items, cudaStream_t stream);
+
+  // functions using customized kernel functions
+  static void UnfoldIndexVec(uint64_t* d_src, uint32_t* d_dst, size_t num_src, size_t num_dst,
+                             cudaStream_t stream);
+  static void Mark(uint64_t* d_src_index, uint32_t* d_src_mark, uint32_t* d_dst, size_t num_mark,
+                   size_t num_dst, cudaStream_t stream);
+  static void AddUp(const T* d_keys_in, const uint32_t* d_values_in, uint32_t* d_dst,
+                    size_t num_items, cudaStream_t stream);
+  static void Min(const uint32_t* d_src1, const uint32_t* d_src2, uint32_t* d_dst, size_t num_items,
+                  cudaStream_t stream);
+};
 
 }  // namespace HugeCTR

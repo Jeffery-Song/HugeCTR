@@ -74,6 +74,7 @@ class Dataset(Enum):
   simple_power1_slot100     = None,                      "SP_1_S100",  100000000, 100
   simple_uniform            = None,                      None,         100000000, 25
   criteo_tb                 = "criteo_tb",               "CR",         882774592, 26
+  criteo_kaggle             = "criteo_kaggle",           "CK",         33762604, 26
 
 class RandomDataset:
   def __init__(self, path, short_name, vocabulary, slot_num):
@@ -189,7 +190,10 @@ class RunConfig:
     self.coll_cache_concurrent_link   = ""
     self.log_level              = "warn"
     self.profile_level          = 3
-    self.custom_env = ""
+    self.custom_env             = ""
+    self.empty_feat             = 25
+    self.scalability_test       = False
+    self.hps_cache_statistic    = False
 
   def get_mock_sparse_name(self):
     if self.mock_embedding:
@@ -208,6 +212,8 @@ class RunConfig:
       std_out_fname += '_nogroup_' + self.coll_cache_no_group
     if self.coll_cache_concurrent_link != "":
       std_out_fname += '_concurrent_impl_' + self.coll_cache_concurrent_link
+    if self.scalability_test == True:
+      std_out_fname += f'_gpu_num_{self.gpu_num}'
     return std_out_fname
 
   def get_conf_fname(self):
@@ -231,6 +237,8 @@ class RunConfig:
       msg += f' nogroup={self.coll_cache_no_group}'
     if self.coll_cache_concurrent_link != "":
       msg += f' concurrent_link={self.coll_cache_concurrent_link}'
+    if self.scalability_test == True:
+      msg += f' gpu_num={self.gpu_num}'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
@@ -276,8 +284,8 @@ class RunConfig:
 
     cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
     cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
-    
     cmd_line += f' --coll_cache_policy {str(self.coll_cache_policy)}'
+    cmd_line += f' --empty-feat {self.empty_feat}'
 
     if durable_log:
       std_out_log = self.get_log_fname() + '.log'
@@ -289,6 +297,7 @@ class RunConfig:
 
   # some members are lazy initialized
   def handle_mock_params(self):
+    if self.system == System.hps: self.coll_cache_enable_iter = 0
     self.iter_num = self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter
     self.max_vocabulary_size = self.dataset.vocabulary
     self.slot_num = self.dataset.slot_num
@@ -332,6 +341,7 @@ class RunConfig:
     conf['iteration_per_epoch'] = self.iteration_per_epoch
     conf['epoch'] = self.epoch
     conf['coll_cache_policy'] = self.coll_cache_policy.value
+    conf['hps_cache_statistic'] = self.hps_cache_statistic
 
     result = json.dumps(conf, indent=4)
     with open(self.get_conf_fname(), "w") as outfile:
@@ -368,7 +378,7 @@ def run_in_list(conf_list : list, mock=False, durable_log=True, callback = None)
 class ConfigList:
   def __init__(self):
     self.conf_list = [
-      RunConfig(System.hps, Model.dlrm, Dataset.criteo_like_uniform)]
+      RunConfig(System.collcache, Model.dlrm, Dataset.criteo_like_uniform)]
 
   def select(self, key, val_indicator):
     '''

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-#include <exception>
 #include <sys/wait.h>
+
+#include <exception>
 
 #include "config.h"
 #include "facade.h"
@@ -32,6 +33,7 @@ class Shutdown : public OpKernel {
   explicit Shutdown(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
     try {
+      HierarchicalParameterServer::Facade::instance()->report_cache();
       if (std::string(std::getenv("HPS_WORKER_ID")) == "0") {
         HierarchicalParameterServer::Facade::instance()->report_avg();
       }
@@ -55,16 +57,16 @@ int wait_one_child() {
   int child_stat;
   pid_t pid = waitpid(-1, &child_stat, 0);
   if (WEXITSTATUS(child_stat) != 0) {
-    std::cerr << "detect a terminated child " << pid << ", status is "
-               << WEXITSTATUS(child_stat) << "\n";
+    std::cerr << "detect a terminated child " << pid << ", status is " << WEXITSTATUS(child_stat)
+              << "\n";
     return 1;
   } else if (WIFSIGNALED(child_stat)) {
-    std::cerr << "detect an abnormal terminated child, signal is " << strsignal(WTERMSIG(child_stat));
+    std::cerr << "detect an abnormal terminated child, signal is "
+              << strsignal(WTERMSIG(child_stat));
     return 1;
-  } else return 0;
+  } else
+    return 0;
 }
-
 }
-
 
 }  // namespace tensorflow

@@ -70,6 +70,8 @@ def add_common_arguments(argparser, run_config):
                             default=run_config['dataset_path'])
     argparser.add_argument('--ps_config_file', type=str,
                             default=run_config['ps_config_file'])
+    argparser.add_argument('--empty-feat', type=str,
+                            dest='_empty_feat', default='')
 
 def process_common_config(run_config):
     run_config["dataset_path"] += '/saved_dataset'
@@ -77,7 +79,7 @@ def process_common_config(run_config):
         run_config["tf_key_type"] = tf.uint32
     # os.environ['SAMGRAPH_LOG_LEVEL'] = run_config['_log_level']
     # os.environ["SAMGRAPH_PROFILE_LEVEL"] = run_config['_profile_level']
-    # os.environ['SAMGRAPH_EMPTY_FEAT'] = run_config['_empty_feat']
+    os.environ['SAMGRAPH_EMPTY_FEAT'] = run_config['_empty_feat']
 
 def print_run_config(run_config):
     print('config:eval_tsp="{:}"'.format(time.strftime(
