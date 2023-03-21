@@ -146,10 +146,11 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
           coll_refresh_thread[global_replica_id].join();
         }
         coll_refresh_thread[global_replica_id] = std::thread([this, global_replica_id, stream](){
-          refresh(global_replica_id, stream, true);
+          refresh(global_replica_id, stream, false /*foreground*/);
+          // refresh(global_replica_id, stream, true);
           coll_refresh_ongoing[global_replica_id].store(false);
         });
-        coll_refresh_thread[global_replica_id].join();
+        // coll_refresh_thread[global_replica_id].join();
       } else {
         HCTR_LOG_S(ERROR, WORLD) << "skip refresh due to refresh already ongoing";
       }
