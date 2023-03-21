@@ -245,6 +245,8 @@ class RunConfig:
   def form_cmd(self, durable_log=True):
     assert((self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter) == self.iter_num)
     cmd_line = f'{self.custom_env} '
+    cmd_line += f'HUGECTR_LOG_LEVEL=0 '
+    cmd_line += f'TF_CPP_MIN_LOG_LEVEL=2 '
     cmd_line += f'COLL_NUM_REPLICA={self.gpu_num} '
     if self.coll_cache_no_group != "":
       cmd_line += f'SAMGRAPH_COLL_CACHE_NO_GROUP={self.coll_cache_no_group} '

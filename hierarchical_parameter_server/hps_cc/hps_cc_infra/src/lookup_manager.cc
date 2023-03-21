@@ -196,11 +196,11 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
           inference_params.coll_cache_enable_iter &&
       parameter_server_->ref_ps_config().use_coll_cache) {
     lookup_session = nullptr;
-    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " reaches "
+    HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id << " reaches "
                              << this->current_steps_for_each_replica_[global_replica_id]
                              << ", calling init pre replica\n";
     init_per_replica(global_replica_id);
-    HCTR_LOG_S(ERROR, WORLD) << "init per replica done\n";
+    HCTR_LOG_S(INFO, WORLD) << "init per replica done\n";
     this->current_steps_for_each_replica_[global_replica_id] = 0;
   }
 }
@@ -220,7 +220,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     coll_parameter_server_ = std::make_shared<CollCacheParameterServer>(ps_config);
     // this->_tensorflow_ctx_list.resize(num_replicas_in_sync);
   });
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                            << " waits for coll ps creation barrier\n";
   coll_parameter_server_->barrier();
 
@@ -270,7 +270,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
 
   CHECK(ps_config.inference_params_array.size() == 1);
 
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " calling init per replica\n";
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id << " calling init per replica\n";
   cudaStream_t stream;
   stream = *reinterpret_cast<const cudaStream_t*>(this->tf_ctx_list[global_replica_id]
                                                       ->op_device_context()
@@ -279,10 +279,10 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
                                                       ->GpuStreamMemberHack());
   // stream = tensorflow::GetGpuStream(this->tf_ctx_list[global_replica_id]);
   ps_ptr->init_per_replica(global_replica_id, rank_ptr, freq_ptr, gpu_mem_allocator, stream);
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                            << " calling init per replica done, doing barrier\n";
   coll_parameter_server_->barrier();
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                            << " calling init per replica done, doing barrier done\n";
 }
 
