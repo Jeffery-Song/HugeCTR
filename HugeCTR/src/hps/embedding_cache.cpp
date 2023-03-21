@@ -284,9 +284,9 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
       size_t& unique_missing_num = workspace_handler.h_missing_length_[table_id];
       TensorPtr d_keys_state = Tensor::EmptyExternal(DataType::kI32, {num_keys}, _eager_gpu_mem_allocator, ctx, "");
       TensorPtr d_unique_keys_state = Tensor::EmptyExternal(DataType::kI32, {unique_num}, _eager_gpu_mem_allocator, ctx, "");
-      HCTR_LIB_THROW(cudaMemset(d_keys_state->MutableData(), 0, sizeof(uint32_t) * num_keys));
+      HCTR_LIB_THROW(cudaMemsetAsync(d_keys_state->MutableData(), 0, sizeof(uint32_t) * num_keys, stream));
       HCTR_LIB_THROW(
-          cudaMemset(d_unique_keys_state->MutableData(), 0, sizeof(uint32_t) * unique_num));
+          cudaMemsetAsync(d_unique_keys_state->MutableData(), 0, sizeof(uint32_t) * unique_num, stream));
       MathUtil<TypeHashKey>::UnfoldIndexVec(workspace_handler.d_missing_index_[table_id],
                                             d_unique_keys_state->Ptr<uint32_t>(),
                                             unique_missing_num, unique_num, stream);
@@ -310,7 +310,8 @@ void EmbeddingCache<TypeHashKey>::lookup(size_t const table_id, float* const d_v
         uint64_t h_num_run_out;
         HCTR_LIB_THROW(cudaStreamSynchronize(stream));
         Device::Get(ctx)->CopyDataFromTo(d_num_run_out->Ptr<uint64_t>(), 0, &h_num_run_out, 0,
-                                         sizeof(uint64_t), ctx, CPU());
+                                         sizeof(uint64_t), ctx, CPU(), stream);
+        HCTR_LIB_THROW(cudaStreamSynchronize(stream));
         return h_num_run_out;
       };
       // Count missing keys

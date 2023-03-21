@@ -157,11 +157,11 @@ void MathUtil<T>::CubCountByKey(const T* d_keys, uint32_t* d_values, T* d_unique
     if (flip) {
       cub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys, d_unique_keys_out,
                                      itr_flip, d_aggregates_out, d_num_runs_out, reduction_op,
-                                     num_items);
+                                     num_items, stream);
     } else {
       cub::DeviceReduce::ReduceByKey(d_temp_storage, temp_storage_bytes, d_keys, d_unique_keys_out,
                                      d_values, d_aggregates_out, d_num_runs_out, reduction_op,
-                                     num_items);
+                                     num_items, stream);
     }
   };
 
@@ -170,6 +170,7 @@ void MathUtil<T>::CubCountByKey(const T* d_keys, uint32_t* d_values, T* d_unique
   cudaMalloc(&d_temp_storage, temp_storage_bytes);
   // Run reduce-by-key
   do_reduce();
+  cudaStreamSynchronize(stream);
   cudaFree(d_temp_storage);
 }
 
@@ -184,6 +185,7 @@ void MathUtil<T>::CubReduceSum(const T* d_in, uint64_t* d_out, size_t num_items,
   cudaMalloc(&d_temp_storage, temp_storage_bytes);
   // Run sum-reduction
   cub::DeviceReduce::Sum(d_temp_storage, temp_storage_bytes, d_in, d_out, num_items, stream);
+  cudaStreamSynchronize(stream);
   cudaFree(d_temp_storage);
 }
 
@@ -194,12 +196,14 @@ void MathUtil<T>::CubSortPairs(const T* d_keys_in, const uint32_t* d_values_in, 
   void* d_temp_storage = NULL;
   size_t temp_storage_bytes = 0;
   cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out,
-                                  d_values_in, d_values_out, num_items);
+                                  d_values_in, d_values_out, num_items, 0, sizeof(T)*8, stream);
   // Allocate temporary storage
   cudaMalloc(&d_temp_storage, temp_storage_bytes);
   // Run sorting operation
   cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out,
-                                  d_values_in, d_values_out, num_items);
+                                  d_values_in, d_values_out, num_items, 0, sizeof(T)*8, stream);
+  cudaStreamSynchronize(stream);
+  cudaFree(d_temp_storage);
 }
 
 template <typename T>
