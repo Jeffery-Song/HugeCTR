@@ -23,6 +23,8 @@ def get_default_common_config(**kwargs):
     default_common_config["global_batch_size"] = 65536                 # the globally batchsize for all GPUs
     default_common_config["iteration_per_epoch"] = 1000
     default_common_config["coll_cache_enable_iter"] = 1000
+    default_common_config["coll_cache_refresh_iter"] = 2147483648
+    default_common_config["coll_cache_enable_refresh"] = False
     default_common_config["coll_cache_policy"] = "coll_asymm"
     default_common_config["model"] = "DLRM"
     default_common_config["combiner"] = "mean"
@@ -58,6 +60,10 @@ def add_common_arguments(argparser, run_config):
                             default=run_config['iteration_per_epoch'])   
     argparser.add_argument('--coll_cache_enable_iter', type=int,
                             default=run_config['coll_cache_enable_iter'])                        
+    argparser.add_argument('--coll_cache_refresh_iter', type=int,
+                            default=run_config['coll_cache_refresh_iter'])
+    argparser.add_argument('--coll_cache_enable_refresh', action='store_true',
+                            default=run_config['coll_cache_enable_refresh'])
     argparser.add_argument('--coll_cache_policy', type=str,
                             default=run_config['coll_cache_policy'])
     argparser.add_argument('--combiner', type=str,

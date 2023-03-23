@@ -19,6 +19,8 @@
 #include "base/debug/logger.hpp"
 #include "coll_cache_lib/atomic_barrier.h"
 #include "coll_cache_lib/facade.h"
+#include "coll_cache_lib/timer.h"
+#include "coll_cache_lib/profiler.h"
 #include "hps/hier_parameter_server.hpp"
 #include "hps/inference_utils.hpp"
 #include "tensorflow/core/framework/op_kernel.h"
@@ -68,6 +70,7 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
   parameter_server_ = HierParameterServerBase::create(ps_config, ps_config.inference_params_array);
   current_steps_for_each_replica_.resize(num_replicas_in_sync, 0);
 
+  this->coll_freq_recorder_list.resize(num_replicas_in_sync);
   // Initialie the resources for each model
   for (auto& inference_params : ps_config.inference_params_array) {
     // Create the lookup sessions on all the deployed devices
@@ -78,6 +81,7 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
                                                                     inference_params.device_id);
       auto lookup_session = LookupSessionBase::create(inference_params, embedding_cache);
       lookup_sessions.emplace(device_id, lookup_session);
+      coll_freq_recorder_list[device_id] = lookup_session->freq_recorder_;
     }
     lookup_session_map_.emplace(inference_params.model_name, lookup_sessions);
 
@@ -96,6 +100,11 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
     h_values_map_.emplace(inference_params.model_name, h_values);
   }
   this->tf_ctx_list.resize(num_replicas_in_sync);
+  this->coll_refresh_thread.resize(num_replicas_in_sync);
+  this->coll_refresh_ongoing = new std::atomic<bool>[num_replicas_in_sync];
+  for (decltype(num_replicas_in_sync) i = 0; i < num_replicas_in_sync; i++) {
+    this->coll_refresh_ongoing[i].store(false);
+  }
 }
 
 void LookupManager::forward(const std::string& model_name, int32_t table_id,
@@ -108,9 +117,45 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                                    ->stream()
                                                    ->implementation()
                                                    ->GpuStreamMemberHack());
+    coll_cache_lib::common::Timer t1;
+    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh) {
+      size_t num_keys_to_record = num_keys * 0.05;
+      size_t per_key_size = coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key ? 8 : 4;
+      void* h_values = h_values_map_.find(model_name)->second.find(global_replica_id)->second[table_id].get();
+      cudaMemcpy(h_values, values_ptr, num_keys_to_record * per_key_size, cudaMemcpyDeviceToHost);
+
+      if (coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key) {
+        coll_freq_recorder_list[global_replica_id]->Record(reinterpret_cast<const coll_cache_lib::common::Id64Type*>(h_values),
+                              num_keys_to_record);
+      } else {
+        coll_freq_recorder_list[global_replica_id]->Record(reinterpret_cast<const coll_cache_lib::common::IdType*>(h_values),
+                              num_keys_to_record);
+      }
+    }
+    double record = t1.Passed();
+    // HCTR_LOG_S(ERROR, WORLD) << "cp taks time " << t_cp << ",record taks time " << record << "\n";
+
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
                                    model_name, table_id, stream,
                                    this->current_steps_for_each_replica_[global_replica_id]);
+    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh &&
+        this->current_steps_for_each_replica_[global_replica_id] == coll_parameter_server_->ref_ps_config().coll_cache_enable_iter) {
+      if (coll_refresh_ongoing[global_replica_id].load() == false) {
+        coll_refresh_ongoing[global_replica_id].store(true);
+        if (coll_refresh_thread[global_replica_id].joinable()) {
+          coll_refresh_thread[global_replica_id].join();
+        }
+        coll_refresh_thread[global_replica_id] = std::thread([this, global_replica_id, stream](){
+          refresh(global_replica_id, stream, false /*foreground*/);
+          // refresh(global_replica_id, stream, true);
+          coll_refresh_ongoing[global_replica_id].store(false);
+        });
+        // coll_refresh_thread[global_replica_id].join();
+      } else {
+        HCTR_LOG_S(ERROR, WORLD) << "skip refresh due to refresh already ongoing";
+      }
+    }
+    set_step_profile_value(global_replica_id, coll_cache_lib::common::kLogL1ConvertTime, record);
     this->current_steps_for_each_replica_[global_replica_id]++;
     return;
   }
@@ -152,11 +197,11 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
           inference_params.coll_cache_enable_iter &&
       parameter_server_->ref_ps_config().use_coll_cache) {
     lookup_session = nullptr;
-    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " reaches "
+    HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id << " reaches "
                              << this->current_steps_for_each_replica_[global_replica_id]
                              << ", calling init pre replica\n";
     init_per_replica(global_replica_id);
-    HCTR_LOG_S(ERROR, WORLD) << "init per replica done\n";
+    HCTR_LOG_S(INFO, WORLD) << "init per replica done\n";
     this->current_steps_for_each_replica_[global_replica_id] = 0;
   }
 }
@@ -176,7 +221,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
     coll_parameter_server_ = std::make_shared<CollCacheParameterServer>(ps_config);
     // this->_tensorflow_ctx_list.resize(num_replicas_in_sync);
   });
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                            << " waits for coll ps creation barrier\n";
   coll_parameter_server_->barrier();
 
@@ -199,13 +244,16 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   if (ps_config.use_multi_worker || global_replica_id == 0) {
     lookup_session_map_.clear();
     parameter_server_ = nullptr;
-    h_values_map_.clear();
+    // h_values_map_.clear();
   }
   coll_parameter_server_->barrier();
 
   std::function<coll_cache_lib::MemHandle(size_t)> gpu_mem_allocator =
       [&ctx = tf_ctx_list[global_replica_id],
        global_replica_id](size_t nbytes) -> coll_cache_lib::MemHandle {
+    if (nbytes == 0) {
+      HCTR_LOG_S(ERROR, WORLD) << "allocating 0 cuda memory?\n";
+    }
     auto handle = std::make_shared<HPSMemHandle>();
     TF_CHECK_OK(ctx->allocate_temp(tensorflow::DataType::DT_UINT8,
                                    tensorflow::TensorShape({(long)nbytes}),
@@ -223,7 +271,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
 
   CHECK(ps_config.inference_params_array.size() == 1);
 
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " calling init per replica\n";
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id << " calling init per replica\n";
   cudaStream_t stream;
   stream = *reinterpret_cast<const cudaStream_t*>(this->tf_ctx_list[global_replica_id]
                                                       ->op_device_context()
@@ -232,12 +280,37 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
                                                       ->GpuStreamMemberHack());
   // stream = tensorflow::GetGpuStream(this->tf_ctx_list[global_replica_id]);
   ps_ptr->init_per_replica(global_replica_id, rank_ptr, freq_ptr, gpu_mem_allocator, stream);
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                            << " calling init per replica done, doing barrier\n";
   coll_parameter_server_->barrier();
-  HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id
+  HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                            << " calling init per replica done, doing barrier done\n";
 }
+
+void LookupManager::refresh(const int32_t global_replica_id, cudaStream_t stream, bool foreground) {
+  std::vector<uint32_t> rank_vec, freq_vec;
+  uint32_t *rank_ptr = nullptr, *freq_ptr = nullptr;
+
+  if (global_replica_id == 0) {
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
+    // HCTR_CHECK_HINT(lookup_session_map_.begin()->second.count(0) > 0,
+    //                 "replica 0's must have device 0's lookup session\n");
+    auto freq_recorder = this->coll_freq_recorder_list[0];
+    freq_recorder->Combine();
+    HCTR_LOG_S(ERROR, WORLD) << "combined\n";
+    rank_vec.resize(freq_recorder->NumNodes());
+    freq_vec.resize(freq_recorder->NumNodes());
+    freq_recorder->Sort();
+    HCTR_LOG_S(ERROR, WORLD) << "sorted\n";
+    freq_recorder->GetFreq(freq_vec.data());
+    freq_recorder->GetRankNode(rank_vec.data());
+    rank_ptr = rank_vec.data();
+    freq_ptr = freq_vec.data();
+    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
+  }
+  coll_parameter_server_->refresh(global_replica_id, rank_ptr, freq_ptr, stream, foreground);
+}
+
 void LookupManager::report_avg() {
   if (coll_parameter_server_) {
     coll_parameter_server_->report_avg();

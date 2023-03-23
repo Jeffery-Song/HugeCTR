@@ -70,6 +70,7 @@ class LookupManager final {
     return parameter_server_->report_access_overlap();
   }
 
+  void refresh(const int32_t global_replica_id, cudaStream_t stream = nullptr, bool foreground = false);
  private:
   void init_per_replica(const int32_t global_replica_id);
 
@@ -86,6 +87,9 @@ class LookupManager final {
 
  public:
   std::vector<tensorflow::OpKernelContext*> tf_ctx_list;
+  std::vector<std::thread> coll_refresh_thread;
+  std::atomic<bool> *coll_refresh_ongoing = nullptr;
+  std::vector<std::shared_ptr<coll_cache_lib::common::FreqRecorder>> coll_freq_recorder_list;
 };
 
 }  // namespace HierarchicalParameterServer

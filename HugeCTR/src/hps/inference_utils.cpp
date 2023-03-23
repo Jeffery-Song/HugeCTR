@@ -243,6 +243,11 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
     this->coll_cache_enable_iter =
         get_value_from_json<size_t>(hps_config, "coll_cache_enable_iter");
   }
+  if (hps_config.find("coll_cache_refresh_iter") != hps_config.end()) {
+    this->coll_cache_refresh_iter =
+        get_value_from_json<size_t>(hps_config, "coll_cache_refresh_iter");
+  }
+  this->coll_cache_enable_refresh = get_value_from_json_soft<bool>(hps_config, "coll_cache_enable_refresh", false);
   this->iteration_per_epoch = get_value_from_json<size_t>(hps_config, "iteration_per_epoch");
   this->epoch = get_value_from_json<size_t>(hps_config, "epoch");
   this->coll_cache_policy = get_value_from_json_soft<int>(hps_config, "coll_cache_policy", 13);
@@ -406,6 +411,8 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
     params.use_multi_worker = this->use_multi_worker;
     params.hps_cache_statistic = this->hps_cache_statistic;
     params.coll_cache_enable_iter = this->coll_cache_enable_iter;
+    params.coll_cache_refresh_iter = this->coll_cache_refresh_iter;
+    params.coll_cache_enable_refresh = this->coll_cache_enable_refresh;
     params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int
     params.number_of_worker_buffers_in_pool =

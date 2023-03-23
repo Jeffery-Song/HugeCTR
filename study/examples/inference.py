@@ -124,7 +124,6 @@ def inference_with_saved_model(args):
     def _dataset_fn(num_replica, local_id):
         assert(args["global_batch_size"] % num_replica == 0)
         replica_batch_size = args["global_batch_size"] // num_replica
-        print(args["dataset_path"])
         if args["dataset_path"].endswith("criteo_tb/saved_dataset"):
             print("Loading Criteo TB")
             from ds_generator import criteo_tb
@@ -144,17 +143,19 @@ def inference_with_saved_model(args):
             else:
                 print("loaded dataset has batch size we need, so directly use it")
         else:
+            print("Generating random dataset")
             sparse_keys, dense_features, labels = generate_random_samples(replica_batch_size * args["iter_num"], args["vocabulary_range_per_slot"], args["dense_dim"], np.int32, args["alpha"])
             def sequential_batch_gen():
                 for i in range(0, replica_batch_size * args["iter_num"], replica_batch_size):
                     sparse_keys, dense_features, labels
                     yield sparse_keys[i:i+replica_batch_size],dense_features[i:i+replica_batch_size],labels[i:i+replica_batch_size]
-
+            print("creating tf dataset")
             dataset = tf.data.Dataset.from_generator(sequential_batch_gen, 
                 output_signature=(
                     tf.TensorSpec(shape=(replica_batch_size, args["slot_num"]), dtype=args["tf_key_type"]), 
                     tf.TensorSpec(shape=(replica_batch_size, args["dense_dim"]), dtype=args["tf_vector_type"]),
                     tf.TensorSpec(shape=(replica_batch_size, 1), dtype=tf.int32)))
+            print("creating tf dataset - done")
         dataset = dataset.cache()
         dataset = dataset.prefetch(1000)
         return dataset
@@ -190,8 +191,8 @@ def inference_with_saved_model(args):
                 sok.SetStepProfileValue(profile_type=sok.kLogL1TrainTime, value=(t2 - t1))
             else:
                 hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
-        if i % 500 == 0:
-            print(i, "time {:.6} {:.6}".format(ds_time / 500, md_time / 500), flush=True)
+        if (i + 1) % 100 == 0:
+            print(i + 1, "time {:.6} {:.6}".format(ds_time / 100, md_time / 100), flush=True)
             ds_time = 0
             md_time = 0
             barrier.wait()
