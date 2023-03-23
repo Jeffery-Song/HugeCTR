@@ -32,6 +32,8 @@ import sys
 
 def Shutdown():
     hps_lib.shutdown()
+def NopDep(dense, emb):
+    return hps_lib.nop_dep(dense, emb)
 def wait_one_child():
     return hps_lib.wait_one_child()
 
