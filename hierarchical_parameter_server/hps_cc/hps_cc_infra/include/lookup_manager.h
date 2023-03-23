@@ -90,7 +90,6 @@ class LookupManager final {
   std::vector<std::thread> coll_refresh_thread;
   std::atomic<bool> *coll_refresh_ongoing = nullptr;
   std::vector<std::shared_ptr<coll_cache_lib::common::FreqRecorder>> coll_freq_recorder_list;
-  size_t refresh_iter;
 };
 
 }  // namespace HierarchicalParameterServer

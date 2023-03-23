@@ -105,7 +105,6 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
   for (decltype(num_replicas_in_sync) i = 0; i < num_replicas_in_sync; i++) {
     this->coll_refresh_ongoing[i].store(false);
   }
-  this->refresh_iter = ps_config.coll_cache_refresh_iter;
 }
 
 void LookupManager::forward(const std::string& model_name, int32_t table_id,
@@ -119,7 +118,7 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                                    ->implementation()
                                                    ->GpuStreamMemberHack());
     coll_cache_lib::common::Timer t1;
-    {
+    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh) {
       size_t num_keys_to_record = num_keys * 0.05;
       size_t per_key_size = coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key ? 8 : 4;
       void* h_values = h_values_map_.find(model_name)->second.find(global_replica_id)->second[table_id].get();
@@ -139,7 +138,8 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
                                    model_name, table_id, stream,
                                    this->current_steps_for_each_replica_[global_replica_id]);
-    if (this->current_steps_for_each_replica_[global_replica_id] == this->refresh_iter) {
+    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh &&
+        this->current_steps_for_each_replica_[global_replica_id] == coll_parameter_server_->ref_ps_config().coll_cache_enable_iter) {
       if (coll_refresh_ongoing[global_replica_id].load() == false) {
         coll_refresh_ongoing[global_replica_id].store(true);
         if (coll_refresh_thread[global_replica_id].joinable()) {
