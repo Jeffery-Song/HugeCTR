@@ -247,7 +247,8 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
     this->coll_cache_refresh_iter =
         get_value_from_json<size_t>(hps_config, "coll_cache_refresh_iter");
   }
-  this->coll_cache_enable_refresh = get_value_from_json_soft<bool>(hps_config, "coll_cache_enable_refresh", false);
+  this->coll_cache_enable_refresh =
+      get_value_from_json_soft<bool>(hps_config, "coll_cache_enable_refresh", false);
   this->iteration_per_epoch = get_value_from_json<size_t>(hps_config, "iteration_per_epoch");
   this->epoch = get_value_from_json<size_t>(hps_config, "epoch");
   this->coll_cache_policy = get_value_from_json_soft<int>(hps_config, "coll_cache_policy", 13);

@@ -148,11 +148,13 @@ class CollCacheParameterServer {
     this->coll_cache_ptr_->add_epoch_profile_value(key, static_cast<LogEpochItem>(item), val);
   }
   inline void refresh(int global_replica_id, IdType* ranking_nodes_list_ptr,
-               IdType* ranking_nodes_freq_list_ptr, cudaStream_t cu_stream = nullptr, bool foreground = false) {
+                      IdType* ranking_nodes_freq_list_ptr, cudaStream_t cu_stream = nullptr,
+                      bool foreground = false) {
     auto stream = static_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
-    this->coll_cache_ptr_->refresh(global_replica_id, ranking_nodes_list_ptr, ranking_nodes_freq_list_ptr, stream, foreground);
+    this->coll_cache_ptr_->refresh(global_replica_id, ranking_nodes_list_ptr,
+                                   ranking_nodes_freq_list_ptr, stream, foreground);
   }
-  inline parameter_server_config& ref_ps_config () {return ps_config_; }
+  inline parameter_server_config& ref_ps_config() { return ps_config_; }
 
   void report_avg();
   static void barrier();
