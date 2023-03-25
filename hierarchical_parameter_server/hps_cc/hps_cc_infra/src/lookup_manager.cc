@@ -101,6 +101,7 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
   }
   this->tf_ctx_list.resize(num_replicas_in_sync);
   this->coll_refresh_thread.resize(num_replicas_in_sync);
+  this->coll_record_thread.resize(num_replicas_in_sync);
   this->coll_refresh_ongoing = new std::atomic<bool>[num_replicas_in_sync];
   for (decltype(num_replicas_in_sync) i = 0; i < num_replicas_in_sync; i++) {
     this->coll_refresh_ongoing[i].store(false);
@@ -117,27 +118,9 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                                    ->stream()
                                                    ->implementation()
                                                    ->GpuStreamMemberHack());
-    coll_cache_lib::common::Timer t1;
-    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh) {
-      size_t num_keys_to_record = num_keys * 0.05;
-      size_t per_key_size =
-          coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key ? 8 : 4;
-      void* h_values =
-          h_values_map_.find(model_name)->second.find(global_replica_id)->second[table_id].get();
-      cudaMemcpy(h_values, values_ptr, num_keys_to_record * per_key_size, cudaMemcpyDeviceToHost);
-
-      if (coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key) {
-        coll_freq_recorder_list[global_replica_id]->Record(
-            reinterpret_cast<const coll_cache_lib::common::Id64Type*>(h_values),
-            num_keys_to_record);
-      } else {
-        coll_freq_recorder_list[global_replica_id]->Record(
-            reinterpret_cast<const coll_cache_lib::common::IdType*>(h_values), num_keys_to_record);
-      }
-    }
-    double record = t1.Passed();
     // HCTR_LOG_S(ERROR, WORLD) << "cp taks time " << t_cp << ",record taks time " << record <<
     // "\n";
+    cur_key_ptr = values_ptr; cur_num_key = num_keys; sem_post(&record_send);
 
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
                                    model_name, table_id, stream,
@@ -160,7 +143,7 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
         HCTR_LOG_S(ERROR, WORLD) << "skip refresh due to refresh already ongoing";
       }
     }
-    set_step_profile_value(global_replica_id, coll_cache_lib::common::kLogL1ConvertTime, record);
+    sem_wait(&record_done);
     this->current_steps_for_each_replica_[global_replica_id]++;
     return;
   }
@@ -290,6 +273,33 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
   coll_parameter_server_->barrier();
   HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                           << " calling init per replica done, doing barrier done\n";
+  sem_init(&record_send, 0, 0);
+  sem_init(&record_done, 0, 0);
+  if (ps_config.coll_cache_enable_refresh) {
+    this->coll_record_thread[global_replica_id] = std::thread([this, global_replica_id](){
+      size_t per_key_size = coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key ? 8 : 4;
+      void* h_values = h_values_map_.begin()->second.find(global_replica_id)->second.begin()->get();
+      while(true) {
+        sem_wait(&record_send);
+        coll_cache_lib::common::Timer t1;
+        if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh) {
+          size_t num_keys_to_record = cur_num_key * 0.05;
+          cudaMemcpy(h_values, cur_key_ptr, num_keys_to_record * per_key_size, cudaMemcpyDeviceToHost);
+          if (coll_parameter_server_->ref_ps_config().inference_params_array[0].i64_input_key) {
+            coll_freq_recorder_list[global_replica_id]->Record(
+                reinterpret_cast<const coll_cache_lib::common::Id64Type*>(h_values),
+                num_keys_to_record);
+          } else {
+            coll_freq_recorder_list[global_replica_id]->Record(
+                reinterpret_cast<const coll_cache_lib::common::IdType*>(h_values), num_keys_to_record);
+          }
+        }
+        double record = t1.Passed();
+        set_step_profile_value(global_replica_id, coll_cache_lib::common::kLogL1ConvertTime, record);
+        sem_post(&record_done);
+      }
+    });
+  }
 }
 
 void LookupManager::refresh(const int32_t global_replica_id, cudaStream_t stream, bool foreground) {
