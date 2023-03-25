@@ -144,7 +144,7 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                    this->current_steps_for_each_replica_[global_replica_id]);
     if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh &&
         this->current_steps_for_each_replica_[global_replica_id] ==
-            coll_parameter_server_->ref_ps_config().coll_cache_enable_iter) {
+            coll_parameter_server_->ref_ps_config().coll_cache_refresh_iter) {
       if (coll_refresh_ongoing[global_replica_id].load() == false) {
         coll_refresh_ongoing[global_replica_id].store(true);
         if (coll_refresh_thread[global_replica_id].joinable()) {
