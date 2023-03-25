@@ -28,6 +28,13 @@
 
 namespace HierarchicalParameterServer {
 
+void CriticalExec(coll_cache_lib::common::BarHandle barrier, int syncer, std::function<void()> func, int local_id) {
+  for (int i = 0; i < syncer; i++) {
+    if (i == local_id) { func(); }
+    barrier->Wait();
+  }
+}
+
 std::shared_ptr<LookupManager> LookupManager::Create() {
   return std::shared_ptr<LookupManager>(new LookupManager());
 }
@@ -213,21 +220,18 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
                           << " waits for coll ps creation barrier\n";
   coll_parameter_server_->barrier();
 
+  CriticalExec(coll_cache_lib::common::AnonymousBarrier::_global_instance, 
+    ps_config.inference_params_array[0].cross_worker_deployed_devices.size(),
+    [this, global_replica_id](){
+      HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
+      this->coll_freq_recorder_list[global_replica_id]->LocalCombineToShared();
+    }, global_replica_id);
+  coll_cache_lib::common::ContFreqBuf* freq_rank = nullptr;
   if (global_replica_id == 0) {
-    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
-    HCTR_CHECK_HINT(lookup_session_map_.begin()->second.count(0) > 0,
-                    "replica 0's must have device 0's lookup session\n");
     auto freq_recorder = this->lookup_session_map_.begin()->second[0]->freq_recorder_;
-    freq_recorder->Combine();
-
-    rank_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
-    freq_vec.resize(ps_config.inference_params_array[0].max_vocabulary_size[0]);
+    freq_recorder->GlobalCombine();
     freq_recorder->Sort();
-    freq_recorder->GetFreq(freq_vec.data());
-    freq_recorder->GetRankNode(rank_vec.data());
-    rank_ptr = rank_vec.data();
-    freq_ptr = freq_vec.data();
-    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
+    freq_rank = freq_recorder->global_cont_freq_buf;
   }
   if (ps_config.use_multi_worker || global_replica_id == 0) {
     lookup_session_map_.clear();
@@ -267,7 +271,7 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
                                                       ->implementation()
                                                       ->GpuStreamMemberHack());
   // stream = tensorflow::GetGpuStream(this->tf_ctx_list[global_replica_id]);
-  ps_ptr->init_per_replica(global_replica_id, rank_ptr, freq_ptr, gpu_mem_allocator, stream);
+  ps_ptr->init_per_replica(global_replica_id, freq_rank, gpu_mem_allocator, stream);
   HCTR_LOG_S(INFO, WORLD) << "replica " << global_replica_id
                           << " calling init per replica done, doing barrier\n";
   coll_parameter_server_->barrier();
@@ -303,27 +307,21 @@ void LookupManager::init_per_replica(const int32_t global_replica_id) {
 }
 
 void LookupManager::refresh(const int32_t global_replica_id, cudaStream_t stream, bool foreground) {
-  std::vector<uint32_t> rank_vec, freq_vec;
-  uint32_t *rank_ptr = nullptr, *freq_ptr = nullptr;
 
+  CriticalExec(coll_cache_lib::common::AnonymousBarrier::_refresh_instance, 
+    coll_parameter_server_->ref_ps_config().inference_params_array[0].cross_worker_deployed_devices.size(),
+    [this, global_replica_id](){
+      HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
+      this->coll_freq_recorder_list[global_replica_id]->LocalCombineToShared();
+    }, global_replica_id);
+  coll_cache_lib::common::ContFreqBuf* freq_rank = nullptr;
   if (global_replica_id == 0) {
-    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency\n";
-    // HCTR_CHECK_HINT(lookup_session_map_.begin()->second.count(0) > 0,
-    //                 "replica 0's must have device 0's lookup session\n");
     auto freq_recorder = this->coll_freq_recorder_list[0];
-    freq_recorder->Combine();
-    HCTR_LOG_S(ERROR, WORLD) << "combined\n";
-    rank_vec.resize(freq_recorder->NumNodes());
-    freq_vec.resize(freq_recorder->NumNodes());
+    freq_recorder->GlobalCombine();
     freq_recorder->Sort();
-    HCTR_LOG_S(ERROR, WORLD) << "sorted\n";
-    freq_recorder->GetFreq(freq_vec.data());
-    freq_recorder->GetRankNode(rank_vec.data());
-    rank_ptr = rank_vec.data();
-    freq_ptr = freq_vec.data();
-    HCTR_LOG_S(ERROR, WORLD) << "replica " << global_replica_id << " preparing frequency done\n";
+    freq_rank = freq_recorder->global_cont_freq_buf;
   }
-  coll_parameter_server_->refresh(global_replica_id, rank_ptr, freq_ptr, stream, foreground);
+  coll_parameter_server_->refresh(global_replica_id, freq_rank, stream, foreground);
 }
 
 void LookupManager::report_avg() {
