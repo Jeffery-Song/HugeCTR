@@ -127,7 +127,9 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
                                                    ->GpuStreamMemberHack());
     // HCTR_LOG_S(ERROR, WORLD) << "cp taks time " << t_cp << ",record taks time " << record <<
     // "\n";
-    cur_key_ptr = values_ptr; cur_num_key = num_keys; sem_post(&record_send);
+    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh) {
+      cur_key_ptr = values_ptr; cur_num_key = num_keys; sem_post(&record_send);
+    }
 
     coll_parameter_server_->lookup(global_replica_id, values_ptr, num_keys, emb_vector_ptr,
                                    model_name, table_id, stream,
@@ -150,7 +152,9 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
         HCTR_LOG_S(ERROR, WORLD) << "skip refresh due to refresh already ongoing";
       }
     }
-    sem_wait(&record_done);
+    if (coll_parameter_server_->ref_ps_config().coll_cache_enable_refresh) {
+      sem_wait(&record_done);
+    }
     this->current_steps_for_each_replica_[global_replica_id]++;
     return;
   }
