@@ -310,8 +310,8 @@ class RunConfig:
     self.max_vocabulary_size = self.dataset.vocabulary
     self.slot_num = self.dataset.slot_num
 
-  def generate_ps_config(self):
-    self.handle_mock_params()
+  def generate_ps_config(self, succeed=False):
+    # self.handle_mock_params()
     assert((self.global_batch_size % self.gpu_num) == 0)
     if self.coll_cache_policy == CachePolicy.sok: return
     conf = {
@@ -352,13 +352,27 @@ class RunConfig:
     conf['epoch'] = self.epoch
     conf['coll_cache_policy'] = self.coll_cache_policy.value
     conf['hps_cache_statistic'] = self.hps_cache_statistic
+    conf['succeed'] = succeed
 
     result = json.dumps(conf, indent=4)
     with open(self.get_conf_fname(), "w") as outfile:
       outfile.write(result)
 
-  def run(self, mock=False, durable_log=True, callback = None, retry=False):
+  def run(self, mock=False, durable_log=True, callback = None, retry=False, fail_only=False):
+    '''
+    retry: immediately retry on each failed job
+    fail_only: only run previously failed job. fail status is recorded in json file
+    '''
+    self.handle_mock_params()
     os.system('mkdir -p {}'.format(self.confdir))
+    if fail_only:
+      with open(self.get_conf_fname(), "r") as conf:
+        js = json.load(conf)
+      if js['succeed']:
+        if callback != None:
+          callback(self)
+        return 0
+
     self.generate_ps_config()
 
     if mock:
@@ -375,6 +389,8 @@ class RunConfig:
             print("FAILED and Retry!")
             continue
           print("FAILED!")
+        else:
+          self.generate_ps_config(True)
         if callback != None:
           callback(self)
         break
@@ -483,7 +499,7 @@ class ConfigList:
       raise Exception("Please construct fron runconfig or list of it")
     return ret
 
-  def run(self, mock=False, durable_log=True, callback = None, retry=False):
+  def run(self, mock=False, durable_log=True, callback = None, retry=False, fail_only=False):
     for conf in self.conf_list:
       conf : RunConfig
-      conf.run(mock, durable_log, callback, retry)
+      conf.run(mock, durable_log, callback, retry, fail_only)
