@@ -127,7 +127,7 @@ def inference_with_saved_model(args):
         if args["dataset_path"].endswith("criteo_tb/saved_dataset"):
             print("Loading Criteo TB")
             from ds_generator import criteo_tb
-            dataset = criteo_tb(["/nvme/songxiaoniu/criteo-TB/processed/day_6"], replica_batch_size, args["iter_num"], num_replica, args["tf_key_type"])
+            dataset = criteo_tb(["/nvme/songxiaoniu/criteo-TB/processed/day_concat"], replica_batch_size, args["iter_num"], num_replica, args["tf_key_type"])
             dataset = dataset.shard(num_replica, local_id)
         elif args["dataset_path"].endswith("criteo_kaggle/saved_dataset"):
             print("Loading Criteo Kaggle")
