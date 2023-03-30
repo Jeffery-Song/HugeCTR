@@ -365,15 +365,21 @@ class RunConfig:
     '''
     self.handle_mock_params()
     os.system('mkdir -p {}'.format(self.confdir))
+    previous_succeed = False
     if fail_only:
-      with open(self.get_conf_fname(), "r") as conf:
-        js = json.load(conf)
-      if js['succeed']:
+      try:
+        with open(self.get_conf_fname(), "r") as conf:
+          js = json.load(conf)
+        if 'succeed' in js and js['succeed']:
+          previous_succeed = True
+      except Exception as e:
+        pass
+      if previous_succeed:
         if callback != None:
           callback(self)
         return 0
 
-    self.generate_ps_config()
+    self.generate_ps_config(previous_succeed)
 
     if mock:
       print(self.form_cmd(durable_log))
@@ -389,6 +395,7 @@ class RunConfig:
             print("FAILED and Retry!")
             continue
           print("FAILED!")
+          self.generate_ps_config(False)
         else:
           self.generate_ps_config(True)
         if callback != None:
