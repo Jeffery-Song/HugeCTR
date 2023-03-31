@@ -1,0 +1,301 @@
+[INFO] hierarchical_parameter_server is imported
+[INFO]: sparse_operation_kit is imported
+environ({'SAMGRAPH_COLL_CACHE_CONCURRENT_LINK_IMPL': 'MPSPhase', 'TF_CPP_MIN_LOG_LEVEL': '2', 'HUGECTR_LOG_LEVEL': '0', 'SAMGRAPH_LOG_LEVEL': 'warn', 'SAMGRAPH_PROFILE_LEVEL': '3', 'SAMGRAPH_COLL_CACHE_CONCURRENT_LINK': '1', 'COLL_NUM_REPLICA': '4', 'SAMGRAPH_EMPTY_FEAT': '24', 'SHELL': '/usr/bin/zsh', 'LSCOLORS': 'Gxfxcxdxbxegedabagacad', 'LESS': '-R', 'TMUX': '/tmp/tmux-0/default,441,0', 'PWD': '/hugectr_dev/study/exp-overview-4v100', 'LOGNAME': 'root', '_': '/usr/bin/python', 'MOTD_SHOWN': 'pam', 'HOME': '/root', 'LANG': 'C.UTF-8', 'LS_COLORS': 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:', 'LC_TERMINAL': 'iTerm2', 'SSH_CONNECTION': '127.0.0.1 36028 127.0.0.1 22', 'TERM': 'screen', 'ZSH': '/root/.oh-my-zsh', 'GUROBI_HOME': '/opt/gurobi-install/gurobi-latest/linux64', 'USER': 'root', 'TMUX_PANE': '%0', 'LIBRARY_PATH': ':/opt/gurobi-install/gurobi-latest/linux64/lib', 'LC_TERMINAL_VERSION': '3.4.16', 'SHLVL': '3', 'PAGER': 'less', 'LD_LIBRARY_PATH': ':/opt/gurobi-install/gurobi-latest/linux64/lib', 'SSH_CLIENT': '127.0.0.1 36028 22', 'LC_ALL': 'C.UTF-8', 'PATH': '/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/opt/gurobi-install/gurobi-latest/linux64/bin', 'SSH_TTY': '/dev/pts/1', 'OLDPWD': '/root', 'TF2_BEHAVIOR': '1', 'TF_FORCE_GPU_ALLOW_GROWTH': 'true', 'CUDA_DEVICE_ORDER': 'PCI_BUS_ID', 'NCCL_LAUNCH_MODE': 'PARALLEL', 'TF_GPU_THREAD_MODE': 'gpu_private'})
+config:eval_tsp="2023-03-30 10:20:18"
+config:gpu_num=4
+config:iter_num=4000
+config:slot_num=100
+config:embed_vec_size=128
+config:dense_dim=13
+config:global_batch_size=32768
+config:iteration_per_epoch=1000
+config:coll_cache_enable_iter=1000
+config:coll_cache_refresh_iter=1000
+config:coll_cache_enable_refresh=False
+config:coll_cache_policy=coll_asymm
+config:model=dlrm
+config:combiner=mean
+config:optimizer=plugin_adam
+config:np_key_type=<class 'numpy.int32'>
+config:np_vector_type=<class 'numpy.float32'>
+config:tf_key_type=<dtype: 'int32'>
+config:tf_vector_type=<dtype: 'float32'>
+config:ps_config_file=run-configs/COLL_dlrm_SP_02_S100_C800m_policy_CollAsymm_cache_rate_0.02_batch_size_32768_mock_800000000_128_concurrent_impl_MPSPhase.json
+config:dense_model_path=plain
+config:dataset_path=/nvme/songxiaoniu/hps-dataset/criteo_like_uniform/saved_dataset
+config:random_request=True
+config:alpha=0.2
+config:max_vocabulary_size=800000000
+config:vocabulary_range_per_slot=[[0, 8000000], [8000000, 16000000], [16000000, 24000000], [24000000, 32000000], [32000000, 40000000], [40000000, 48000000], [48000000, 56000000], [56000000, 64000000], [64000000, 72000000], [72000000, 80000000], [80000000, 88000000], [88000000, 96000000], [96000000, 104000000], [104000000, 112000000], [112000000, 120000000], [120000000, 128000000], [128000000, 136000000], [136000000, 144000000], [144000000, 152000000], [152000000, 160000000], [160000000, 168000000], [168000000, 176000000], [176000000, 184000000], [184000000, 192000000], [192000000, 200000000], [200000000, 208000000], [208000000, 216000000], [216000000, 224000000], [224000000, 232000000], [232000000, 240000000], [240000000, 248000000], [248000000, 256000000], [256000000, 264000000], [264000000, 272000000], [272000000, 280000000], [280000000, 288000000], [288000000, 296000000], [296000000, 304000000], [304000000, 312000000], [312000000, 320000000], [320000000, 328000000], [328000000, 336000000], [336000000, 344000000], [344000000, 352000000], [352000000, 360000000], [360000000, 368000000], [368000000, 376000000], [376000000, 384000000], [384000000, 392000000], [392000000, 400000000], [400000000, 408000000], [408000000, 416000000], [416000000, 424000000], [424000000, 432000000], [432000000, 440000000], [440000000, 448000000], [448000000, 456000000], [456000000, 464000000], [464000000, 472000000], [472000000, 480000000], [480000000, 488000000], [488000000, 496000000], [496000000, 504000000], [504000000, 512000000], [512000000, 520000000], [520000000, 528000000], [528000000, 536000000], [536000000, 544000000], [544000000, 552000000], [552000000, 560000000], [560000000, 568000000], [568000000, 576000000], [576000000, 584000000], [584000000, 592000000], [592000000, 600000000], [600000000, 608000000], [608000000, 616000000], [616000000, 624000000], [624000000, 632000000], [632000000, 640000000], [640000000, 648000000], [648000000, 656000000], [656000000, 664000000], [664000000, 672000000], [672000000, 680000000], [680000000, 688000000], [688000000, 696000000], [696000000, 704000000], [704000000, 712000000], [712000000, 720000000], [720000000, 728000000], [728000000, 736000000], [736000000, 744000000], [744000000, 752000000], [752000000, 760000000], [760000000, 768000000], [768000000, 776000000], [776000000, 784000000], [784000000, 792000000], [792000000, 800000000]]
+config:_empty_feat=25
+worker 1 at process 209920
+Generating random dataset
+creating tf dataset
+creating tf dataset - done
+worker 3 at process 209922
+Generating random dataset
+creating tf dataset
+creating tf dataset - done
+worker 0 at process 209919
+Generating random dataset
+creating tf dataset
+creating tf dataset - done
+worker 2 at process 209921
+Generating random dataset
+creating tf dataset
+creating tf dataset - done
+100 time 1.33085e-05 0.266528
+100 time 1.60694e-05 0.296187
+100 time 1.33991e-05 0.29721
+100 time 1.31154e-05 0.297373
+200 time 1.48988e-05 0.0325062
+200 time 1.24955e-05 0.0326308
+200 time 1.40905e-05 0.0332008
+200 time 1.55139e-05 0.0334645
+300 time 1.22619e-05 0.0318837
+300 time 1.33109e-05 0.0337125
+300 time 1.36065e-05 0.0338534
+300 time 1.37901e-05 0.034038
+400 time 1.22094e-05 0.0310418
+400 time 1.40262e-05 0.0314867
+400 time 1.2815e-05 0.0320573
+400 time 1.39999e-05 0.0322815
+500 time 1.19519e-05 0.0320128
+500 time 1.34945e-05 0.0322382
+500 time 1.39189e-05 0.0326424
+500 time 1.48797e-05 0.0337249
+600 time 1.25337e-05 0.034265
+600 time 1.57428e-05 0.0350433
+600 time 1.24741e-05 0.0353008
+600 time 1.36161e-05 0.0358261
+700 time 1.33014e-05 0.0303649
+700 time 1.1704e-05 0.0307096
+700 time 1.24526e-05 0.0308122
+700 time 1.33324e-05 0.0315198
+800 time 1.29604e-05 0.0307326
+800 time 1.66368e-05 0.0312599
+800 time 1.56927e-05 0.0315491
+800 time 1.30892e-05 0.0324128
+900 time 1.39093e-05 0.0307647
+900 time 1.17087e-05 0.0315306
+900 time 1.45221e-05 0.031989
+900 time 1.2362e-05 0.0321814
+0 :  {link #0 : 1}, {link #1 : 2}, {link #2 : 3},
+1 :  {link #0 : 2}, {link #1 : 3}, {link #2 : 0},
+2 :  {link #0 : 3}, {link #1 : 0}, {link #2 : 1},
+3 :  {link #0 : 0}, {link #1 : 1}, {link #2 : 2},
+0 :  {link #0 : 1}, {link #1 : 2}, {link #2 : 3},
+1 :  {link #0 : 2}, {link #1 : 3}, {link #2 : 0},
+2 :  {link #0 : 3}, {link #1 : 0}, {link #2 : 1},
+3 :  {link #0 : 0}, {link #1 : 1}, {link #2 : 2},
+0 :  {link #0 : 1}, {link #1 : 2}, {link #2 : 3},
+1 :  {link #0 : 2}, {link #1 : 3}, {link #2 : 0},
+2 :  {link #0 : 3}, {link #1 : 0}, {link #2 : 1},
+3 :  {link #0 : 0}, {link #1 : 1}, {link #2 : 2},
+0 :  {link #0 : 1}, {link #1 : 2}, {link #2 : 3},
+1 :  {link #0 : 2}, {link #1 : 3}, {link #2 : 0},
+2 :  {link #0 : 3}, {link #1 : 0}, {link #2 : 1},
+3 :  {link #0 : 0}, {link #1 : 1}, {link #2 : 2},
+Set parameter WLSAccessID
+Set parameter WLSSecret
+Set parameter LicenseID
+Set parameter TimeLimit to value 200
+Set parameter MIPGap to value 0.05
+Set parameter LogFile to value "cppsolver.log"
+Set parameter Threads to value 40
+Academic license - for non-commercial use only - registered to xiaoniu.sxn@sjtu.edu.cn
+Gurobi Optimizer version 9.5.1 build v9.5.1rc2 (linux64)
+Thread count: 40 physical cores, 80 logical processors, using up to 40 threads
+Academic license - for non-commercial use only - registered to xiaoniu.sxn@sjtu.edu.cn
+Optimize a model with 17188 rows, 5615 columns and 52824 nonzeros
+Model fingerprint: 0x3ad93c9e
+Variable types: 5 continuous, 5610 integer (5610 binary)
+Coefficient statistics:
+  Matrix range     [2e-06, 3e+03]
+  Objective range  [1e+00, 1e+00]
+  Bounds range     [1e+00, 1e+00]
+  RHS range        [1e+00, 2e+03]
+Found heuristic solution: objective 8800.5569627
+Presolve removed 11919 rows and 38 columns
+Presolve time: 0.07s
+Presolved: 5269 rows, 5577 columns, 25281 nonzeros
+Variable types: 1 continuous, 5576 integer (5576 binary)
+
+Root relaxation: objective 6.035877e+02, 2688 iterations, 0.07 seconds (0.05 work units)
+
+    Nodes    |    Current Node    |     Objective Bounds      |     Work
+ Expl Unexpl |  Obj  Depth IntInf | Incumbent    BestBd   Gap | It/Node Time
+
+H    0     0                     603.5877458  603.58775  0.00%     -    0s
+     0     0  603.58775    0   81  603.58775  603.58775  0.00%     -    0s
+
+Explored 1 nodes (2688 simplex iterations) in 0.15 seconds (0.13 work units)
+Thread count was 40 (of 80 available processors)
+
+Solution count 2: 603.588 8800.56 
+
+Optimal solution found (tolerance 5.00e-02)
+Best objective 6.035877457917e+02, best bound 6.035877457917e+02, gap 0.0000%
+coll_cache:optimal_local_rate=0.708077,0.709737,0.743356,0.708003,
+coll_cache:optimal_remote_rate=0.262902,0.261242,0.227624,0.262977,
+coll_cache:optimal_cpu_rate=0.0290205,0.0290205,0.0290205,0.0290205,
+z=603.588
+test_result:init:feat_nbytes=409600000000
+test_result:init:cache_nbytes=8601599488
+test_result:init:feat_nbytes=409600000000
+test_result:init:cache_nbytes=8601599488
+test_result:init:feat_nbytes=409600000000
+test_result:init:cache_nbytes=8601599488
+test_result:init:feat_nbytes=409600000000
+test_result:init:cache_nbytes=8601599488
+1000 time 1.34039e-05 0.427773
+1000 time 1.22237e-05 0.427788
+1000 time 1.28889e-05 0.427754
+1000 time 1.32585e-05 0.427723
+1100 time 1.28198e-05 0.00791364
+1100 time 1.32346e-05 0.00786662
+1100 time 1.28007e-05 0.00805756
+1100 time 1.22571e-05 0.00815578
+1200 time 1.3423e-05 0.00778282
+1200 time 1.28889e-05 0.00786201
+1200 time 1.20378e-05 0.00795726
+1200 time 1.29771e-05 0.00800805
+1300 time 1.2722e-05 0.00785589
+1300 time 1.21355e-05 0.00786355
+1300 time 1.21307e-05 0.00798795
+1300 time 1.97077e-05 0.00801119
+1400 time 1.18828e-05 0.00758774
+1400 time 1.25051e-05 0.00793484
+1400 time 1.27435e-05 0.0079046
+1400 time 1.20664e-05 0.00795713
+1500 time 1.16444e-05 0.00755953
+1500 time 1.25527e-05 0.00791862
+1500 time 1.23286e-05 0.00803333
+1500 time 1.29628e-05 0.0080498
+1600 time 1.24121e-05 0.00778769
+1600 time 1.2238e-05 0.00792104
+1600 time 1.23072e-05 0.00799369
+1600 time 1.30653e-05 0.00801731
+1700 time 1.1909e-05 0.00764771
+1700 time 1.21665e-05 0.00793485
+1700 time 1.24454e-05 0.00795124
+1700 time 1.30057e-05 0.00800118
+1800 time 1.24907e-05 0.00783308
+1800 time 1.20497e-05 0.00791454
+1800 time 1.24955e-05 0.00791713
+1800 time 1.22094e-05 0.00795347
+1900 time 1.36495e-05 0.00793101
+1900 time 1.21522e-05 0.00797983
+1900 time 1.30534e-05 0.00811936
+1900 time 1.36805e-05 0.00814005
+2000 time 1.99485e-05 0.00792511
+2000 time 1.21498e-05 0.00795903
+2000 time 1.29914e-05 0.0080846
+2000 time 1.3628e-05 0.00813673
+2100 time 1.21021e-05 0.00789717
+2100 time 1.30439e-05 0.00794768
+2100 time 1.2877e-05 0.00796125
+2100 time 1.35899e-05 0.00798014
+2200 time 1.28126e-05 0.00795613
+2200 time 1.24788e-05 0.00797269
+2200 time 1.2517e-05 0.00799678
+2200 time 1.50132e-05 0.00812679
+2300 time 1.21999e-05 0.00790194
+2300 time 1.31083e-05 0.00788886
+2300 time 1.24812e-05 0.00798339
+2300 time 1.26719e-05 0.00799451
+2400 time 1.23215e-05 0.00796377
+2400 time 1.26457e-05 0.00795952
+2400 time 1.23549e-05 0.00802717
+2400 time 1.28412e-05 0.00797724
+2500 time 1.2064e-05 0.00791393
+2500 time 1.2753e-05 0.00796426
+2500 time 1.23405e-05 0.00795609
+2500 time 1.2567e-05 0.00798599
+2600 time 1.3783e-05 0.00793638
+2600 time 1.22523e-05 0.00798469
+2600 time 1.35803e-05 0.00797209
+2600 time 1.22786e-05 0.00803183
+2700 time 1.1878e-05 0.00791404
+2700 time 1.24812e-05 0.00789272
+2700 time 1.27053e-05 0.00793241
+2700 time 1.26338e-05 0.00791283
+2800 time 1.22404e-05 0.00795512
+2800 time 1.19829e-05 0.00793527
+2800 time 1.23835e-05 0.00794827
+2800 time 1.25051e-05 0.00799165
+2900 time 1.27459e-05 0.00789718
+2900 time 1.25265e-05 0.0079404
+2900 time 1.26934e-05 0.00795868
+2900 time 1.31416e-05 0.00799434
+3000 time 1.23453e-05 0.00791158
+3000 time 1.22428e-05 0.00794064
+3000 time 1.23858e-05 0.00796593
+3000 time 1.22333e-05 0.00800802
+3100 time 1.20473e-05 0.0079032
+3100 time 1.11651e-05 0.00789403
+3100 time 1.29557e-05 0.00808202
+3100 time 1.30057e-05 0.00812865
+3200 time 1.26386e-05 0.0079911
+3200 time 1.27935e-05 0.00796395
+3200 time 1.32608e-05 0.00816361
+3200 time 1.27149e-05 0.00861227
+3300 time 1.22905e-05 0.00795279
+3300 time 1.4174e-05 0.00811485
+3300 time 1.39785e-05 0.00810274
+3300 time 1.24693e-05 0.00819606
+3400 time 1.26076e-05 0.00789652
+3400 time 1.28794e-05 0.00795094
+3400 time 1.32608e-05 0.00803362
+3400 time 1.24526e-05 0.00813128
+3500 time 1.28174e-05 0.00795584
+3500 time 1.2331e-05 0.00806656
+3500 time 1.26505e-05 0.00807652
+3500 time 1.26863e-05 0.00815328
+3600 time 1.27316e-05 0.00790836
+3600 time 1.19972e-05 0.00809025
+3600 time 1.23763e-05 0.00812492
+3600 time 1.18995e-05 0.00825293
+3700 time 1.25504e-05 0.00797934
+3700 time 1.23096e-05 0.0079731
+3700 time 1.1816e-05 0.0081043
+3700 time 1.25027e-05 0.00814575
+3800 time 1.3113e-05 0.00796931
+3800 time 1.2753e-05 0.00800983
+3800 time 1.1673e-05 0.00815359
+3800 time 1.23119e-05 0.0081502
+3900 time 1.25217e-05 0.00794505
+3900 time 1.28984e-05 0.0079807
+3900 time 1.3032e-05 0.00804344
+3900 time 1.2157e-05 0.00816078
+4000 time 1.23501e-05 0.00791254
+4000 time 1.28865e-05 0.0079573
+4000 time 1.18732e-05 0.00803058
+4000 time 1.27721e-05 0.00817557
+[CUDA] worker0 cuda mem usage: 14.09 GB
+    [Step(average) Profiler Level 1 E2 S3999]
+        L1  sample           0.000000 | send           0.000000
+        L1  recv             0.000000 | copy           0.000000 | convert time 0.000000 | train  0.008010
+        L1  feature nbytes  400.00 MB | label nbytes 0.00 Bytes
+        L1  id nbytes      0.00 Bytes | graph nbytes 0.00 Bytes
+        L1  miss nbytes      15.42 MB | remote nbytes   98.67 MB
+        L1  num nodes               0 | num samples           0
+    [Step(average) Profiler Level 2 E2 S3999]
+        L2  shuffle     0.000000 | core sample  0.000000 | id remap        0.000000
+        L2  graph copy  0.000000 | id copy      0.000000 | cache feat copy 0.002386
+        L2  last layer sample time 0.000000 | size 0.000000
+    [Step(average) Profiler Level 3 E2 S3999]
+        L3  khop sample coo  0.000000 | khop sort coo      0.000000 | khop count edge     0.000000 | khop compact edge 0.000000
+        L3  walk sample coo  0.000000 | walk topk total    0.000000 | walk topk step1     0.000000 | walk topk step2   0.000000
+        L3  walk topk step3  0.000000 | walk topk step4    0.000000 | walk topk step5     0.000000
+        L3  walk topk step6  0.000000 | walk topk step7    0.000000
+        L3  remap unique     0.000000 | remap populate     0.000000 | remap mapnode       0.000000 | remap mapedge     0.000000
+        L3  cache get_index  0.000440 | cache copy_index   0.000000 | cache extract_miss  0.000000
+        L3  cache copy_miss  0.000000 | cache combine_miss 0.001927 | cache combine cache 0.001539 | cache combine remote 0.001320
+        L3  label extract  0.000000
+    [Profiler Level Percentiles E2 S3999]
+        p50.00_tail_logl2featcopy=0.002376
+        p90.00_tail_logl2featcopy=0.002446
+        p95.00_tail_logl2featcopy=0.002473
+        p99.00_tail_logl2featcopy=0.002982
+        p99.90_tail_logl2featcopy=0.004821

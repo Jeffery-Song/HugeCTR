@@ -7,7 +7,7 @@ durable_log = True
 
 cur_common_base = (ConfigList()
   # .override('root_path', ['/disk1/graph-learning-copy/samgraph/'])
-  .override('epoch', [2])
+  .override('epoch', [3])
   .override('gpu_num', [8])
   .override('logdir', ['run-logs'])
   .override('confdir', ['run-configs'])
@@ -31,45 +31,50 @@ Coll Cache
   .override('mock_embedding', [True])
 )
 
-cfg_list_collector.concat(cur_common_base.copy().hyper_override(
-  ["random_request", "alpha", "dataset", "custom_env"],
-  [
-    [True,  0.1,  RandomDataset("simple_power0.1_slot100", "SP_01_S100", 100000000, 100), ""],
-    # [True,  0.1,  RandomDataset("simple_power0.1_slot50", "SP_01_S50", 100000000, 50), ""],
-  ]
-  ).override('cache_percent', 
-    percent_gen(1,4,1) + 
-    percent_gen(6,8,2) + 
-    percent_gen(10, 30, 5) + 
+cfg_list_collector.concat(cur_common_base.copy()
+  .hyper_override(
+    ["random_request", "alpha", "dataset", "custom_env"],
+    [
+      [False,  None,  Dataset.criteo_tb, "SAMGRAPH_EMPTY_FEAT=24"],
+    ])
+  .override('cache_percent', 
+    [0.01] + 
+    [0.02, 0.04] + 
+    [0.08, 0.12] + 
+    # [0.10, 0.15] + 
     []
-  ))
-  # .override('cache_percent', [0.01] + percent_gen(10, 90, 5) + percent_gen(95, 100, 1)))
-
-cfg_list_collector.concat(cur_common_base.copy().hyper_override(
-  ["random_request", "alpha", "dataset", "custom_env"],
-  [
-    [False,  None,  Dataset.criteo_tb, "SAMGRAPH_EMPTY_FEAT=27"],
-  ]
-  ).override('cache_percent', [
-    # 0.0001, 0.0002, 0.0004, 0.0006, 0.0008, 0.001, 0.012, 0.015,
-    0.01,
-    0.05,
-    0.08,
-    0.10,
-    0.15,
-  ]))
-
-cfg_list_collector.hyper_override(
+  ).hyper_override(
   ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link"], 
   [
     [CachePolicy.clique_part, "DIRECT", ""],
+    [CachePolicy.clique_part, "", "MPSPhase"],
     [CachePolicy.rep_cache, "DIRECT", ""],
-    [CachePolicy.clique_part, "", "MPS"],
-    [CachePolicy.rep_cache, "", "MPS"],
-    [CachePolicy.coll_cache_asymm_link, "", "MPS"],
+    [CachePolicy.rep_cache, "", "MPSPhase"],
     [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
-    [CachePolicy.sok, "", ""],
-  ])
+  ]))
+
+
+cfg_list_collector.concat(cur_common_base.copy()
+  .hyper_override(
+    ["random_request", "alpha", "dataset", "custom_env"],
+    [
+      [True,  0.2,  RandomDataset("simple_power0.2_slot100_C800m", "SP_02_S100_C800m", 800000000, 100), "SAMGRAPH_EMPTY_FEAT=24"],
+    ])
+  .override('cache_percent', 
+    [0.01] + 
+    [0.02, 0.04] + 
+    [0.08, 0.12] + 
+    # [0.10, 0.15] + 
+    []
+  ).hyper_override(
+  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link"], 
+  [
+    [CachePolicy.clique_part, "DIRECT", ""],
+    [CachePolicy.clique_part, "", "MPSPhase"],
+    [CachePolicy.rep_cache, "DIRECT", ""],
+    [CachePolicy.rep_cache, "", "MPSPhase"],
+    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
+  ]))
 
 # selector for fast validation
 (cfg_list_collector
@@ -96,9 +101,15 @@ cfg_list_collector.hyper_override(
 
 if __name__ == '__main__':
   from sys import argv
+  retry = False
+  fail_only = False
   for arg in argv[1:]:
     if arg == '-m' or arg == '--mock':
       do_mock = True
     elif arg == '-i' or arg == '--interactive':
       durable_log = False
-  cfg_list_collector.run(do_mock, durable_log)
+    elif arg == '-r' or arg == '--retry':
+      retry = True
+    elif arg == '-f' or arg == '--fail':
+      fail_only = True
+  cfg_list_collector.run(do_mock, durable_log, retry=retry, fail_only=fail_only)
