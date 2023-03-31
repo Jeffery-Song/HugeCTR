@@ -43,8 +43,8 @@ set datafile sep '\t'
 set output outputfname
 
 # set terminal svg "Helvetica,16" enhance color dl 2 background rgb "white"
-set terminal svg size 1400,700 font "Helvetica,16" enhanced background rgb "white" dl 2
-set multiplot layout 2,4
+set terminal svg size 700,600 font "Helvetica,16" enhanced background rgb "white" dl 2
+set multiplot layout 2,2
 
 set style fill solid border -2
 set pointsize 1
@@ -97,22 +97,21 @@ set grid ytics
 
 cache_percent_lb=0
 
-app_str = "dlrm dcn dlrm dcn"
-ds_str = "SP_01_S100 SP_01_S100 CR CR"
+app_str = "dlrm dlrm dcn dcn"
+ds_str = "SP_02_S100_C800m CR SP_02_S100_C800m CR"
 bs_str = ".* .*"
 
 do for [i=1:words(app_str)]  {
 app = word(app_str, i)
 ds = word(ds_str, i)
 bs = word(bs_str, i)
-set title app." ".ds." ".bs
+set title app." ".ds." ".bs offset 0,-1
 print(cmd_filter_dat_by_policy(app, ds, bs, "^Cliq"))
 plot cmd_filter_dat_by_policy(app, ds, bs, "^Rep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "Rep" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSRep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 1 lc 3 title "MPSRep" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseRep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 3 title "MPSRep" \
     ,cmd_filter_dat_by_policy(app, ds, bs, "^Cliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 2 title "CliqPart" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSCliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 1 lc 2 title "MPSCliqPart" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "CollAsymm" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 3 lc 1 title "CollAsymmPhase" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseCliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 2 title "MPSCliqPart" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "CollAsymmPhase" \
     ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):((column(col_step_time_train_total))*1000) w lp ps 0.5 lw 1 lc "black" title "APP" \
 }
 
