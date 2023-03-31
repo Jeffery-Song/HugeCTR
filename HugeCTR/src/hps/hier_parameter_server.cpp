@@ -1115,6 +1115,7 @@ CollCacheParameterServer::CollCacheParameterServer(const parameter_server_config
   HCTR_LOG(ERROR, WORLD, "coll ps creation done\n");
 }
 
+#ifdef DEAD_CODE
 void CollCacheParameterServer::init_per_replica(int global_replica_id,
                                                 IdType* ranking_nodes_list_ptr,
                                                 IdType* ranking_nodes_freq_list_ptr,
@@ -1139,6 +1140,31 @@ void CollCacheParameterServer::init_per_replica(int global_replica_id,
 
   this->coll_cache_ptr_->build_v2(global_replica_id, ranking_nodes_list_ptr,
                                   ranking_nodes_freq_list_ptr, num_key, gpu_mem_allocator, cpu_data,
+                                  dtype, dim, cache_percentage, stream);
+}
+#endif
+void CollCacheParameterServer::init_per_replica(int global_replica_id,
+                                                ContFreqBuf* freq_rank,
+                                                std::function<MemHandle(size_t)> gpu_mem_allocator,
+                                                cudaStream_t cu_stream) {
+  void* cpu_data = raw_data_holder->getvectors();
+  double cache_percentage = ps_config_.inference_params_array[0].cache_size_percentage;
+  size_t dim = ps_config_.inference_params_array[0].embedding_vecsize_per_table[0];
+  // hps may be used in hugectr or tensorflow, so we don't know how to allocate memory;
+  size_t num_key = raw_data_holder->getkeycount();
+  HCTR_CHECK_HINT(num_key == ps_config_.inference_params_array[0].max_vocabulary_size[0],
+                  "num key from file must equal with max vocabulary: %d", num_key);
+  auto stream = reinterpret_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
+  HCTR_LOG(ERROR, WORLD, "Calling build_v2\n");
+
+  {
+    int value;
+    cudaDeviceGetAttribute(&value, cudaDevAttrCanUseHostPointerForRegisteredMem,
+                           coll_cache_lib::common::RunConfig::device_id_list[global_replica_id]);
+    HCTR_LOG_S(ERROR, WORLD) << "cudaDevAttrCanUseHostPointerForRegisteredMem is " << value << "\n";
+  }
+
+  this->coll_cache_ptr_->build_v2(global_replica_id, freq_rank, num_key, gpu_mem_allocator, cpu_data,
                                   dtype, dim, cache_percentage, stream);
 }
 

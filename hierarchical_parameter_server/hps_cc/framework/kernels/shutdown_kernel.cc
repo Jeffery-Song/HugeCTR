@@ -27,12 +27,44 @@ namespace tensorflow {
 using GPUDevice = Eigen::GpuDevice;
 using CPUDevice = Eigen::ThreadPoolDevice;
 
+namespace {
+
+std::string ToReadableSize(size_t nbytes) {
+  constexpr size_t kGigabytes = 1ull << 30;
+  constexpr size_t kMegabytes = 1ull << 20;
+  constexpr size_t kKilobytes = 1ull << 10;
+  char buf[100];
+  if (nbytes > kGigabytes) {
+    double new_size = (float)nbytes / kGigabytes;
+    sprintf(buf, "%.2lf GB", new_size);
+    return std::string(buf);
+  } else if (nbytes > kMegabytes) {
+    double new_size = (float)nbytes / kMegabytes;
+    sprintf(buf, "%.2lf MB", new_size);
+    return std::string(buf);
+  } else if (nbytes > kKilobytes) {
+    double new_size = (float)nbytes / kKilobytes;
+    sprintf(buf, "%.2lf KB", new_size);
+    return std::string(buf);
+  } else {
+    double new_size = (float)nbytes;
+    sprintf(buf, "%.2lf Bytes", new_size);
+    return std::string(buf);
+  }
+}
+};
+
 template <typename Device>
 class Shutdown : public OpKernel {
  public:
   explicit Shutdown(OpKernelConstruction* ctx) : OpKernel(ctx) {}
   void Compute(OpKernelContext* ctx) override {
     try {
+      size_t free, total;
+      cudaMemGetInfo(&free, &total);
+      std::stringstream ss;
+      ss << "[CUDA] worker" << std::getenv("HPS_WORKER_ID") << " cuda mem usage: " << ToReadableSize(total  - free) << "\n";
+      std::cout << ss.str();
       HierarchicalParameterServer::Facade::instance()->report_cache();
       if (std::string(std::getenv("HPS_WORKER_ID")) == "0") {
         HierarchicalParameterServer::Facade::instance()->report_avg();

@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
 list(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmakes)
 
-option(CLANGFORMAT "Setup clangformat target" ON)
+option(CLANGFORMAT "Setup clangformat target" OFF)
 if(CLANGFORMAT)
   include(ClangFormat)
   file(GLOB_RECURSE HUGECTR_SRC

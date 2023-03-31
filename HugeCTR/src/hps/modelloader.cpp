@@ -70,14 +70,22 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
       size_t empty_feat_num_key = 1 << std::stoull(GetEnv("SAMGRAPH_EMPTY_FEAT"));
       vec_file_size_in_byte = sizeof(float) * empty_feat_num_key * dim;
     }
-    std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
+    // std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
+    std::string shm_name = "SAMG_FEAT_SHM";
     HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr,
                     "Env HPS_WORKER_ID must be set before loading hps lib\n");
     int fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
     HCTR_CHECK_HINT(fd != -1, "shm open vec file shm failed\n");
-    int ret = ftruncate(fd, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff);
-    HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
-    embedding_table_->vectors_ptr = mmap(nullptr, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff,
+    size_t padded_size = (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff;
+    {
+      struct stat st;
+      fstat(fd, &st);
+      if (st.st_size < padded_size) {
+        int ret = ftruncate(fd, padded_size);
+        HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
+      }
+    }
+    embedding_table_->vectors_ptr = mmap(nullptr, padded_size,
                                          PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
     HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
     embedding_table_->umap_len = vec_file_size_in_byte;
@@ -119,14 +127,22 @@ void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std
   }
 
   /** Impl 1*/
-  std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
+  // std::string shm_name = std::string("HPS_VEC_FILE_SHM_") + getenv("USER");
+  std::string shm_name = "SAMG_FEAT_SHM";
   HCTR_CHECK_HINT(getenv("HPS_WORKER_ID") != nullptr,
                   "Env HPS_WORKER_ID must be set before loading hps lib\n");
   int fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
   HCTR_CHECK_HINT(fd != -1, "shm open vec file shm failed\n");
-  int ret = ftruncate(fd, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff);
-  HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
-  embedding_table_->vectors_ptr = mmap(nullptr, (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff,
+  size_t padded_size = (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff;
+  {
+    struct stat st;
+    fstat(fd, &st);
+    if (st.st_size < padded_size) {
+      int ret = ftruncate(fd, padded_size);
+      HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
+    }
+  }
+  embedding_table_->vectors_ptr = mmap(nullptr, padded_size,
                                        PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
   HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
   embedding_table_->umap_len = vec_file_size_in_byte;

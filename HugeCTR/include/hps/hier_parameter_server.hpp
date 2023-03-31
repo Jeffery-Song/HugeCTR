@@ -117,8 +117,12 @@ class CollCacheParameterServer {
   CollCacheParameterServer(const parameter_server_config& ps_config);
   CollCacheParameterServer(CollCacheParameterServer const&) = delete;
   CollCacheParameterServer& operator=(CollCacheParameterServer const&) = delete;
+#ifdef DEAD_CODE
   void init_per_replica(int global_replica_id, IdType* ranking_nodes_list_ptr,
                         IdType* ranking_nodes_freq_list_ptr,
+                        std::function<MemHandle(size_t)> gpu_mem_allocator, cudaStream_t stream);
+#endif
+  void init_per_replica(int global_replica_id, coll_cache_lib::common::ContFreqBuf* freq_rank,
                         std::function<MemHandle(size_t)> gpu_mem_allocator, cudaStream_t stream);
 
   // virtual void update_database_per_model(const InferenceParams& inference_params);
@@ -147,12 +151,22 @@ class CollCacheParameterServer {
     auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + replica_id;
     this->coll_cache_ptr_->add_epoch_profile_value(key, static_cast<LogEpochItem>(item), val);
   }
+#ifdef DEAD_CODE
   inline void refresh(int global_replica_id, IdType* ranking_nodes_list_ptr,
-               IdType* ranking_nodes_freq_list_ptr, cudaStream_t cu_stream = nullptr, bool foreground = false) {
+                      IdType* ranking_nodes_freq_list_ptr, cudaStream_t cu_stream = nullptr,
+                      bool foreground = false) {
     auto stream = static_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
-    this->coll_cache_ptr_->refresh(global_replica_id, ranking_nodes_list_ptr, ranking_nodes_freq_list_ptr, stream, foreground);
+    this->coll_cache_ptr_->refresh(global_replica_id, ranking_nodes_list_ptr,
+                                   ranking_nodes_freq_list_ptr, stream, foreground);
   }
-  inline parameter_server_config& ref_ps_config () {return ps_config_; }
+#endif
+  inline void refresh(int global_replica_id, coll_cache_lib::common::ContFreqBuf* freq_rank, cudaStream_t cu_stream = nullptr,
+                      bool foreground = false) {
+    auto stream = static_cast<coll_cache_lib::common::StreamHandle>(cu_stream);
+    this->coll_cache_ptr_->refresh(global_replica_id, freq_rank, stream, foreground);
+  }
+
+  inline parameter_server_config& ref_ps_config() { return ps_config_; }
 
   void report_avg();
   static void barrier();

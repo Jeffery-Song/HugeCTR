@@ -196,12 +196,12 @@ void MathUtil<T>::CubSortPairs(const T* d_keys_in, const uint32_t* d_values_in, 
   void* d_temp_storage = NULL;
   size_t temp_storage_bytes = 0;
   cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out,
-                                  d_values_in, d_values_out, num_items, 0, sizeof(T)*8, stream);
+                                  d_values_in, d_values_out, num_items, 0, sizeof(T) * 8, stream);
   // Allocate temporary storage
   cudaMalloc(&d_temp_storage, temp_storage_bytes);
   // Run sorting operation
   cub::DeviceRadixSort::SortPairs(d_temp_storage, temp_storage_bytes, d_keys_in, d_keys_out,
-                                  d_values_in, d_values_out, num_items, 0, sizeof(T)*8, stream);
+                                  d_values_in, d_values_out, num_items, 0, sizeof(T) * 8, stream);
   cudaStreamSynchronize(stream);
   cudaFree(d_temp_storage);
 }

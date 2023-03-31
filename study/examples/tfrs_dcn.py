@@ -298,4 +298,6 @@ class DCNHPS(tf.keras.models.Model):
     input_dense = inputs[1]
 
     sparse_embeddings = self._embedding_layer(input_cat)
+    input_dense = hps.hps_lib.nop_dep(dense=input_dense, emb = sparse_embeddings)
+
     return self.__non_lookup(sparse_embeddings, input_dense)

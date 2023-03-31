@@ -175,6 +175,7 @@ class DLRMHPS(tf.keras.models.Model):
         
         embedding_vector = self.lookup_layer(input_cat)
         embedding_vector = self.reshape_layer0(embedding_vector)
+        input_dense = hps.hps_lib.nop_dep(dense=input_dense, emb = embedding_vector)
         dense_x = self.bot_nn(input_dense)
         concat_features = self.concat1([embedding_vector, self.reshape_layer1(dense_x)])
         
