@@ -59,10 +59,11 @@ def grep_from(fname, pattern, line_ctx=[0,0]):
         if p.match(lines[i]):
           ret_lines += lines[max(0, i - line_ctx[0]):min(len(lines), i + line_ctx[1] + 1)]
     return ret_lines
+  except FileNotFoundError as e:
+    return []
   except Exception as e:
     print("error when ", fname)
     print(traceback.format_exc())
-    traceback.print_exc()
     return []
 
 def filter_from(line_list, pattern):
