@@ -35,6 +35,7 @@ import sparse_operation_kit.tf
 from sparse_operation_kit.core.initialize import Init
 from sparse_operation_kit.core.initialize import Shutdown
 from sparse_operation_kit.core.initialize import SetStepProfileValue
+from sparse_operation_kit.core.initialize import NopDep
 from sparse_operation_kit.core.context_scope import OptimizerScope
 from sparse_operation_kit.embeddings.distributed_embedding import DistributedEmbedding
 from sparse_operation_kit.embeddings.all2all_dense_embedding import All2AllDenseEmbedding
