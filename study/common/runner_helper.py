@@ -196,6 +196,7 @@ class RunConfig:
     self.empty_feat             = 25
     self.scalability_test       = False
     self.hps_cache_statistic    = False
+    self.coll_cache_scale       = 0
 
   def get_mock_sparse_name(self):
     if self.mock_embedding:
@@ -216,6 +217,8 @@ class RunConfig:
       std_out_fname += '_concurrent_impl_' + self.coll_cache_concurrent_link
     if self.scalability_test == True:
       std_out_fname += f'_gpu_num_{self.gpu_num}'
+    if self.coll_cache_scale != 0:
+      std_out_fname += f'_scale_nb_{self.coll_cache_scale}'
     return std_out_fname
 
   def get_conf_fname(self):
@@ -241,6 +244,8 @@ class RunConfig:
       msg += f' concurrent_link={self.coll_cache_concurrent_link}'
     if self.scalability_test == True:
       msg += f' gpu_num={self.gpu_num}'
+    if self.coll_cache_scale != "":
+      msg += f' scale_nb={self.coll_cache_scale}'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
@@ -249,6 +254,8 @@ class RunConfig:
     cmd_line += f'HUGECTR_LOG_LEVEL=0 '
     cmd_line += f'TF_CPP_MIN_LOG_LEVEL=2 '
     cmd_line += f'COLL_NUM_REPLICA={self.gpu_num} '
+    if self.coll_cache_scale != 0:
+      cmd_line += f'COLL_CACHE_SCALE={self.coll_cache_scale} '
     if self.coll_cache_no_group != "":
       cmd_line += f'SAMGRAPH_COLL_CACHE_NO_GROUP={self.coll_cache_no_group} '
     if self.coll_cache_concurrent_link != "":
@@ -366,14 +373,14 @@ class RunConfig:
     self.handle_mock_params()
     os.system('mkdir -p {}'.format(self.confdir))
     previous_succeed = False
+    try:
+      with open(self.get_conf_fname(), "r") as conf:
+        js = json.load(conf)
+      if 'succeed' in js and js['succeed']:
+        previous_succeed = True
+    except Exception as e:
+      pass
     if fail_only:
-      try:
-        with open(self.get_conf_fname(), "r") as conf:
-          js = json.load(conf)
-        if 'succeed' in js and js['succeed']:
-          previous_succeed = True
-      except Exception as e:
-        pass
       if previous_succeed:
         if callback != None:
           callback(self)
