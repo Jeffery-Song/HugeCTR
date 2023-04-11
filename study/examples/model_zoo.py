@@ -244,6 +244,7 @@ class DLRMSOK(tf.keras.models.Model):
         input_cat = self.reshape_layer(input_cat)
         embedding_vector = self.lookup_layer(input_cat, training)
         embedding_vector = self.reshape_layer0(embedding_vector)
+        input_dense = sok.kit_lib.nop_dep(dense=input_dense, emb = embedding_vector)
         dense_x = self.bot_nn(input_dense)
         concat_features = self.concat1([embedding_vector, self.reshape_layer1(dense_x)])
         
