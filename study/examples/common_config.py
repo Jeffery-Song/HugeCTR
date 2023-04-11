@@ -34,6 +34,7 @@ def get_default_common_config(**kwargs):
     default_common_config["tf_key_type"] = tf.int32
     default_common_config["tf_vector_type"] = tf.float32
     default_common_config["ps_config_file"] = ""
+    default_common_config["cache_percent"] = 0
     default_common_config["dense_model_path"] = "/nvme/songxiaoniu/hps-model/dlrm_criteo/dense.model"
     default_common_config["dataset_path"] = "/nvme/songxiaoniu/hps-dataset/criteo_like_uniform"
 
@@ -58,6 +59,8 @@ def add_common_arguments(argparser, run_config):
                             default=run_config['global_batch_size'])
     argparser.add_argument('--iteration_per_epoch', type=int,
                             default=run_config['iteration_per_epoch'])   
+    argparser.add_argument('--cache_percent', type=float,
+                            default=run_config['cache_percent'])                        
     argparser.add_argument('--coll_cache_enable_iter', type=int,
                             default=run_config['coll_cache_enable_iter'])                        
     argparser.add_argument('--coll_cache_refresh_iter', type=int,

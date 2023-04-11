@@ -202,6 +202,7 @@ class DLRMSOK(tf.keras.models.Model):
                  self_interaction,
                  tf_key_type,
                  tf_vector_type,
+                 use_hashtable = False,
                  **kwargs):
         super(DLRMSOK, self).__init__(**kwargs)
         
@@ -213,13 +214,14 @@ class DLRMSOK(tf.keras.models.Model):
         self.tf_key_type = tf_key_type
         self.tf_vector_type = tf_vector_type
         self.max_vocabulary_size_per_gpu = max_vocabulary_size_per_gpu
- 
+
         self.lookup_layer = sok.All2AllDenseEmbedding(
                                                         max_vocabulary_size_per_gpu=self.max_vocabulary_size_per_gpu,
                                                         embedding_vec_size=self.embed_vec_size,
                                                         slot_num=self.slot_num,
                                                         key_dtype=tf.uint32,
-                                                        nnz_per_slot=1, use_hashtable=False)
+                                                        trainable=False,
+                                                        nnz_per_slot=1, use_hashtable=use_hashtable)
 
         self.bot_nn = MLP(arch_bot, name = "bottom", out_activation='relu')
         self.top_nn = MLP(arch_top, name = "top", out_activation='sigmoid')

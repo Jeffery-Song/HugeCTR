@@ -105,6 +105,7 @@ class CachePolicy(Enum):
   clique_part=14
   clique_part_by_degree=15
   sok = 16
+  hps = 17
 
   def __str__(self):
     name_list = [
@@ -124,7 +125,8 @@ class CachePolicy(Enum):
       'coll_asymm',
       'cliq_part',
       'cliq_part_degree',
-      'sok'
+      'sok',
+      'hps',
     ]
     return name_list[self.value]
   
@@ -146,7 +148,8 @@ class CachePolicy(Enum):
       "CollAsymm",
       "CliqPart",
       "CliqPartDeg",
-      "SOK"
+      "SOK",
+      "HPS",
     ]
     return policy_str_short[self.value]
 
@@ -197,6 +200,7 @@ class RunConfig:
     self.scalability_test       = False
     self.hps_cache_statistic    = False
     self.coll_cache_scale       = 0
+    self.sok_use_hashtable      = False
 
   def get_mock_sparse_name(self):
     if self.mock_embedding:
@@ -285,13 +289,17 @@ class RunConfig:
       cmd_line += f' --dense_model_path {self.model_root_path}dense.model'
 
     cmd_line += f' --max_vocabulary_size {self.max_vocabulary_size}'
+    cmd_line += f' --cache_percent {self.cache_percent}'
     if self.random_request:
-      cmd_line += f' --random_request {self.random_request} '
+      cmd_line += f' --random_request '
       cmd_line += f' --alpha {self.alpha} '
     else:
       cmd_line += f' --dataset_path {self.dataset_root_path + str(self.dataset)}'
     if self.coll_cache_policy != CachePolicy.sok:
       cmd_line += f' --ps_config_file {self.get_conf_fname()}'
+    else:
+      if self.sok_use_hashtable:
+        cmd_line += f' --sok_use_hashtable '
 
     cmd_line += f' --iteration_per_epoch {self.iteration_per_epoch}'
     cmd_line += f' --coll_cache_enable_iter {self.coll_cache_enable_iter}'
@@ -312,7 +320,8 @@ class RunConfig:
 
   # some members are lazy initialized
   def handle_mock_params(self):
-    if self.system == System.hps: self.coll_cache_enable_iter = 0
+    # if self.system == System.hps: self.coll_cache_enable_iter = 0
+    if self.coll_cache_policy in [CachePolicy.hps, CachePolicy.sok]: self.coll_cache_enable_iter = 0
     self.iter_num = self.epoch * self.iteration_per_epoch + self.coll_cache_enable_iter
     self.max_vocabulary_size = self.dataset.vocabulary
     self.slot_num = self.dataset.slot_num
@@ -350,7 +359,7 @@ class RunConfig:
     conf['models'][0]['gpucacheper'] = self.cache_percent
 
     conf['models'][0]['max_vocabulary_size'] = [self.max_vocabulary_size]
-    if self.system == System.hps: conf['use_coll_cache'] = False
+    if self.coll_cache_policy == CachePolicy.hps: conf['use_coll_cache'] = False
     else: conf['use_coll_cache'] = True
     conf['coll_cache_enable_iter'] = self.coll_cache_enable_iter
     conf['coll_cache_refresh_iter'] = self.coll_cache_refresh_iter

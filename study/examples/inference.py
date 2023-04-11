@@ -2,11 +2,18 @@ import argparse
 import time
 import os
 proxy = None
-if "http_proxy" in os.environ:
-    proxy = os.environ["http_proxy"]
-    del os.environ["http_proxy"]
-import hierarchical_parameter_server as hps
-import sparse_operation_kit as sok
+def handle_proxy(proxy_env):
+    if proxy_env in os.environ:
+        proxy = os.environ[proxy_env]
+        del os.environ[proxy_env]
+handle_proxy("http_proxy")
+handle_proxy("https_proxy")
+handle_proxy("all_proxy")
+handle_proxy("HTTP_PROXY")
+handle_proxy("HTTPS_PROXY")
+handle_proxy("ALL_PROXY")
+# import hierarchical_parameter_server as hps
+# import sparse_operation_kit as sok
 import numpy as np
 import tensorflow as tf
 from tqdm import tqdm
@@ -21,7 +28,8 @@ def parse_args(default_run_config):
     argparser = argparse.ArgumentParser("RM INFERENCE")
     add_common_arguments(argparser, default_run_config)
 
-    argparser.add_argument('--random_request', type=bool, default=False)
+    argparser.add_argument('--sok_use_hashtable', dest='sok_use_hashtable', action='store_true')
+    argparser.add_argument('--random_request', dest='random_request', action='store_true')
     argparser.add_argument('--alpha', type=float, default=None)
     argparser.add_argument('--max_vocabulary_size', type=int, default=100000000)
 
@@ -66,11 +74,15 @@ def prepare_model(args):
     if args["dense_model_path"] == "plain":
         if args["coll_cache_policy"] == "sok":
             from model_zoo import DLRMSOK
-            model = DLRMSOK("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
+            if args['sok_use_hashtable']:
+                sok_vocab=int(args["max_vocabulary_size"] * args['cache_percent'])
+            else:
+                sok_vocab=args["max_vocabulary_size"] // args["gpu_num"]
+            model = DLRMSOK("mean", sok_vocab, args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
                 arch_bot = [256, 128, args["embed_vec_size"]],
                 arch_top = [256, 128, 1],
                 tf_key_type = args["tf_key_type"], tf_vector_type = args["tf_vector_type"], 
-                self_interaction=False)
+                self_interaction=False, use_hashtable=args['sok_use_hashtable'])
         else:
             from model_zoo import DLRMHPS
             model = DLRMHPS("mean", args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"], 
@@ -224,10 +236,22 @@ print(os.environ, flush=True)
 args = get_run_config()
 proc_list = [None for _ in range(args["gpu_num"])]
 barrier = multiprocessing.Barrier(args["gpu_num"])
+
+if args["coll_cache_policy"] == "sok":
+    import sparse_operation_kit as sok
+    Shutdown = sok.Shutdown
+    SetStepProfileValue = sok.SetStepProfileValue
+    kLogL1TrainTime = sok.kLogL1TrainTime
+else:
+    import hierarchical_parameter_server as hps
+    Shutdown = hps.Shutdown
+    SetStepProfileValue = hps.SetStepProfileValue
+    kLogL1TrainTime = hps.kLogL1TrainTime
 for i in range(args["gpu_num"]):
     proc_list[i] = multiprocessing.Process(target=proc_func, args=(i,))
     proc_list[i].start()
-ret_code = hps.wait_one_child()
+from hierarchical_parameter_server import wait_one_child
+ret_code = wait_one_child()
 if ret_code != 0:
     for i in range(args["gpu_num"]):
         proc_list[i].kill()
