@@ -188,6 +188,7 @@ class RunConfig:
     self.max_vocabulary_size    = None
     self.coll_cache_enable_iter = 1000
     self.coll_cache_refresh_iter = 1000
+    self.coll_cache_refresh_seq_bucket_sz = 1000
     self.coll_cache_enable_refresh = False
     self.iteration_per_epoch    = 1000
     # env variables
@@ -271,6 +272,8 @@ class RunConfig:
     if self.coll_cache_policy == CachePolicy.sok:
       cmd_line += f'ITERATION_PER_EPOCH={self.iteration_per_epoch} '
       cmd_line += f'EPOCH={self.epoch} '
+    if self.coll_cache_enable_refresh:
+      cmd_line += f'PROFILE_SEQ_BUCKET_SZ={self.coll_cache_refresh_seq_bucket_sz} '
 
     cmd_line += f'python ../examples/inference.py'
     cmd_line += f' --gpu_num {self.gpu_num} '

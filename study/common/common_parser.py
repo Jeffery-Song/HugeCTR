@@ -105,6 +105,7 @@ class BenchInstance:
       self.prepare_coll_cache(cfg)
       self.prepare_profiler_log(cfg)
       self.prepare_config(cfg)
+      self.prepare_percentage_log(cfg)
       self.vals['optimal_hit_percent'] = self.get_optimal()
     except Exception as e:
       print("error when ", fname)
@@ -293,6 +294,17 @@ class BenchInstance:
         assert(key not in result_map)
         result_map[key] = val
     return result_map
+  
+  def prepare_percentage_log(self, cfg):
+    # percentage_pattern = r'^p([0-9\.]+)_(.*)'
+    percentage_pattern = r'^        p([0-9\.]+)_([^=]*)=([0-9\.]+)'
+    line_list = grep_from(cfg.get_log_fname() + '.log', percentage_pattern)
+    for i in range(0, len(line_list)):
+      line = line_list[i]
+      m = re.match(percentage_pattern, line)
+      key = m.group(2) + '_' + m.group(1)
+      val = m.group(3)
+      self.vals[key] = val
 
   def prepare_profiler_log(self, cfg):
     line_list = grep_from(cfg.get_log_fname() + '.log', r'^(    \[Step|        L|    \[Init).*')
