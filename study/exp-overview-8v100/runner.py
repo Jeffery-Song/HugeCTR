@@ -4,6 +4,7 @@ from runner_helper import System, Model, Dataset, CachePolicy, RunConfig, Config
 
 do_mock = False
 durable_log = True
+fail_only = False
 
 cur_common_base = (ConfigList()
   # .override('root_path', ['/disk1/graph-learning-copy/samgraph/'])
@@ -13,6 +14,7 @@ cur_common_base = (ConfigList()
   .override('confdir', ['run-configs'])
   .override('profile_level', [3])
   .override('multi_gpu', [True])
+  .override('coll_cache_scale', [16])
   .override('model', [
     Model.dlrm, 
     Model.dcn,
@@ -46,20 +48,26 @@ cfg_list_collector.concat(cur_common_base.copy().hyper_override(
 cfg_list_collector.concat(cur_common_base.copy().hyper_override(
   ["random_request", "alpha", "dataset", "custom_env"],
   [
-    [True,  0.1,  RandomDataset("simple_power0.1_slot100", "SP_01_S100", 100000000, 100), ""],
+    [True,  0.2,  RandomDataset("simple_power0.2_slot100_C800m", "SP_02_S100_C800m", 800000000, 100), "SAMGRAPH_EMPTY_FEAT=24"],
+    # [True,  0.1,  RandomDataset("simple_power0.1_slot100", "SP_01_S100", 100000000, 100), ""],
     # [True,  0.1,  RandomDataset("simple_power0.1_slot50", "SP_01_S50", 100000000, 50), ""],
   ]
-  ).override('cache_percent', percent_gen(1,4,1) + percent_gen(5, 30, 5)))
+  ).override('cache_percent', [
+    0.02, 
+    # 0.04,
+  ]))
 
 cfg_list_collector.hyper_override(
-  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link"], 
+  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link", "sok_use_hashtable"], 
   [
-    [CachePolicy.clique_part, "DIRECT", ""],
-    [CachePolicy.clique_part, "", "MPS"],
-    [CachePolicy.rep_cache, "DIRECT", ""],
-    [CachePolicy.rep_cache, "", "MPS"],
-    [CachePolicy.coll_cache_asymm_link, "", "MPS"],
-    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
+    [CachePolicy.clique_part, "DIRECT", "", None],
+    [CachePolicy.clique_part, "", "MPSPhase", None],
+    [CachePolicy.rep_cache, "DIRECT", "", None],
+    [CachePolicy.rep_cache, "", "MPSPhase", None],
+    [CachePolicy.coll_cache_asymm_link, "DIRECT", "", None],
+    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase", None],
+    [CachePolicy.hps, "", "", None],
+    [CachePolicy.sok, "", "", True],
   ])
 
 # selector for fast validation
@@ -92,4 +100,6 @@ if __name__ == '__main__':
       do_mock = True
     elif arg == '-i' or arg == '--interactive':
       durable_log = False
-  cfg_list_collector.run(do_mock, durable_log)
+    elif arg == '-f' or arg == '--fail':
+      fail_only = True
+  cfg_list_collector.run(do_mock, durable_log, fail_only=fail_only)
