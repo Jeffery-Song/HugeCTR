@@ -14,9 +14,10 @@ cur_common_base = (ConfigList()
   .override('confdir', ['run-configs'])
   .override('profile_level', [3])
   .override('multi_gpu', [True])
+  .override('coll_cache_scale', [16])
   .override('model', [
     Model.dlrm, 
-    # Model.dcn,
+    Model.dcn,
   ])
   )
 
@@ -44,13 +45,16 @@ cfg_list_collector.concat(cur_common_base.copy().hyper_override(
     [0.02] + 
     []
   ).hyper_override(
-  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link"], 
+  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link", "sok_use_hashtable"], 
   [
-    [CachePolicy.clique_part, "DIRECT", ""],
-    [CachePolicy.clique_part, "", "MPSPhase"],
-    [CachePolicy.rep_cache, "DIRECT", ""],
-    [CachePolicy.rep_cache, "", "MPSPhase"],
-    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
+    [CachePolicy.clique_part, "DIRECT", "", None],
+    [CachePolicy.clique_part, "", "MPSPhase", None],
+    [CachePolicy.rep_cache, "DIRECT", "", None],
+    [CachePolicy.rep_cache, "", "MPSPhase", None],
+    [CachePolicy.coll_cache_asymm_link, "DIRECT", "", None],
+    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase", None],
+    [CachePolicy.hps, "", "", None],
+    [CachePolicy.sok, "", "", True],
   ]))
 
 cfg_list_collector.concat(cur_common_base.copy().hyper_override(
@@ -67,13 +71,16 @@ cfg_list_collector.concat(cur_common_base.copy().hyper_override(
     [0.02] + 
     []
   ).hyper_override(
-  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link"], 
+  ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link", "sok_use_hashtable"], 
   [
-    [CachePolicy.clique_part, "DIRECT", ""],
-    [CachePolicy.clique_part, "", "MPSPhase"],
-    [CachePolicy.rep_cache, "DIRECT", ""],
-    [CachePolicy.rep_cache, "", "MPSPhase"],
-    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
+    [CachePolicy.clique_part, "DIRECT", "", None],
+    [CachePolicy.clique_part, "", "MPSPhase", None],
+    [CachePolicy.rep_cache, "DIRECT", "", None],
+    [CachePolicy.rep_cache, "", "MPSPhase", None],
+    [CachePolicy.coll_cache_asymm_link, "DIRECT", "", None],
+    [CachePolicy.coll_cache_asymm_link, "", "MPSPhase", None],
+    [CachePolicy.hps, "", "", None],
+    [CachePolicy.sok, "", "", True],
   ]))
 
 # selector for fast validation
@@ -100,6 +107,7 @@ cfg_list_collector.concat(cur_common_base.copy().hyper_override(
 if __name__ == '__main__':
   from sys import argv
   retry = False
+  fail_only = False
   for arg in argv[1:]:
     if arg == '-m' or arg == '--mock':
       do_mock = True
@@ -107,4 +115,6 @@ if __name__ == '__main__':
       durable_log = False
     elif arg == '-r' or arg == '--retry':
       retry = True
-  cfg_list_collector.run(do_mock, durable_log, retry=retry)
+    elif arg == '-f' or arg == '--fail':
+      fail_only = True
+  cfg_list_collector.run(do_mock, durable_log, retry=retry, fail_only=fail_only)
