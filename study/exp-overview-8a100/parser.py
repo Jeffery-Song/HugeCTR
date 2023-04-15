@@ -12,10 +12,10 @@ selected_col += ['policy_impl', 'cache_percentage', 'global_batch_size']
 # selected_col += ['unsupervised']
 selected_col += ['dataset_short', 'coll_cache:solve_time']
 
-selected_col += ['Step(average) L1 sample']
-selected_col += ['Step(average) L1 recv']
 selected_col += ['Step(average) L2 feat copy']
 selected_col += ['Step(average) L1 train total']
+selected_col += ['Step(average) L1 sample']
+selected_col += ['Step(average) L1 recv']
 selected_col += ['Time.L','Time.R','Time.C']
 selected_col += ['Wght.L','Wght.R','Wght.C']
 selected_col += ['optimal_local_rate','optimal_remote_rate','optimal_cpu_rate']
@@ -98,8 +98,8 @@ if __name__ == '__main__':
       inst.vals['Thpt.L'] = div_nan(inst.get_val('Size.L'), inst.get_val('Time.L')) / 1024 / 1024 / 1024
 
       # per-step extraction portion from different source
-      inst.vals['Wght.R'] = inst.get_val('Size.R') / inst.get_val('Size.A') * 100
-      inst.vals['Wght.C'] = inst.get_val('Size.C') / inst.get_val('Size.A') * 100
+      inst.vals['Wght.R'] = div_nan(inst.get_val('Size.R'), inst.get_val('Size.A')) * 100
+      inst.vals['Wght.C'] = div_nan(inst.get_val('Size.C'), inst.get_val('Size.A')) * 100
       inst.vals['Wght.L'] = 100 - inst.get_val('Wght.R') - inst.get_val('Wght.C')
     except Exception as e:
       print("Error when " + inst.cfg.get_log_fname() + '.log')

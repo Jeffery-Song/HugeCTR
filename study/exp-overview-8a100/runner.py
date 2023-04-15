@@ -13,6 +13,7 @@ cur_common_base = (ConfigList()
   .override('confdir', ['run-configs'])
   .override('profile_level', [3])
   .override('multi_gpu', [True])
+  .override('coll_cache_scale', [16])
   .override('model', [
     Model.dlrm, 
     Model.dcn,
@@ -38,10 +39,11 @@ cfg_list_collector.concat(cur_common_base.copy()
       [False,  None,  Dataset.criteo_tb, "SAMGRAPH_EMPTY_FEAT=24"],
     ])
   .override('cache_percent', 
-    [0.01] + 
-    [0.02, 0.04] + 
-    [0.08, 0.12] + 
+    # [0.01] + 
+    # [0.02, 0.04] + 
+    # [0.08, 0.12] + 
     # [0.10, 0.15] + 
+    [0.12] +
     []
   ).hyper_override(
   ['coll_cache_policy', "coll_cache_no_group", "coll_cache_concurrent_link"], 
@@ -50,7 +52,10 @@ cfg_list_collector.concat(cur_common_base.copy()
     [CachePolicy.clique_part, "", "MPSPhase"],
     [CachePolicy.rep_cache, "DIRECT", ""],
     [CachePolicy.rep_cache, "", "MPSPhase"],
+    [CachePolicy.coll_cache_asymm_link, "DIRECT", ""],
     [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
+    [CachePolicy.sok, "", ""],
+    [CachePolicy.hps, "", ""],
   ]))
 
 
@@ -61,8 +66,8 @@ cfg_list_collector.concat(cur_common_base.copy()
       [True,  0.2,  RandomDataset("simple_power0.2_slot100_C800m", "SP_02_S100_C800m", 800000000, 100), "SAMGRAPH_EMPTY_FEAT=24"],
     ])
   .override('cache_percent', 
-    [0.01] + 
-    [0.02, 0.04] + 
+    # [0.01] + 
+    # [0.02, 0.04] + 
     [0.08, 0.12] + 
     # [0.10, 0.15] + 
     []
@@ -73,7 +78,10 @@ cfg_list_collector.concat(cur_common_base.copy()
     [CachePolicy.clique_part, "", "MPSPhase"],
     [CachePolicy.rep_cache, "DIRECT", ""],
     [CachePolicy.rep_cache, "", "MPSPhase"],
+    [CachePolicy.coll_cache_asymm_link, "DIRECT", ""],
     [CachePolicy.coll_cache_asymm_link, "", "MPSPhase"],
+    [CachePolicy.sok, "", ""],
+    [CachePolicy.hps, "", ""],
   ]))
 
 # selector for fast validation
