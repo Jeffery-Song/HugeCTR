@@ -96,6 +96,7 @@ class DCNSOK(tf.keras.models.Model):
       embed_vec_size,
       slot_num,
       dense_dim,
+      use_hashtable=False,
       bottom_stack: Optional[tf.keras.layers.Layer] = None,
       feature_interaction: Optional[tf.keras.layers.Layer] = None,
       top_stack: Optional[tf.keras.layers.Layer] = None) -> None:
@@ -132,7 +133,7 @@ class DCNSOK(tf.keras.models.Model):
                                                     embedding_vec_size=self.embed_vec_size,
                                                     slot_num=self.slot_num,
                                                     key_dtype=tf.uint32,
-                                                    nnz_per_slot=1, use_hashtable=False)
+                                                    nnz_per_slot=1, use_hashtable=use_hashtable)
 
     self.reshape_layer1  = tf.keras.layers.Reshape((slot_num, 1), name = "reshape1")
     self.reshape_layer2  = tf.keras.layers.Reshape((self.slot_num * self.embed_vec_size,), name = "reshape2")

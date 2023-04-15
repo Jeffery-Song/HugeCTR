@@ -65,7 +65,11 @@ def prepare_model(args):
         # model = DCNModel(args["embed_vec_size"], args["slot_num"], args["dense_dim"])
         if args["coll_cache_policy"] == "sok":
             from tfrs_dcn import DCNSOK
-            model = DCNSOK(args["max_vocabulary_size"] // args["gpu_num"], args["embed_vec_size"], args["slot_num"], args["dense_dim"])
+            if args['sok_use_hashtable']:
+                sok_vocab=int(args["max_vocabulary_size"] * args['cache_percent'])
+            else:
+                sok_vocab=args["max_vocabulary_size"] // args["gpu_num"]
+            model = DCNSOK(sok_vocab, args["embed_vec_size"], args["slot_num"], args["dense_dim"], use_hashtable=args['sok_use_hashtable'])
             return model
         else:
             from tfrs_dcn import DCNHPS
