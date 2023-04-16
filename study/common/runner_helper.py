@@ -188,7 +188,7 @@ class RunConfig:
     self.max_vocabulary_size    = None
     self.coll_cache_enable_iter = 1000
     self.coll_cache_refresh_iter = 1000
-    self.coll_cache_refresh_seq_bucket_sz = 1000
+    self.coll_cache_refresh_seq_bucket_sz = 0
     self.coll_cache_enable_refresh = False
     self.iteration_per_epoch    = 1000
     # env variables
