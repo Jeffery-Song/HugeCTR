@@ -224,6 +224,8 @@ class RunConfig:
       std_out_fname += f'_gpu_num_{self.gpu_num}'
     if self.coll_cache_scale != 0:
       std_out_fname += f'_scale_nb_{self.coll_cache_scale}'
+    if self.coll_cache_refresh_seq_bucket_sz != 0:
+      std_out_fname += f'_bucket_{self.coll_cache_refresh_seq_bucket_sz}'
     return std_out_fname
 
   def get_conf_fname(self):
@@ -251,6 +253,8 @@ class RunConfig:
       msg += f' gpu_num={self.gpu_num}'
     if self.coll_cache_scale != "":
       msg += f' scale_nb={self.coll_cache_scale}'
+    if self.coll_cache_refresh_seq_bucket_sz != 0:
+      msg += f' seq_bucket={self.coll_cache_refresh_seq_bucket_sz}'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):

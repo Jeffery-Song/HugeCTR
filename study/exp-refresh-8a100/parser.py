@@ -74,8 +74,8 @@ if __name__ == '__main__':
       # example: [Step(Seq_23) Profiler Level 3 E2 S7999]
       for i in range(int(bucket_num)):
         inst.vals['Sequence'] = i
-        inst.vals['Sequence(Average) L1 convert time'] = inst.vals[f'Step(Seq_{i}) L1 convert time']
-        inst.vals['Sequence(Average) e2e time'] = inst.vals[f'Step(Seq_{i}) L1 train']
+        inst.vals['Sequence(Average) convert time'] = inst.vals[f'Step(Seq_{i}) L1 convert time']
+        inst.vals['Sequence(Average) e2e time'] = inst.vals[f'Step(Seq_{i}) L1 train'] + inst.vals['Sequence(Average) convert time'] 
         inst.vals['Sequence(Average) extract time'] = inst.vals[f'Step(Seq_{i}) L2 cache feat copy']
         inst.vals['Sequence(Average) seq duration'] = inst.vals[f'Step(Seq_{i}) L1 seq duration']
         # when cache rate = 0, extract time has different log name...

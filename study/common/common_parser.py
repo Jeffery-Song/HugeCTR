@@ -30,6 +30,28 @@ size_unit_to_coefficient = {
   'B':1,
 }
 
+def div_nan(a,b):
+  if b == 0:
+    return math.nan
+  return a/b
+
+def max_nan(a,b):
+  if math.isnan(a):
+    return b
+  elif math.isnan(b):
+    return a
+  else:
+    return max(a,b)
+
+def handle_nan(a, default=0):
+  if math.isnan(a):
+    return default
+  return a
+
+def zero_nan(a):
+  return handle_nan(a, 0)
+
+
 def sample_method_str_short(cfg):
   if cfg.app is App.gcn:
     num_hop = 3
