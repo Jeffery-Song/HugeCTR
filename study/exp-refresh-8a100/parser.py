@@ -15,6 +15,7 @@ selected_col += ['Sequence']
 selected_col += ['Sequence(Average) extract time']
 selected_col += ['Sequence(Average) e2e time']
 selected_col += ['Sequence(Average) seq duration']
+selected_col += ['coll_cache_refresh_seq_bucket_sz']
 
 # selected_col += ['Step(average) L1 sample']
 # selected_col += ['Step(average) L1 recv']
@@ -22,14 +23,7 @@ selected_col += ['Sequence(Average) seq duration']
 # selected_col += ['Step(average) L1 train total']
 
 cfg_list_collector = (cfg_list_collector.copy()
-  # .select('dataset', [Dataset.twitter, Dataset.uk_2006_05])
-  # .select('cache_policy', [CachePolicy.coll_cache_10])
-#   .select('pipeline', [False])
-  # .override_T('logdir', [
-  #   # 'run-logs-backup-pcvyatta',
-  #   # 'run-logs-backup',
-  #   'run-logs',
-  # ])
+  .select('coll_cache_refresh_seq_bucket_sz', [4000])
 )
 
 def div_nan(a,b):
