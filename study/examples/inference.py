@@ -106,6 +106,7 @@ def prepare_model(args):
     return model
 
 def inference_with_saved_model(args):
+    worker_id = int(os.environ["HPS_WORKER_ID"])
     strategy = tf.distribute.MultiWorkerMirroredStrategy()
     with strategy.scope():
         if args["coll_cache_policy"] == "sok":
@@ -208,7 +209,7 @@ def inference_with_saved_model(args):
             else:
                 hps.SetStepProfileValue(profile_type=hps.kLogL1TrainTime, value=(t2 - t1))
         if (i + 1) % 100 == 0:
-            print(i + 1, "time {:.6} {:.6}".format(ds_time / 100, md_time / 100), flush=True)
+            print("[GPU{}] {} time {:.6} {:.6}".format(worker_id, i + 1, ds_time / 100, md_time / 100), flush=True)
             ds_time = 0
             md_time = 0
             barrier.wait()
