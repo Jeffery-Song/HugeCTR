@@ -16,6 +16,8 @@ selected_col += ['Sequence(Average) extract time']
 selected_col += ['Sequence(Average) e2e time']
 selected_col += ['Sequence(Average) seq duration']
 selected_col += ['coll_cache_refresh_seq_bucket_sz']
+selected_col += ['coll_cache_enable_refresh']
+selected_col += ['Python seq e2e time']
 
 # selected_col += ['Step(average) L1 sample']
 # selected_col += ['Step(average) L1 recv']
@@ -23,7 +25,7 @@ selected_col += ['coll_cache_refresh_seq_bucket_sz']
 # selected_col += ['Step(average) L1 train total']
 
 cfg_list_collector = (cfg_list_collector.copy()
-  .select('coll_cache_refresh_seq_bucket_sz', [4000])
+  .select('coll_cache_refresh_seq_bucket_sz', [8000])
 )
 
 def div_nan(a,b):
@@ -64,19 +66,23 @@ if __name__ == '__main__':
       # get bucket num
       profile_steps = inst.get_val('epoch') * inst.get_val('iteration_per_epoch') * inst.get_val('gpu_num')
       bucket_num = profile_steps / inst.get_val('coll_cache_refresh_seq_bucket_sz')
+      python_profile_per_bucket = (inst.get_val('coll_cache_refresh_seq_bucket_sz') / inst.get_val('gpu_num')) / 100
 
       # example: [Step(Seq_23) Profiler Level 3 E2 S7999]
       for i in range(int(bucket_num)):
         inst.vals['Sequence'] = i
         inst.vals['Sequence(Average) convert time'] = inst.vals[f'Step(Seq_{i}) L1 convert time']
-        inst.vals['Sequence(Average) e2e time'] = inst.vals[f'Step(Seq_{i}) L1 train'] + inst.vals['Sequence(Average) convert time'] 
+        inst.vals['Sequence(Average) e2e time'] = inst.vals[f'Step(Seq_{i}) L1 train']
         inst.vals['Sequence(Average) extract time'] = inst.vals[f'Step(Seq_{i}) L2 cache feat copy']
         inst.vals['Sequence(Average) seq duration'] = inst.vals[f'Step(Seq_{i}) L1 seq duration']
-        # when cache rate = 0, extract time has different log name...
-        # inst.vals['Step(average) L2 feat copy'] = max_nan(inst.get_val('Step(average) L2 cache feat copy'), inst.get_val('Step(average) L2 extract'))
+        python_train_time = 0
+        for k in range(int(python_profile_per_bucket)):
+          python_profile_iter = int(100 * (python_profile_per_bucket * i + k + 1))
+          python_train_time += inst.vals[f'{python_profile_iter}_iter']
+        inst.vals['Python seq e2e time'] = python_train_time / python_profile_per_bucket
         seq_bench_list.append(copy.deepcopy(inst))
     except Exception as e:
-      print(e)
+      # print(e)
       print("Error when " + inst.cfg.get_log_fname() + '.log')
   with open(f'data.dat', 'w') as f:
     BenchInstance.print_dat(seq_bench_list, f, selected_col)

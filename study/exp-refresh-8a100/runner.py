@@ -7,7 +7,7 @@ durable_log = True
 
 cur_common_base = (ConfigList()
   # .override('root_path', ['/disk1/graph-learning-copy/samgraph/'])
-  .override('epoch', [30])
+  .override('epoch', [50])
   .override('gpu_num', [8])
   .override('logdir', ['run-logs'])
   .override('confdir', ['run-configs'])
@@ -30,9 +30,15 @@ Coll Cache
   .override('global_batch_size', [65536])
   .override('plain_dense_model', [True])
   .override('mock_embedding', [True])
-  .override('coll_cache_enable_refresh', [True])
-  .override('coll_cache_refresh_iter', [10000])
-  .override('coll_cache_refresh_seq_bucket_sz', [1000, 2000, 4000, 8000])
+  .override('coll_cache_enable_refresh', [
+    False,
+    True, 
+  ])
+  .override('coll_cache_refresh_iter', [20000])
+  .override('coll_cache_refresh_seq_bucket_sz', [
+    # 4000, 
+    8000,
+  ])
   .override('log_level', ["info"])
 )
 

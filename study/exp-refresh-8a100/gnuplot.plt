@@ -11,6 +11,9 @@ col_seq                          = 6
 col_seq_feat_copy                = 7
 col_e2e_time                     = 8
 col_seq_duration                 = 9
+col_bucket_size                  = 10
+col_enable_refresh               = 11
+col_python_e2e_time              = 12
 
 batch_size = "65536"
 fig_col_num = 2
@@ -40,9 +43,10 @@ format_str="<awk -F'\\t' '{ if(". \
                               "$".col_dataset."         ~ \"%s\"     && ". \
                               "$".col_batch_size."      ~ \"%s\"     && ". \
                               "$".col_cache_percent."   ~ \"%s\"     && ". \
-                              "$".col_cache_policy."    ~ \"%s\"     ". \
+                              "$".col_cache_policy."    ~ \"%s\"     && ". \
+                              "$".col_enable_refresh."  ~ \"%s\"     ". \
                               ") { print }}' ".dat_file." "
-cmd_filter_dat_by_policy(app, dataset, batch_size, cache_percent, policy)=sprintf(format_str, app, dataset, batch_size, cache_percent, policy)
+cmd_filter_dat_by_policy(app, dataset, batch_size, cache_percent, policy, refresh)=sprintf(format_str, app, dataset, batch_size, cache_percent, policy, refresh)
 ##########################################################################################
 
 ### Key
@@ -86,24 +90,34 @@ policy="MPSPhaseCollAsymm"
 app="dlrm"
 ds="CR"
 bs=".*"
+refresh_on="True"
+refresh_off="False"
 do for [cache_percent in "1.000000"] {
 set xlabel "Seq bucket" offset 0,1.7 font ",13"
 set ylabel "Copy Time(ms)" offset 3.5,0 font ",13"
 set title app." ".ds." ".bs." ".cache_percent offset 0,-1
-plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy) using (column(col_seq)):(column(col_seq_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh"
+plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_on) using (column(col_seq)):(column(col_seq_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_off) using (column(col_seq)):(column(col_seq_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "normal"
 set ylabel "E2E Time(ms)" offset 3.5,0 font ",13"
 set title app." ".ds." ".bs." ".cache_percent offset 0,-1
-plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy) using (column(col_seq)):(column(col_e2e_time)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh"
+plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_on) using (column(col_seq)):(column(col_e2e_time)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_off) using (column(col_seq)):(column(col_e2e_time)*1000) w lp ps 0.5 lw 1 lc 1 title "normal" \
+    # ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_on) using (column(col_seq)):(column(col_python_e2e_time)*1000) w lp ps 0.5 lw 1 lc 1 title "refresh-python" \
+    # ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_off) using (column(col_seq)):(column(col_python_e2e_time)*1000) w lp ps 0.5 lw 1 lc 1 title "normal-python"
 
 set xlabel "time(s)" offset 0,1.7 font ",13"
 set ylabel "Copy Time(ms)" offset 3.5,0 font ",13"
 set title app." ".ds." ".bs." ".cache_percent offset 0,-1
-plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy) using (column(col_seq_duration)):(column(col_seq_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh"
+plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_on) using (column(col_seq_duration)):(column(col_seq_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_off) using (column(col_seq_duration)):(column(col_seq_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "normal"
 set ylabel "E2E Time(ms)" offset 3.5,0 font ",13"
 set grid x2tics
 set x2tics 10 format "" scale 0
 set title app." ".ds." ".bs." ".cache_percent offset 0,-1
-plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy) using (column(col_seq_duration)):(column(col_e2e_time)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh"
+plot cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_on) using (column(col_seq_duration)):(column(col_e2e_time)*1000) w lp ps 0.5 lw 1 lc 3 title "refresh" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_off) using (column(col_seq_duration)):(column(col_e2e_time)*1000) w lp ps 0.5 lw 1 lc 1 title "normal" \
+    # ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_on) using (column(col_seq_duration)):(column(col_python_e2e_time)*1000) w lp ps 0.5 lw 1 lc 1 title "refresh-python" \
+    # ,cmd_filter_dat_by_policy(app, ds, bs, cache_percent, policy, refresh_off) using (column(col_seq_duration)):(column(col_python_e2e_time)*1000) w lp ps 0.5 lw 1 lc 1 title "normal-python"
 }
 
 
