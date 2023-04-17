@@ -149,6 +149,7 @@ class BenchInstance:
       self.prepare_config(cfg)
       self.prepare_percentage_log(cfg)
       self.prepare_coll_cache_meta(cfg)
+      self.prepare_cuda_eval(cfg)
       self.vals['optimal_hit_percent'] = self.get_optimal()
     except Exception as e:
       print("error when ", fname)
@@ -405,6 +406,15 @@ class BenchInstance:
       num_step = max(num_step, int(re.match(num_step_pattern, line).group(1)))
     self.vals['num_step'] = num_step + 1
     # print(result_map_list)
+
+  def prepare_cuda_eval(self, cfg):
+    cuda_eval_pattern = r'^\[CUDA\] worker0 cuda mem usage: ([0-9\.]+) GB'
+    line_list = grep_from(cfg.get_log_fname() + '.log', cuda_eval_pattern)
+    for i in range(0, len(line_list)):
+      line = line_list[i]
+      m = re.match(cuda_eval_pattern, line)
+      val = m.group(1)
+      self.vals['cuda_usage'] = val
 
   def to_formated_str(self):
     pass
