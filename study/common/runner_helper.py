@@ -226,6 +226,8 @@ class RunConfig:
       std_out_fname += f'_scale_nb_{self.coll_cache_scale}'
     if self.coll_cache_refresh_seq_bucket_sz != 0:
       std_out_fname += f'_bucket_{self.coll_cache_refresh_seq_bucket_sz}'
+    if self.coll_cache_enable_refresh:
+      std_out_fname += f'_refresh_{self.coll_cache_refresh_iter}'
     return std_out_fname
 
   def get_conf_fname(self):
@@ -255,6 +257,8 @@ class RunConfig:
       msg += f' scale_nb={self.coll_cache_scale}'
     if self.coll_cache_refresh_seq_bucket_sz != 0:
       msg += f' seq_bucket={self.coll_cache_refresh_seq_bucket_sz}'
+    if self.coll_cache_enable_refresh:
+      msg += f' refresh'
     return datetime.datetime.now().strftime('[%H:%M:%S]') + msg + '.'
 
   def form_cmd(self, durable_log=True):
@@ -276,7 +280,7 @@ class RunConfig:
     if self.coll_cache_policy == CachePolicy.sok:
       cmd_line += f'ITERATION_PER_EPOCH={self.iteration_per_epoch} '
       cmd_line += f'EPOCH={self.epoch} '
-    if self.coll_cache_enable_refresh:
+    if self.coll_cache_refresh_seq_bucket_sz != 0:
       cmd_line += f'PROFILE_SEQ_BUCKET_SZ={self.coll_cache_refresh_seq_bucket_sz} '
 
     cmd_line += f'python ../examples/inference.py'
@@ -364,6 +368,8 @@ class RunConfig:
     conf['models'][0]['deployed_device_list'] = list(range(self.gpu_num))
     conf['models'][0]['max_batch_size'] = self.global_batch_size // self.gpu_num
     conf['models'][0]['gpucacheper'] = self.cache_percent
+    if self.cache_percent == 0:
+      conf['models'][0]['gpucache'] = False
 
     conf['models'][0]['max_vocabulary_size'] = [self.max_vocabulary_size]
     if self.coll_cache_policy == CachePolicy.hps: conf['use_coll_cache'] = False

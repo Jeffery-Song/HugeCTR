@@ -150,6 +150,7 @@ class BenchInstance:
       self.prepare_percentage_log(cfg)
       self.prepare_coll_cache_meta(cfg)
       self.prepare_cuda_eval(cfg)
+      self.prepare_python_eval(cfg)
       self.vals['optimal_hit_percent'] = self.get_optimal()
     except Exception as e:
       print("error when ", fname)
@@ -415,6 +416,17 @@ class BenchInstance:
       m = re.match(cuda_eval_pattern, line)
       val = m.group(1)
       self.vals['cuda_usage'] = val
+
+  def prepare_python_eval(self, cfg):
+    # 35700 time 1.06001e-05 0.00170291
+    python_eval_pattern = r'^\[GPU0\] ([0-9]+) time ([0-9e\-\.]+) ([0-9\.]+)'
+    line_list = grep_from(cfg.get_log_fname() + '.log', python_eval_pattern)
+    for i in range(0, len(line_list)):
+      line = line_list[i]
+      m = re.match(python_eval_pattern, line)
+      key = m.group(1) + '_iter'
+      val = float(m.group(3))
+      self.vals[key] = val
 
   def to_formated_str(self):
     pass
