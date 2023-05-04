@@ -87,7 +87,7 @@ set grid ytics
 cache_percent_lb=0
 
 app_str = "dlrm dlrm dcn dcn"
-ds_str = "SP_02_S100_C800m SP_02_S100_C800m CR CR"
+ds_str = "SP_02_S100_C800m CR SP_02_S100_C800m CR"
 bs_str = ".* .* .* .*"
 
 do for [i=1:words(app_str)]  {
@@ -95,10 +95,13 @@ app = word(app_str, i)
 ds = word(ds_str, i)
 bs = word(bs_str, i)
 set title app." ".ds." ".bs offset 0,-1
-plot cmd_filter_dat_by_policy(app, ds, bs, "^Rep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "Rep" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseRep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 3 title "MPSRep" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "^Cliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 2 title "CliqPart" \
+plot cmd_filter_dat_by_policy(app, ds, bs, "^Rep")         using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "Rep" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseRep")  using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 3 title "MPSRep" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "^Cliq")        using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 2 title "CliqPart" \
     ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseCliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 2 title "MPSCliqPart" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "CollAsymm" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "^Coll")        using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 1 lc 1 title "Coll" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 3 lc 1 title "CollAsymm" \
     ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):((column(col_step_time_train_total))*1000) w lp ps 0.5 lw 1 lc "black" title "APP" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "HPS") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 title "HPS" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "SOK") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 title "SOK" \
 }

@@ -108,11 +108,13 @@ bs = word(bs_str, i)
 set title app." ".ds." ".bs offset 0,-1
 print(cmd_filter_dat_by_policy(app, ds, bs, "^Cliq"))
 plot cmd_filter_dat_by_policy(app, ds, bs, "^Rep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 3 title "Rep" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseRep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 3 title "MPSRep" \
     ,cmd_filter_dat_by_policy(app, ds, bs, "^Cliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 2 title "CliqPart" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseCliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 2 title "MPSCliqPart" \
-    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "CollAsymmPhase" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "^Coll") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 1 lc 1 title "Coll" \
+    ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w lp ps 0.5 lw 3 lc 1 title "CollAsymmPhase" \
     ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseColl") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):((column(col_step_time_train_total))*1000) w lp ps 0.5 lw 1 lc "black" title "APP" \
+    # ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseRep") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 3 title "MPSRep" \
+    # ,cmd_filter_dat_by_policy(app, ds, bs, "MPSPhaseCliq") using (column(col_cache_percent) > cache_percent_lb ? column(col_cache_percent) : 1/0):(column(col_step_time_feat_copy)*1000) w l lw 3 lc 2 title "MPSCliqPart" \
+
 }
 
 
