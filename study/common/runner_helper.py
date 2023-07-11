@@ -106,6 +106,7 @@ class CachePolicy(Enum):
   clique_part_by_degree=15
   sok = 16
   hps = 17
+  coll_fine_grain = 18
 
   def __str__(self):
     name_list = [
@@ -127,6 +128,7 @@ class CachePolicy(Enum):
       'cliq_part_degree',
       'sok',
       'hps',
+      'coll_fine_grain',
     ]
     return name_list[self.value]
   
@@ -150,6 +152,7 @@ class CachePolicy(Enum):
       "CliqPartDeg",
       "SOK",
       "HPS",
+      "CollFine"
     ]
     return policy_str_short[self.value]
 
@@ -327,6 +330,7 @@ class RunConfig:
       cmd_line += f' > \"{std_out_log}\"'
       cmd_line += f' 2> \"{std_err_log}\"'
       cmd_line += ';'
+      cmd_line = "COLL_LOG_BASE=\"" + self.get_log_fname() + "\" " + cmd_line;
     return cmd_line
 
   # some members are lazy initialized
