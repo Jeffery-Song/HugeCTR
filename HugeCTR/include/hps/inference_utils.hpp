@@ -38,6 +38,7 @@ enum class DatabaseType_t {
   ParallelHashMap,
   RedisCluster,
   RocksDB,
+  DirectMap,
 };
 enum class DatabaseOverflowPolicy_t {
   EvictOldest,
@@ -57,6 +58,8 @@ constexpr const char* hctr_enum_to_c_str(const DatabaseType_t value) {
       return "hash_map";
     case DatabaseType_t::ParallelHashMap:
       return "parallel_hash_map";
+    case DatabaseType_t::DirectMap:
+      return "direct_map";
     case DatabaseType_t::RedisCluster:
       return "redis_cluster";
     case DatabaseType_t::RocksDB:
@@ -195,6 +198,7 @@ struct UpdateSourceParams {
 enum class PSUpdateSource_t { None, Kafka };
 
 struct InferenceParams {
+  bool use_multi_worker = false;
   std::string model_name;
   size_t max_batchsize;
   float hit_rate_threshold;
@@ -213,6 +217,7 @@ struct InferenceParams {
   int thread_pool_size;
   float cache_refresh_percentage_per_iteration;
   std::vector<int> deployed_devices;
+  std::vector<int> cross_worker_deployed_devices;
   std::vector<float> default_value_for_each_table;
   // Database backend.
   VolatileDatabaseParams volatile_db;
@@ -256,6 +261,9 @@ struct InferenceParams {
 };
 
 struct parameter_server_config {
+  bool use_multi_worker = false;
+  size_t iteration_per_epoch = 0;
+  size_t epoch = 0;
   std::map<std::string, size_t> model_name_id_map_;
   // Each vector should have size of M(# of models), where each element in the vector should be a
   // vector with size E(# of embedding tables in that model)
@@ -294,6 +302,14 @@ struct parameter_server_config {
   parameter_server_config(const char* hps_json_config_file);
   void init(const std::string& hps_json_config_file);
   std::optional<size_t> find_model_id(const std::string& model_name) const;
+  void fix_multi_worker(int replica_id) {
+    if (use_multi_worker) {
+      for (auto & inf_param : inference_params_array) {
+        inf_param.deployed_devices = {inf_param.deployed_devices[replica_id]};
+        inf_param.device_id = inf_param.deployed_devices.back();
+      }
+    }
+  }
 };
 
 struct inference_memory_pool_size_config {

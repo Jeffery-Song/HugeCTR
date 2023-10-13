@@ -20,6 +20,7 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.framework.tensor_shape import TensorShape
 from tensorflow.python.ops import resource_variable_ops
 from tensorflow import __version__ as tf_version
+import ctypes
 
 if tf_version.startswith("2"):
     using_tf2 = True
@@ -58,6 +59,7 @@ if lib_file is None:
     raise FileNotFoundError("Could not find %s" % lib_name)
 
 kit_ops = load_library.load_op_library(lib_file)
+kit_clib = ctypes.CDLL(lib_file, mode=ctypes.RTLD_GLOBAL)
 
 # for op in dir(kit_ops):
 # print(op)
@@ -84,7 +86,10 @@ if not in_tensorflow2():
 
 create_global_adam_optimizer = kit_ops.create_global_adam_optimizer
 custom_optimizer_apply_gradients = kit_ops.custom_optimizer_apply_gradients
-
+set_step_profile_value = kit_ops.set_step_profile_value_sok
+report = kit_ops.report_sok
+wait_one_child=kit_clib.wait_one_child
+wait_one_child.restype = ctypes.c_int
 
 @ops.RegisterGradient("Test")
 def _TestGrad(op, top_grad):

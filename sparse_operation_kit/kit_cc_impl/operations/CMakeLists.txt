@@ -37,7 +37,7 @@ file(GLOB framework_interface
 )
 
 add_library(sparse_operation_kit_compat_ops SHARED ${operations_src} ${framework_interface})
-target_link_libraries(sparse_operation_kit_compat_ops PUBLIC ${TF_LINK_FLAGS})
+target_link_libraries(sparse_operation_kit_compat_ops PUBLIC ${TF_LINK_FLAGS} coll_cache)
 
 set_target_properties(sparse_operation_kit_compat_ops PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 set_target_properties(sparse_operation_kit_compat_ops PROPERTIES CUDA_ARCHITECTURES OFF)

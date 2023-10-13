@@ -21,6 +21,7 @@ from tensorflow import function
 from tensorflow.python.framework import config
 from tensorflow.dtypes import int32, int64
 from tensorflow.python.ops import array_ops
+from hierarchical_parameter_server.core import lookup_ops
 
 MirroredStrategy = tf_dist.MirroredStrategy
 try:
@@ -29,6 +30,10 @@ except AttributeError:
     MultiWorkerMirroredStrategy = tf_dist.experimental.MultiWorkerMirroredStrategy
 import sys
 
+def Report():
+    hps_lib.report()
+def wait_one_child():
+    return hps_lib.wait_one_child()
 
 def Init(**kwargs):
     """
@@ -241,3 +246,7 @@ def Init(**kwargs):
             return _horovod_init(**kwargs)
     else:
         return _one_device_init(**kwargs)
+
+def SetStepProfileValue(**kwargs):
+    global_replica_id = lookup_ops.get_global_replica_id(lookup_ops._get_comm_tool())
+    hps_lib.set_step_profile_value(global_replica_id=global_replica_id, **kwargs)

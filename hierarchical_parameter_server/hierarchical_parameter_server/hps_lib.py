@@ -15,6 +15,7 @@
 """
 
 import os
+import ctypes
 from tensorflow.python.framework import load_library
 from tensorflow import __version__ as tf_version
 
@@ -51,5 +52,10 @@ for path in paths:
 if lib_file is None:
     raise FileNotFoundError("Could not find %s" % lib_name)
 hps_ops = load_library.load_op_library(lib_file)
+hps_clib = ctypes.CDLL(lib_file, mode=ctypes.RTLD_GLOBAL)
 lookup = hps_ops.lookup
 init = hps_ops.init
+report = hps_ops.report
+set_step_profile_value=hps_ops.set_step_profile_value
+wait_one_child=hps_clib.wait_one_child
+wait_one_child.restype = ctypes.c_int

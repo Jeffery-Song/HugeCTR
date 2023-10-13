@@ -234,6 +234,9 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
   // Initialize for each model
   // Open model config file and input model json config
   nlohmann::json hps_config(read_json_file(hps_json_config_file));
+  this->use_multi_worker = get_value_from_json_soft<bool>(hps_config, "use_multi_worker", false);
+  this->iteration_per_epoch = get_value_from_json<size_t>(hps_config, "iteration_per_epoch");
+  this->epoch = get_value_from_json<size_t>(hps_config, "epoch");
 
   // Parsing HPS Databse backend
   //****Update source parameters.
@@ -390,6 +393,8 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
 
     InferenceParams params(model_name, max_batch_size, hit_rate_threshold, dense_file, sparse_files,
                            device_id, use_gpu_embedding_cache, cache_size_percentage, true);
+    params.use_multi_worker = this->use_multi_worker;
+    params.i64_input_key = get_value_from_json_soft<bool>(model, "i64_input_key", true);
     // [8] number_of_worker_buffers_in_pool ->int
     params.number_of_worker_buffers_in_pool =
         get_value_from_json_soft<int>(model, "num_of_worker_buffer_in_pool", 1);
@@ -410,7 +415,7 @@ void parameter_server_config::init(const std::string& hps_json_config_file) {
         params.deployed_devices.emplace_back(deployed_device_list[device_index].get<int>());
       }
     }
-    params.device_id = params.deployed_devices.back();
+    params.cross_worker_deployed_devices = params.deployed_devices;
     // [12] default_value_for_each_table -> std::vector<float>
     auto default_value_for_each_table = get_json(model, "default_value_for_each_table");
     params.default_value_for_each_table.clear();
@@ -649,6 +654,12 @@ HugeCTR::DatabaseType_t get_hps_database_type(const nlohmann::json& json, const 
 
   enum_value = HugeCTR::DatabaseType_t::ParallelHashMap;
   names = {hctr_enum_to_c_str(enum_value), "parallel_hashmap", "parallel_hash", "parallel_map"};
+  for (const char* name : names)
+    if (tmp == name) {
+      return enum_value;
+    }
+  enum_value = HugeCTR::DatabaseType_t::DirectMap;
+  names = {hctr_enum_to_c_str(enum_value), "direct", "direct_map"};
   for (const char* name : names)
     if (tmp == name) {
       return enum_value;

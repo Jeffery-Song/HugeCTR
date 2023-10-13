@@ -16,13 +16,19 @@
 
 #include <cmath>
 #include <filesystem>
+#include <hps/direct_map_backend.hpp>
 #include <hps/hash_map_backend.hpp>
 #include <hps/hier_parameter_server.hpp>
+#include <hps/inference_utils.hpp>
 #include <hps/kafka_message.hpp>
 #include <hps/modelloader.hpp>
 #include <hps/redis_backend.hpp>
 #include <hps/rocksdb_backend.hpp>
 #include <regex>
+#include <vector>
+
+#include "base/debug/logger.hpp"
+#include "coll_cache_lib/atomic_barrier.h"
 
 namespace HugeCTR {
 
@@ -96,6 +102,15 @@ HierParameterServer<TypeHashKey>::HierParameterServer(
     switch (conf.type) {
       case DatabaseType_t::Disabled:
         break;  // No volatile database.
+
+      case DatabaseType_t::DirectMap:
+        HCTR_CHECK_HINT(inference_params_array.size() == 1,
+                        "direct map backend supports only 1 model");
+        HCTR_LOG_S(INFO, WORLD) << "Creating DirectMap CPU database backend..." << std::endl;
+        volatile_db_ = std::make_unique<DirectMapBackend<TypeHashKey>>(
+            conf.max_get_batch_size, conf.max_set_batch_size, conf.overflow_margin,
+            conf.overflow_policy, conf.overflow_resolution_target);
+        break;
 
       case DatabaseType_t::HashMap:
       case DatabaseType_t::ParallelHashMap:
@@ -192,6 +207,9 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
     // Get raw format model loader
     rawreader->load(inference_params.embedding_table_names[j],
                     inference_params.sparse_model_files[j]);
+    // if (inference_params.use_multi_worker) {
+    //   CollCacheParameterServer::barrier();
+    // }
     const std::string tag_name = make_tag_name(
         inference_params.model_name, ps_config_.emb_table_name_[inference_params.model_name][j]);
     size_t num_key = rawreader->getkeycount();
@@ -205,6 +223,14 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
               : static_cast<size_t>(
                     volatile_db_cache_rate_ * static_cast<double>(volatile_capacity) + 0.5);
 
+      if (dynamic_cast<DirectMapBackend<TypeHashKey>*>(volatile_db_.get()) &&
+          rawreader->is_mock == false) {
+        auto keys_ptr = (const TypeHashKey*)(rawreader->getkeys());
+#pragma omp parallel for
+        for (TypeHashKey i = 0; i < volatile_cache_amount; i++) {
+          HCTR_CHECK_HINT(keys_ptr[i] == i, "direct backend requries continious source");
+        }
+      }
       HCTR_CHECK(volatile_db_->insert(tag_name, volatile_cache_amount,
                                       reinterpret_cast<const TypeHashKey*>(rawreader->getkeys()),
                                       reinterpret_cast<const char*>(rawreader->getvectors()),
@@ -230,7 +256,9 @@ void HierParameterServer<TypeHashKey>::update_database_per_model(
                               << persistent_db_->get_name() << ")." << std::endl;
     }
   }
-  rawreader->delete_table();
+  if (inference_params.volatile_db.type != DatabaseType_t::DirectMap) {
+    rawreader->delete_table();
+  }
 
   // Connect to online update service (if configured).
   // TODO: Maybe need to change the location where this is initialized.
@@ -352,7 +380,7 @@ void HierParameterServer<TypeHashKey>::init_ec(
       // apply the memory block for embedding cache refresh workspace
       MemoryBlock* memory_block = nullptr;
       while (memory_block == nullptr) {
-        memory_block = reinterpret_cast<struct MemoryBlock*>(this->apply_buffer(
+        memory_block = reinterpret_cast<MemoryBlock*>(this->apply_buffer(
             inference_params.model_name, device_id, CACHE_SPACE_TYPE::REFRESHER));
       }
       EmbeddingCacheRefreshspace refreshspace_handler = memory_block->refresh_buffer;
@@ -631,7 +659,7 @@ void HierParameterServer<TypeHashKey>::refresh_embedding_cache(const std::string
   // apply the memory block for embedding cache refresh workspace
   MemoryBlock* memory_block = nullptr;
   while (memory_block == nullptr) {
-    memory_block = reinterpret_cast<struct MemoryBlock*>(
+    memory_block = reinterpret_cast<MemoryBlock*>(
         this->apply_buffer(model_name, device_id, CACHE_SPACE_TYPE::REFRESHER));
   }
   EmbeddingCacheRefreshspace refreshspace_handler = memory_block->refresh_buffer;

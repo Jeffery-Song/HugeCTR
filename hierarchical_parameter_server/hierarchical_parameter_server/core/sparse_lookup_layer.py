@@ -80,8 +80,8 @@ class SparseLookupLayer(tf.keras.layers.Layer):
         table_id,
         emb_vec_size,
         emb_vec_dtype,
-        ps_config_file="",
-        global_batch_size=1,
+        # ps_config_file="",
+        # global_batch_size=1,
         **kwargs,
     ):
         super(SparseLookupLayer, self).__init__(**kwargs)
@@ -89,8 +89,8 @@ class SparseLookupLayer(tf.keras.layers.Layer):
         self.table_id = table_id
         self.emb_vec_size = emb_vec_size
         self.emb_vec_dtype = emb_vec_dtype
-        self.ps_config_file = ps_config_file
-        self.global_batch_size = global_batch_size
+        # self.ps_config_file = ps_config_file
+        # self.global_batch_size = global_batch_size
 
     def call(self, sp_ids, sp_weights, name=None, combiner=None, max_norm=None):
         """
@@ -174,8 +174,8 @@ class SparseLookupLayer(tf.keras.layers.Layer):
         if not isinstance(sp_ids, sparse_tensor.SparseTensor):
             raise TypeError(f"sp_ids must be SparseTensor, got {type(sp_ids)}")
 
-        if sp_ids.values.dtype is not tf.int64:
-            raise TypeError(f"sp_ids.values must be tf.int64, got {sp_ids.values.dtype}")
+        # if sp_ids.values.dtype is not tf.int64:
+        #     raise TypeError(f"sp_ids.values must be tf.int64, got {sp_ids.values.dtype}")
 
         ignore_weights = sp_weights is None
         if not ignore_weights:
@@ -203,8 +203,8 @@ class SparseLookupLayer(tf.keras.layers.Layer):
             table_id=self.table_id,
             emb_vec_size=self.emb_vec_size,
             emb_vec_dtype=self.emb_vec_dtype,
-            ps_config_file=self.ps_config_file,
-            global_batch_size=self.global_batch_size,
+            # ps_config_file=self.ps_config_file,
+            # global_batch_size=self.global_batch_size,
         )
 
         # Handle weights and combiner

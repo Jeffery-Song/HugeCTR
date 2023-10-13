@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
+#include <fcntl.h>
+#include <sys/mman.h>
+
 #include <common.hpp>
+#include <cstddef>
 #include <hps/inference_utils.hpp>
 #include <hps/modelloader.hpp>
 #include <parser.hpp>
+#include <string>
 #include <unordered_set>
 #include <utils.hpp>
 
@@ -29,11 +34,58 @@ RawModelLoader<TKey, TValue>::RawModelLoader() : IModelLoader() {
   embedding_table_ = new UnifiedEmbeddingTable<TKey, TValue>();
 }
 
+namespace {
+
+std::string GetEnv(std::string key) {
+  const char* env_var_val = getenv(key.c_str());
+  if (env_var_val != nullptr) {
+    return std::string(env_var_val);
+  } else {
+    return "";
+  }
+}
+
+}  // namespace
+
 template <typename TKey, typename TValue>
 void RawModelLoader<TKey, TValue>::load(const std::string& table_name, const std::string& path) {
   const std::string emb_file_prefix = path + "/";
   const std::string key_file = emb_file_prefix + "key";
   const std::string vec_file = emb_file_prefix + "emb_vector";
+
+  if (path.find("mock_") == 0) {
+    this->is_mock = true;
+    size_t num_key_offset = path.find('_') + 1, dim_offset = path.find_last_of('_') + 1;
+    size_t num_key = std::stoull(path.substr(num_key_offset)),
+           dim = std::stoull(path.substr(dim_offset));
+    HCTR_LOG_S(ERROR, WORLD) << "using mock embedding with " << num_key << " * " << dim
+                             << " elements\n";
+    embedding_table_->key_count = num_key;
+    embedding_table_->keys.resize(num_key);
+
+    size_t vec_file_size_in_byte = sizeof(float) * num_key * dim;
+    if (GetEnv("SAMGRAPH_EMPTY_FEAT") != "") {
+      size_t empty_feat_num_key = 1 << std::stoull(GetEnv("SAMGRAPH_EMPTY_FEAT"));
+      vec_file_size_in_byte = sizeof(float) * empty_feat_num_key * dim;
+    }
+    std::string shm_name = "SAMG_FEAT_SHM";
+    int fd = shm_open(shm_name.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    HCTR_CHECK_HINT(fd != -1, "shm open vec file shm failed\n");
+    size_t padded_size = (vec_file_size_in_byte + 0x01fffff) & ~0x01fffff;
+    {
+      struct stat st;
+      fstat(fd, &st);
+      if (st.st_size < padded_size) {
+        int ret = ftruncate(fd, padded_size);
+        HCTR_CHECK_HINT(ret != -1, "ftruncate vec file shm failed");
+      }
+    }
+    embedding_table_->vectors_ptr = mmap(nullptr, padded_size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+    HCTR_CHECK_HINT(embedding_table_->vectors_ptr != nullptr, "mmap vec file shm failed\n");
+    embedding_table_->umap_len = vec_file_size_in_byte;
+
+    return;
+  }
 
   std::ifstream key_stream(key_file);
   std::ifstream vec_stream(vec_file);
@@ -80,6 +132,9 @@ void* RawModelLoader<TKey, TValue>::getkeys() {
 
 template <typename TKey, typename TValue>
 void* RawModelLoader<TKey, TValue>::getvectors() {
+  if (is_mock) {
+    return embedding_table_->vectors_ptr;
+  }
   return embedding_table_->vectors.data();
 }
 

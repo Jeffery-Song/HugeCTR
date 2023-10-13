@@ -50,6 +50,7 @@ def get_cmake_args():
     cmake_args = [
         "-DSM='{}'".format(";".join(gpu_capabilities)),
         "-DCMAKE_BUILD_TYPE={}".format(cmake_build_type),
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
     ]
     return cmake_args
 

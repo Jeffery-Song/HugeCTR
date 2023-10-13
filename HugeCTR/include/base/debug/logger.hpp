@@ -318,6 +318,8 @@ inline std::string getErrorString(curandStatus_t err) {
   do {                                                                               \
     HugeCTR::Error_t err_thr = (EXPR);                                               \
     if (err_thr != HugeCTR::Error_t::Success) {                                      \
+      HugeCTR::Logger::get().log(LOG_ERROR_LEVEL, LOG_RANK_WORLD, true) << "Own Throw:" << std::string(MSG) << "\n"; \
+      abort(); \
       HugeCTR::Logger::get().do_throw(err_thr, CUR_SRC_LOC(EXPR), std::string(MSG)); \
     }                                                                                \
   } while (0);
@@ -333,6 +335,8 @@ inline std::string getErrorString(curandStatus_t err) {
       char err_str[MPI_MAX_ERROR_STRING];                                    \
       int err_len = MPI_MAX_ERROR_STRING;                                    \
       MPI_Error_string(err_code, err_str, &err_len);                         \
+      Logger::get().log(LOG_ERROR_LEVEL, LOG_RANK_WORLD, true) << "MPI Own Throw:" << err_str << "\n"; \
+      abort(); \
       Logger::get().do_throw(Error_t::MpiError, CUR_SRC_LOC(EXPR), err_str); \
     }                                                                        \
   } while (0)
@@ -345,6 +349,8 @@ inline std::string getErrorString(curandStatus_t err) {
     HugeCTR::Error_t err_type = HugeCTR::getErrorType(ret_thr);              \
     if (err_type != HugeCTR::Error_t::Success) {                             \
       std::string err_msg = HugeCTR::getErrorString(ret_thr);                \
+      HugeCTR::Logger::get().log(LOG_ERROR_LEVEL, LOG_RANK_WORLD, true) << "Lib throw:" << err_msg << "\n"; \
+      abort(); \
       HugeCTR::Logger::get().do_throw(err_type, CUR_SRC_LOC(EXPR), err_msg); \
     }                                                                        \
   } while (0);
@@ -353,6 +359,8 @@ inline std::string getErrorString(curandStatus_t err) {
   do {                                                                               \
     const auto& expr = (EXPR);                                                       \
     if (expr) {                                                                      \
+      HugeCTR::Logger::get().log(LOG_ERROR_LEVEL, LOG_RANK_WORLD, true) << "Throw If:" << std::string(MSG) << "\n"; \
+      abort(); \
       HugeCTR::Logger::get().do_throw((ERROR), CUR_SRC_LOC(EXPR), std::string(MSG)); \
     }                                                                                \
   } while (0)

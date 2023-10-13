@@ -15,6 +15,11 @@
  */
 
 #pragma once
+#include <cstdint>
+
+#include "coll_cache_lib/run_config.h"
+#include "coll_cache_lib/profiler.h"
+#include "hps/inference_utils.hpp"
 #include "lookup_manager.h"
 #include "tensorflow/core/framework/op_kernel.h"
 
@@ -37,10 +42,27 @@ class Facade final {
  public:
   static Facade* instance();
   void operator delete(void*);
-  void init(const char* ps_config_file, const int32_t global_batch_size,
+  void init(const int32_t global_replica_id,
+            const char* ps_config_file, const int32_t global_batch_size,
             const int32_t num_replicas_in_sync);
   void forward(const char* model_name, const int32_t table_id, const int32_t global_replica_id,
                const tensorflow::Tensor* values_tensor, tensorflow::Tensor* emb_vector_tensor);
+  void report_avg();
+  std::shared_ptr<coll_cache_lib::common::Profiler> profiler_;
+  std::vector<size_t> current_steps_for_each_replica_;
+
+  // for profiler
+  inline void set_step_profile_value(const int global_replica_id, const int64_t type,
+                                     double value) {
+    {
+      auto iter_key = current_steps_for_each_replica_[global_replica_id];
+      if (type == coll_cache_lib::common::kLogL1TrainTime)
+        current_steps_for_each_replica_[global_replica_id]++;
+      auto key = iter_key * coll_cache_lib::common::RunConfig::num_device + global_replica_id;
+      this->profiler_->LogStep(key, static_cast<coll_cache_lib::common::LogStepItem>(type), value);
+    }
+  }
+
 };
 
 }  // namespace HierarchicalParameterServer

@@ -33,7 +33,7 @@ file(GLOB recompile_for_unit_test
 add_definitions(-DUNIT_TEST)
 
 add_library(sok_unit_test SHARED ${unit_test_src} ${recompile_for_unit_test})
-target_link_libraries(sok_unit_test PUBLIC sparse_operation_kit)
+target_link_libraries(sok_unit_test PUBLIC sparse_operation_kit coll_cache)
 
 set_target_properties(sok_unit_test PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
 set_target_properties(sok_unit_test PROPERTIES CUDA_ARCHITECTURES OFF)

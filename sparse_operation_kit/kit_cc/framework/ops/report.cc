@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "config.h"
 #include "tensorflow/core/framework/common_shape_fns.h"
 #include "tensorflow/core/framework/op.h"
 #include "tensorflow/core/framework/shape_inference.h"
@@ -22,29 +21,28 @@
 using namespace tensorflow;
 using namespace tensorflow::shape_inference;
 
-REGISTER_OP("Lookup")
-    .Input("values: value_dtype")
+REGISTER_OP("ReportSOK").Output("status: string").SetShapeFn([](InferenceContext* ctx) {
+  return Status::OK();
+});
+
+REGISTER_OP("SetStepProfileValueSOK")
     .Input("global_replica_id: int32")
-    .Output("emb_vector: dtype")
-    .Attr("value_dtype: {int64,int32,uint64,uint32}")
-    .Attr("model_name: string")
-    .Attr("table_id: int")
-    .Attr("emb_vec_size: int")
-    .Attr("dtype: {float32}")
-    // .Input("init_status: status_dtype")
-    // .Attr("status_dtype: {string}")
+    .Input("profile_type: int64")
+    .Input("value: double")
     .SetShapeFn([](InferenceContext* ctx) {
       ShapeHandle input_shape_0 = ctx->input(0);
+      DimensionHandle input_num_elem_0 = ctx->NumElements(input_shape_0);
+      if (1 != ctx->Value(input_num_elem_0))
+        return errors::InvalidArgument("global_replica_id must be a scalar.");
 
       ShapeHandle input_shape_1 = ctx->input(1);
       DimensionHandle input_num_elem_1 = ctx->NumElements(input_shape_1);
-      if (1 != ctx->Value(input_num_elem_1)) {
-        return errors::InvalidArgument("global_replica_id must be a scalar.");
-      }
+      if (1 != ctx->Value(input_num_elem_1))
+        return errors::InvalidArgument("profile_type must be a scalar.");
 
-      // Values must be of dense key tensors, but are not necessarily 1-D.
-      // ShapeHandle values_shape;
-      // TF_RETURN_IF_ERROR(ctx->WithRankAtMost(ctx->input(0), 1, &values_shape));
-
+      ShapeHandle input_shape_2 = ctx->input(2);
+      DimensionHandle input_num_elem_2 = ctx->NumElements(input_shape_2);
+      if (1 != ctx->Value(input_num_elem_2))
+        return errors::InvalidArgument("value must be a scalar.");
       return Status::OK();
     });

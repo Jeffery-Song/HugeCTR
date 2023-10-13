@@ -43,13 +43,13 @@ void LookupManager::init(parameter_server_config& ps_config, int32_t global_batc
       }
       return true;
     };
-    HCTR_CHECK_HINT(inference_params.i64_input_key, "inference_params.i64_input_key must be true.");
+    HCTR_CHECK_HINT(inference_params.cross_worker_deployed_devices.size() == num_replicas_in_sync,
+                    (std::string() + "inference_params.cross_worker_deployed_devices.size() must be equal to "
+                    "num_replicas_in_sync." + std::to_string(inference_params.cross_worker_deployed_devices.size()) + " " + std::to_string(num_replicas_in_sync)).c_str());
     HCTR_CHECK_HINT(
-        inference_params.deployed_devices.size() == num_replicas_in_sync,
-        "inference_params.deployed_devices.size() must be equal to num_replicas_in_sync.");
-    HCTR_CHECK_HINT(check(inference_params.deployed_devices),
-                    "inference_params.deployed_devices should contain exactly from 0 to "
-                    "num_replicas_in_sync-1.");
+        check(inference_params.cross_worker_deployed_devices),
+        "inference_params.cross_worker_deployed_devices should contain exactly from 0 to "
+        "num_replicas_in_sync-1.");
     HCTR_CHECK_HINT(local_batch_size <= inference_params.max_batchsize,
                     "global_batch_size / num_replicas_in_sync must be <= max_batchsize configured "
                     "in ps_config.json.");
@@ -119,7 +119,8 @@ void LookupManager::forward(const std::string& model_name, int32_t table_id,
 
   void* h_values =
       h_values_map_.find(model_name)->second.find(global_replica_id)->second[table_id].get();
-  cudaMemcpy(h_values, values_ptr, num_keys * sizeof(size_t), cudaMemcpyDeviceToHost);
+  size_t per_key_size = inference_params.i64_input_key ? 8 : 4;
+  cudaMemcpy(h_values, values_ptr, num_keys * per_key_size, cudaMemcpyDeviceToHost);
   lookup_session->lookup(reinterpret_cast<void*>(h_values),
                          reinterpret_cast<float*>(emb_vector_ptr), num_keys, table_id);
 }
